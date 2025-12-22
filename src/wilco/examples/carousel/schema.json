@@ -1,0 +1,37 @@
+{
+  "title": "Image Carousel",
+  "description": "A simple image carousel with navigation controls",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "images": {
+      "type": "array",
+      "title": "Images",
+      "description": "List of image URLs to display",
+      "items": {
+        "type": "string",
+        "format": "uri"
+      },
+      "default": [
+        "https://picsum.photos/seed/wilco1/600/400",
+        "https://picsum.photos/seed/wilco2/600/400",
+        "https://picsum.photos/seed/wilco3/600/400"
+      ],
+      "minItems": 1
+    },
+    "autoPlay": {
+      "type": "boolean",
+      "title": "Auto Play",
+      "description": "Automatically advance slides",
+      "default": false
+    },
+    "interval": {
+      "type": "number",
+      "title": "Interval (ms)",
+      "description": "Time between slides when auto-playing",
+      "default": 3000,
+      "minimum": 500
+    }
+  },
+  "required": ["images"]
+}

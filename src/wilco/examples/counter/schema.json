@@ -1,0 +1,21 @@
+{
+  "title": "Counter",
+  "description": "A simple counter widget with increment/decrement buttons",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "initialValue": {
+      "type": "number",
+      "title": "Initial Value",
+      "description": "Initial counter value",
+      "default": 0
+    },
+    "step": {
+      "type": "number",
+      "title": "Step",
+      "description": "Increment/decrement step",
+      "default": 1,
+      "minimum": 1
+    }
+  }
+}

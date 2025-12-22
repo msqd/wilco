@@ -1,0 +1,47 @@
+{
+  "title": "Image",
+  "description": "A reusable image component with styling options",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "src": {
+      "type": "string",
+      "title": "Source URL",
+      "description": "The image URL",
+      "format": "uri",
+      "default": "https://picsum.photos/seed/placeholder/600/400"
+    },
+    "alt": {
+      "type": "string",
+      "title": "Alt Text",
+      "description": "Alternative text for accessibility",
+      "default": ""
+    },
+    "width": {
+      "type": "string",
+      "title": "Width",
+      "description": "Image width (e.g., '100%', '300px')",
+      "default": "100%"
+    },
+    "height": {
+      "type": "string",
+      "title": "Height",
+      "description": "Image height (e.g., 'auto', '400px')",
+      "default": "auto"
+    },
+    "objectFit": {
+      "type": "string",
+      "title": "Object Fit",
+      "description": "How the image should fit its container",
+      "enum": ["cover", "contain", "fill", "none", "scale-down"],
+      "default": "cover"
+    },
+    "borderRadius": {
+      "type": "string",
+      "title": "Border Radius",
+      "description": "Corner rounding (e.g., '8px', '50%')",
+      "default": "0"
+    }
+  },
+  "required": []
+}
