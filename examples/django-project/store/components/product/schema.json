@@ -1,0 +1,25 @@
+{
+  "title": "Product Card",
+  "description": "Displays a product with image, name, price, and description",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "price": {
+      "type": "number",
+      "description": "Product price in USD"
+    },
+    "description": {
+      "type": "string",
+      "description": "Product description"
+    },
+    "imageUrl": {
+      "type": "string",
+      "description": "URL to product image"
+    }
+  },
+  "required": ["name", "price"]
+}

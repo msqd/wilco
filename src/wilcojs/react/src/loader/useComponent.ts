@@ -103,6 +103,9 @@ function compileComponent(code: string, componentName: string): LoadedComponent 
  * }
  * ```
  */
+// Export for testing
+export { transformEsmToRuntime, compileComponent };
+
 export function useComponent(name: string): LoadedComponent {
   const { data: code } = useSuspenseQuery({
     queryKey: ["component", name],

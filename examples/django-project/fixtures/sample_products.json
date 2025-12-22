@@ -1,0 +1,68 @@
+[
+  {
+    "model": "store.product",
+    "pk": 1,
+    "fields": {
+      "name": "Space Quest T-Shirt",
+      "description": "Classic Space Quest design on a comfortable cotton t-shirt. Perfect for any adventure.",
+      "price": "29.99",
+      "image_url": "https://picsum.photos/seed/product1/600/400",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.product",
+    "pk": 2,
+    "fields": {
+      "name": "Janitor's Mop",
+      "description": "A high-quality mop for keeping your spaceship spotless. Roger Wilco approved.",
+      "price": "19.99",
+      "image_url": "https://picsum.photos/seed/product2/600/400",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.product",
+    "pk": 3,
+    "fields": {
+      "name": "Buckazoid Coin",
+      "description": "Authentic replica Buckazoid currency. Makes a great collectible!",
+      "price": "9.99",
+      "image_url": "https://picsum.photos/seed/product3/600/400",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.product",
+    "pk": 4,
+    "fields": {
+      "name": "Xenon Army Knife",
+      "description": "Multi-tool for the discerning space traveler. Includes a dehydrated towel!",
+      "price": "49.99",
+      "image_url": "https://picsum.photos/seed/product4/600/400",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.product",
+    "pk": 5,
+    "fields": {
+      "name": "Astro Chicken Game",
+      "description": "The legendary arcade game cartridge. Hours of frustration guaranteed.",
+      "price": "14.99",
+      "image_url": "https://picsum.photos/seed/product5/600/400",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "store.product",
+    "pk": 6,
+    "fields": {
+      "name": "Monolith Burger Gift Card",
+      "description": "Treat yourself to the galaxy's finest fast food.",
+      "price": "25.00",
+      "image_url": "https://picsum.photos/seed/product6/600/400",
+      "created_at": "2024-01-01T00:00:00Z"
+    }
+  }
+]

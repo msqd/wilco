@@ -52,34 +52,65 @@ class Component:
 
 
 class ComponentRegistry:
-    """Registry that discovers and manages components.
+    """Registry that discovers and manages components from multiple sources.
 
     Components are Python packages (directories with __init__.py) containing:
     - index.tsx (required): The component entry point
     - schema.json (optional): Props schema and metadata
+
+    Supports multiple component sources, each with an optional prefix:
+    - Components from unprefixed sources are named by their path (e.g., "counter")
+    - Components from prefixed sources include the prefix (e.g., "myapp:counter")
+
+    Example:
+        registry = ComponentRegistry()
+        registry.add_source(Path("./components"))  # counter, button, etc.
+        registry.add_source(Path("./myapp/components"), prefix="myapp")  # myapp:widget
     """
 
-    def __init__(self, components_dir: Path):
-        self.components_dir = components_dir
-        self.components: dict[str, Component] = {}
-        self._discover()
+    def __init__(self, components_dir: Path | None = None, prefix: str = ""):
+        """Initialize the registry.
 
-    def _discover(self) -> None:
-        """Discover all components in the components directory.
+        Args:
+            components_dir: Optional initial components directory.
+            prefix: Optional prefix for components from this directory.
+        """
+        self._sources: list[tuple[Path, str]] = []
+        self.components: dict[str, Component] = {}
+
+        if components_dir is not None:
+            self.add_source(components_dir, prefix)
+
+    def add_source(self, path: Path, prefix: str = "") -> None:
+        """Add a component source directory.
+
+        Args:
+            path: Path to the components directory.
+            prefix: Optional prefix for component names (e.g., "myapp" -> "myapp:component").
+        """
+        self._sources.append((path, prefix))
+        self._discover_from(path, prefix)
+
+    def _discover_from(self, components_dir: Path, prefix: str) -> None:
+        """Discover components from a specific directory.
 
         A valid component is a directory that:
         1. Contains __init__.py (is a Python package)
         2. Contains index.tsx or index.ts (has a TypeScript entry point)
+
+        Args:
+            components_dir: Directory to scan for components.
+            prefix: Prefix to add to component names.
         """
-        if not self.components_dir.exists():
+        if not components_dir.exists():
             return
 
         # Find all __init__.py files (Python packages)
-        for init_file in self.components_dir.rglob("__init__.py"):
+        for init_file in components_dir.rglob("__init__.py"):
             package_dir = init_file.parent
 
             # Skip the components directory itself if it has __init__.py
-            if package_dir == self.components_dir:
+            if package_dir == components_dir:
                 continue
 
             # Look for index.tsx or index.ts
@@ -90,8 +121,11 @@ class ComponentRegistry:
                 continue
 
             # Component name is relative path from components dir
-            rel_path = package_dir.relative_to(self.components_dir)
-            name = str(rel_path).replace("/", ".").replace("\\", ".")
+            rel_path = package_dir.relative_to(components_dir)
+            base_name = str(rel_path).replace("/", ".").replace("\\", ".")
+
+            # Add prefix if provided
+            name = f"{prefix}:{base_name}" if prefix else base_name
 
             self.components[name] = Component(
                 name=name,
@@ -99,11 +133,16 @@ class ComponentRegistry:
                 ts_path=ts_file,
             )
 
+    def _discover(self) -> None:
+        """Re-discover components from all sources."""
+        for path, prefix in self._sources:
+            self._discover_from(path, prefix)
+
     def get(self, name: str) -> Component | None:
         """Get a component by name."""
         return self.components.get(name)
 
     def refresh(self) -> None:
-        """Re-discover components."""
+        """Re-discover components from all sources."""
         self.components.clear()
         self._discover()

@@ -73,11 +73,12 @@ class TestComponentRegistryInit:
 
         assert len(registry.components) > 0
 
-    def test_stores_components_dir(self, sample_component_dir: Path) -> None:
-        """Should store the components directory path."""
+    def test_stores_source_in_sources_list(self, sample_component_dir: Path) -> None:
+        """Should store the component source in the sources list."""
         registry = ComponentRegistry(sample_component_dir)
 
-        assert registry.components_dir == sample_component_dir
+        assert len(registry._sources) == 1
+        assert registry._sources[0] == (sample_component_dir, "")
 
 
 class TestComponentDiscovery:
@@ -387,3 +388,105 @@ class TestComponentRegistryIntegration:
         for component in sample_registry.components.values():
             assert component.package_dir.exists(), f"{component.package_dir} does not exist"
             assert component.ts_path.exists(), f"{component.ts_path} does not exist"
+
+
+class TestMultiSourceRegistry:
+    """Tests for multi-source registry with prefixes."""
+
+    def test_add_source_adds_to_sources_list(self, temp_dir: Path) -> None:
+        """Should add source to internal sources list."""
+        registry = ComponentRegistry()
+        registry.add_source(temp_dir, prefix="myapp")
+
+        assert len(registry._sources) == 1
+        assert registry._sources[0] == (temp_dir, "myapp")
+
+    def test_add_source_discovers_components(self, temp_dir: Path) -> None:
+        """Should discover components from added source."""
+        create_component_package(
+            temp_dir / "widgets", "button", "export default function() {}"
+        )
+
+        registry = ComponentRegistry()
+        registry.add_source(temp_dir)
+
+        assert "widgets.button" in registry.components
+
+    def test_prefix_applied_to_component_names(self, temp_dir: Path) -> None:
+        """Should prefix component names when prefix is provided."""
+        create_component_package(
+            temp_dir / "widgets", "button", "export default function() {}"
+        )
+
+        registry = ComponentRegistry()
+        registry.add_source(temp_dir, prefix="store")
+
+        assert "store:widgets.button" in registry.components
+        assert "widgets.button" not in registry.components
+
+    def test_multiple_sources_with_different_prefixes(self, temp_dir: Path) -> None:
+        """Should support multiple sources with different prefixes."""
+        # Create two separate source directories
+        source1 = temp_dir / "source1"
+        source2 = temp_dir / "source2"
+        source1.mkdir()
+        source2.mkdir()
+
+        create_component_package(source1, "widget", "export default function() {}")
+        create_component_package(source2, "widget", "export default function() {}")
+
+        registry = ComponentRegistry()
+        registry.add_source(source1, prefix="app1")
+        registry.add_source(source2, prefix="app2")
+
+        assert len(registry._sources) == 2
+        assert "app1:widget" in registry.components
+        assert "app2:widget" in registry.components
+
+    def test_unprefixed_source_alongside_prefixed(self, temp_dir: Path) -> None:
+        """Should support mixing prefixed and unprefixed sources."""
+        source1 = temp_dir / "main"
+        source2 = temp_dir / "apps"
+        source1.mkdir()
+        source2.mkdir()
+
+        create_component_package(source1, "shared", "export default function() {}")
+        create_component_package(source2, "custom", "export default function() {}")
+
+        registry = ComponentRegistry()
+        registry.add_source(source1)  # No prefix
+        registry.add_source(source2, prefix="myapp")
+
+        assert "shared" in registry.components
+        assert "myapp:custom" in registry.components
+
+    def test_constructor_with_prefix(self, temp_dir: Path) -> None:
+        """Should support prefix in constructor."""
+        create_component_package(
+            temp_dir / "widgets", "counter", "export default function() {}"
+        )
+
+        registry = ComponentRegistry(temp_dir, prefix="store")
+
+        assert "store:widgets.counter" in registry.components
+
+    def test_refresh_preserves_sources(self, temp_dir: Path) -> None:
+        """Should preserve all sources during refresh."""
+        source1 = temp_dir / "source1"
+        source2 = temp_dir / "source2"
+        source1.mkdir()
+        source2.mkdir()
+
+        create_component_package(source1, "widget", "export default function() {}")
+
+        registry = ComponentRegistry()
+        registry.add_source(source1, prefix="app1")
+        registry.add_source(source2, prefix="app2")
+
+        # Add component to source2 after initial add
+        create_component_package(source2, "new", "export default function() {}")
+
+        registry.refresh()
+
+        assert "app1:widget" in registry.components
+        assert "app2:new" in registry.components
