@@ -3,6 +3,7 @@
 This package provides Django integration for wilco, including:
 - URL patterns for serving component bundles
 - Admin widget for rendering components
+- Admin mixin for live preview support
 - Template tags for component rendering
 
 Usage:
@@ -24,11 +25,29 @@ Example:
     urlpatterns = [
         path("api/", include("wilco.bridges.django.urls")),
     ]
+
+For live preview in admin:
+    from wilco.bridges.django import LivePreviewAdminMixin
+
+    @admin.register(Product)
+    class ProductAdmin(LivePreviewAdminMixin, admin.ModelAdmin):
+        preview_component = "store:product"
+        readonly_fields = ["preview"]
+
+        def get_preview_props(self, form_data):
+            return {"name": form_data.get("name", "")}
 """
 
+from .admin import LivePreviewAdminMixin
 from .apps import WilcoBridgeConfig
+from .views import get_bundle_result
 from .widgets import WilcoComponentWidget
 
 default_app_config = "wilco.bridges.django.apps.WilcoBridgeConfig"
 
-__all__ = ["WilcoBridgeConfig", "WilcoComponentWidget"]
+__all__ = [
+    "LivePreviewAdminMixin",
+    "WilcoBridgeConfig",
+    "WilcoComponentWidget",
+    "get_bundle_result",
+]

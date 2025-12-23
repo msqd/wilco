@@ -238,11 +238,8 @@ body {
 }
 
 .bg-selector-btn--transparent {
-  background:
-    linear-gradient(45deg, #666 25%, transparent 25%),
-    linear-gradient(-45deg, #666 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #666 75%),
-    linear-gradient(-45deg, transparent 75%, #666 75%);
+  background: linear-gradient(45deg, #666 25%, transparent 25%), linear-gradient(-45deg, #666 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #666 75%), linear-gradient(-45deg, transparent 75%, #666 75%);
   background-size: 8px 8px;
   background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
   background-color: #444;
@@ -259,11 +256,8 @@ body {
 
 /* Background options */
 .preview-canvas.bg-transparent {
-  background:
-    linear-gradient(45deg, #222 25%, transparent 25%),
-    linear-gradient(-45deg, #222 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #222 75%),
-    linear-gradient(-45deg, transparent 75%, #222 75%);
+  background: linear-gradient(45deg, #222 25%, transparent 25%), linear-gradient(-45deg, #222 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #222 75%), linear-gradient(-45deg, transparent 75%, #222 75%);
   background-size: 16px 16px;
   background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
   background-color: #2a2a2a;
@@ -758,10 +752,8 @@ button:focus-visible {
   }
 
   .preview-canvas {
-    background:
-      linear-gradient(45deg, #e8e8e8 25%, transparent 25%),
-      linear-gradient(-45deg, #e8e8e8 25%, transparent 25%),
-      linear-gradient(45deg, transparent 75%, #e8e8e8 75%),
+    background: linear-gradient(45deg, #e8e8e8 25%, transparent 25%),
+      linear-gradient(-45deg, #e8e8e8 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e8e8e8 75%),
       linear-gradient(-45deg, transparent 75%, #e8e8e8 75%);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0px;

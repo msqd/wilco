@@ -1,3 +1,4 @@
+// @ts-ignore
 import React from "react";
 
 interface ProductProps {
@@ -5,6 +6,8 @@ interface ProductProps {
   price: number;
   description?: string;
   imageUrl?: string;
+  url?: string;
+  mode?: "list" | "detail";
 }
 
 export default function Product({
@@ -12,28 +15,43 @@ export default function Product({
   price,
   description,
   imageUrl,
+  url,
+  mode = "detail",
 }: ProductProps) {
   const formattedPrice = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
   }).format(price);
 
-  return (
+  const isListMode = mode === "list";
+
+  // Truncate description in list mode
+  const displayDescription =
+    isListMode && description && description.length > 80
+      ? description.slice(0, 80) + "..."
+      : description;
+
+  const content = (
     <div
       style={{
         display: "flex",
-        gap: "24px",
+        flexDirection: isListMode ? "column" : "row",
+        gap: isListMode ? "12px" : "24px",
         padding: "16px",
         backgroundColor: "#f9fafb",
         borderRadius: "12px",
         fontFamily: "system-ui, -apple-system, sans-serif",
+        height: isListMode ? "100%" : "auto",
+        boxSizing: "border-box",
+        transition: "box-shadow 0.2s ease",
+        cursor: url ? "pointer" : "default",
       }}
     >
       <div
         style={{
           flexShrink: 0,
-          width: "200px",
-          height: "200px",
+          width: isListMode ? "100%" : "200px",
+          height: isListMode ? "160px" : "200px",
           borderRadius: "8px",
           overflow: "hidden",
           backgroundColor: "#e5e7eb",
@@ -70,7 +88,7 @@ export default function Product({
         <h2
           style={{
             margin: "0 0 8px 0",
-            fontSize: "24px",
+            fontSize: isListMode ? "18px" : "24px",
             fontWeight: 600,
             color: "#111827",
           }}
@@ -80,7 +98,7 @@ export default function Product({
 
         <div
           style={{
-            fontSize: "20px",
+            fontSize: isListMode ? "16px" : "20px",
             fontWeight: 500,
             color: "#059669",
             marginBottom: "12px",
@@ -89,7 +107,7 @@ export default function Product({
           {formattedPrice}
         </div>
 
-        {description && (
+        {displayDescription && (
           <p
             style={{
               margin: 0,
@@ -98,10 +116,29 @@ export default function Product({
               lineHeight: 1.5,
             }}
           >
-            {description}
+            {displayDescription}
           </p>
         )}
       </div>
     </div>
   );
+
+  // Wrap in link if URL provided
+  if (url) {
+    return (
+      <a
+        href={url}
+        style={{
+          textDecoration: "none",
+          color: "inherit",
+          display: "block",
+          height: isListMode ? "100%" : "auto",
+        }}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return content;
 }

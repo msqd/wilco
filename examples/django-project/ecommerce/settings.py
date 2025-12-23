@@ -118,14 +118,29 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Unfold Admin Theme
+def _static(path):
+    from django.templatetags.static import static
+    return lambda request: static(path)
+
 UNFOLD = {
     "SITE_TITLE": "Wilco Shop Administration",
     "SITE_HEADER": "Wilco Shop",
+    "SITE_ICON": _static("apple-touch-icon.png"),
+    "SITE_FAVICONS": [
+        {"rel": "apple-touch-icon", "sizes": "180x180", "href": _static("apple-touch-icon.png")},
+        {"rel": "icon", "type": "image/png", "sizes": "32x32", "href": _static("favicon-32x32.png")},
+        {"rel": "icon", "type": "image/png", "sizes": "16x16", "href": _static("favicon-16x16.png")},
+    ],
+    "STYLES": [_static("css/admin.css")],
 }
 
 # Wilco Components

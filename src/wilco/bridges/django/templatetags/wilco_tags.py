@@ -38,11 +38,11 @@ def wilco_component(
     container_id = f"wilco-{uuid.uuid4().hex[:8]}"
     props_json = json.dumps(props)
 
-    html = f'''<div id="{container_id}"
+    html = f"""<div id="{container_id}"
      data-wilco-component="{component_name}"
      data-wilco-props='{props_json}'
      data-wilco-api="{api_base}">
-</div>'''
+</div>"""
 
     return mark_safe(html)
 

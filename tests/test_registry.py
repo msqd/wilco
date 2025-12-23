@@ -166,9 +166,7 @@ class TestComponentDiscovery:
         # Create multiple components
         for i in range(3):
             cat = temp_dir / f"cat{i}"
-            create_component_package(
-                cat, "comp", "export default function() {}"
-            )
+            create_component_package(cat, "comp", "export default function() {}")
 
         registry = ComponentRegistry(temp_dir)
 
@@ -184,9 +182,7 @@ class TestComponentDiscovery:
         # But don't add index.tsx to root
 
         # Add a valid component
-        create_component_package(
-            temp_dir / "widgets", "counter", "export default function() {}"
-        )
+        create_component_package(temp_dir / "widgets", "counter", "export default function() {}")
 
         registry = ComponentRegistry(temp_dir)
 
@@ -217,9 +213,7 @@ class TestMetadataLoading:
         assert props.get("type") == "object"
         assert "initialValue" in props.get("properties", {})
 
-    def test_returns_empty_dict_when_no_schema(
-        self, sample_component_dir: Path
-    ) -> None:
+    def test_returns_empty_dict_when_no_schema(self, sample_component_dir: Path) -> None:
         """Should return empty metadata when no schema.json exists."""
         registry = ComponentRegistry(sample_component_dir)
 
@@ -270,17 +264,13 @@ class TestComponentRegistryGet:
         assert component is not None
         assert component.name == "widgets.counter"
 
-    def test_returns_none_for_unknown_name(
-        self, sample_registry: ComponentRegistry
-    ) -> None:
+    def test_returns_none_for_unknown_name(self, sample_registry: ComponentRegistry) -> None:
         """Should return None when component name not found."""
         component = sample_registry.get("nonexistent.component")
 
         assert component is None
 
-    def test_returns_none_for_empty_name(
-        self, sample_registry: ComponentRegistry
-    ) -> None:
+    def test_returns_none_for_empty_name(self, sample_registry: ComponentRegistry) -> None:
         """Should return None for empty string name."""
         component = sample_registry.get("")
 
@@ -293,17 +283,13 @@ class TestComponentRegistryRefresh:
     def test_clears_and_rediscovers_components(self, temp_dir: Path) -> None:
         """Should clear existing components and rediscover."""
         category = temp_dir / "widgets"
-        create_component_package(
-            category, "initial", "export default function() {}"
-        )
+        create_component_package(category, "initial", "export default function() {}")
 
         registry = ComponentRegistry(temp_dir)
         assert "widgets.initial" in registry.components
 
         # Add new component
-        create_component_package(
-            category, "added", "export default function() {}"
-        )
+        create_component_package(category, "added", "export default function() {}")
 
         # Refresh
         registry.refresh()
@@ -314,9 +300,7 @@ class TestComponentRegistryRefresh:
     def test_removes_deleted_components(self, temp_dir: Path) -> None:
         """Should remove components that no longer exist."""
         category = temp_dir / "widgets"
-        pkg_dir = create_component_package(
-            category, "temporary", "export default function() {}"
-        )
+        pkg_dir = create_component_package(category, "temporary", "export default function() {}")
 
         registry = ComponentRegistry(temp_dir)
         assert "widgets.temporary" in registry.components
@@ -375,9 +359,7 @@ class TestComponentRegistryIntegration:
             assert counter.metadata.get("title") is not None
             assert counter.ts_path.exists()
 
-    def test_component_paths_are_absolute(
-        self, sample_registry: ComponentRegistry
-    ) -> None:
+    def test_component_paths_are_absolute(self, sample_registry: ComponentRegistry) -> None:
         """Component paths should be absolute paths."""
         for component in sample_registry.components.values():
             assert component.package_dir.is_absolute()
@@ -403,9 +385,7 @@ class TestMultiSourceRegistry:
 
     def test_add_source_discovers_components(self, temp_dir: Path) -> None:
         """Should discover components from added source."""
-        create_component_package(
-            temp_dir / "widgets", "button", "export default function() {}"
-        )
+        create_component_package(temp_dir / "widgets", "button", "export default function() {}")
 
         registry = ComponentRegistry()
         registry.add_source(temp_dir)
@@ -414,9 +394,7 @@ class TestMultiSourceRegistry:
 
     def test_prefix_applied_to_component_names(self, temp_dir: Path) -> None:
         """Should prefix component names when prefix is provided."""
-        create_component_package(
-            temp_dir / "widgets", "button", "export default function() {}"
-        )
+        create_component_package(temp_dir / "widgets", "button", "export default function() {}")
 
         registry = ComponentRegistry()
         registry.add_source(temp_dir, prefix="store")
@@ -462,9 +440,7 @@ class TestMultiSourceRegistry:
 
     def test_constructor_with_prefix(self, temp_dir: Path) -> None:
         """Should support prefix in constructor."""
-        create_component_package(
-            temp_dir / "widgets", "counter", "export default function() {}"
-        )
+        create_component_package(temp_dir / "widgets", "counter", "export default function() {}")
 
         registry = ComponentRegistry(temp_dir, prefix="store")
 

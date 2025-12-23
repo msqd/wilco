@@ -1,56 +1,56 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query"
 
 export interface BundleInfo {
-  name: string;
+  name: string
 }
 
 export interface JsonSchemaProperty {
-  type: "string" | "number" | "boolean" | "array" | "object";
-  title?: string;
-  description?: string;
-  default?: unknown;
-  minimum?: number;
-  maximum?: number;
-  minItems?: number;
-  maxItems?: number;
-  items?: JsonSchemaProperty;
-  format?: string;
+  type: "string" | "number" | "boolean" | "array" | "object"
+  title?: string
+  description?: string
+  default?: unknown
+  minimum?: number
+  maximum?: number
+  minItems?: number
+  maxItems?: number
+  items?: JsonSchemaProperty
+  format?: string
 }
 
 export interface PropsSchema {
-  type: "object";
-  properties?: Record<string, JsonSchemaProperty>;
-  required?: string[];
+  type: "object"
+  properties?: Record<string, JsonSchemaProperty>
+  required?: string[]
 }
 
 export interface BundleMetadata {
-  title?: string;
-  description?: string;
-  props?: PropsSchema;
+  title?: string
+  description?: string
+  props?: PropsSchema
 }
 
 async function fetchBundles(): Promise<BundleInfo[]> {
-  const response = await fetch("/api/bundles");
+  const response = await fetch("/api/bundles")
   if (!response.ok) {
-    throw new Error("Failed to fetch bundles");
+    throw new Error("Failed to fetch bundles")
   }
-  return response.json();
+  return response.json()
 }
 
 async function fetchBundleMetadata(name: string): Promise<BundleMetadata> {
-  const response = await fetch(`/api/bundles/${name}/metadata`);
+  const response = await fetch(`/api/bundles/${name}/metadata`)
   if (!response.ok) {
-    throw new Error(`Failed to fetch metadata for ${name}`);
+    throw new Error(`Failed to fetch metadata for ${name}`)
   }
-  return response.json();
+  return response.json()
 }
 
 async function fetchBundleCode(name: string): Promise<string> {
-  const response = await fetch(`/api/bundles/${name}.js`);
+  const response = await fetch(`/api/bundles/${name}.js`)
   if (!response.ok) {
-    throw new Error(`Failed to fetch bundle ${name}`);
+    throw new Error(`Failed to fetch bundle ${name}`)
   }
-  return response.text();
+  return response.text()
 }
 
 export function useBundles() {
@@ -58,7 +58,7 @@ export function useBundles() {
     queryKey: ["bundles"],
     queryFn: fetchBundles,
     staleTime: 30_000,
-  });
+  })
 }
 
 export function useBundleMetadata(name: string | null) {
@@ -67,7 +67,7 @@ export function useBundleMetadata(name: string | null) {
     queryFn: () => fetchBundleMetadata(name!),
     enabled: !!name,
     staleTime: 60_000,
-  });
+  })
 }
 
 export function useBundleCode(name: string | null) {
@@ -76,5 +76,5 @@ export function useBundleCode(name: string | null) {
     queryFn: () => fetchBundleCode(name!),
     enabled: !!name,
     staleTime: 60_000,
-  });
+  })
 }

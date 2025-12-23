@@ -1,14 +1,42 @@
 """Django views for serving wilco component bundles."""
 
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
+from threading import Lock
 
 from django.apps import apps
 from django.conf import settings
 from django.http import Http404, HttpResponse, JsonResponse
 
-from wilco import ComponentRegistry
+from wilco import BundleResult, ComponentRegistry
 from wilco.bundler import bundle_component
+
+
+@dataclass
+class CachedBundle:
+    """Cached bundle with source file modification time."""
+
+    result: BundleResult
+    mtime: float
+
+
+# Bundle cache: component name -> CachedBundle
+_bundle_cache: dict[str, CachedBundle] = {}
+_bundle_cache_lock = Lock()
+
+
+def clear_bundle_cache(name: str | None = None) -> None:
+    """Clear the bundle cache.
+
+    Args:
+        name: Component name to clear, or None to clear all.
+    """
+    with _bundle_cache_lock:
+        if name is None:
+            _bundle_cache.clear()
+        else:
+            _bundle_cache.pop(name, None)
 
 
 @lru_cache(maxsize=1)
@@ -48,6 +76,46 @@ def get_registry() -> ComponentRegistry:
     return registry
 
 
+def get_bundle_result(name: str) -> BundleResult | None:
+    """Get bundle result for a component, using cache with mtime invalidation.
+
+    Args:
+        name: Component name (e.g., "counter" or "store:product")
+
+    Returns:
+        BundleResult with code and hash, or None if component not found.
+    """
+    registry = get_registry()
+    component = registry.get(name)
+
+    if component is None:
+        return None
+
+    # Get current source file mtime
+    try:
+        current_mtime = component.ts_path.stat().st_mtime
+    except OSError:
+        return None
+
+    # Check cache
+    with _bundle_cache_lock:
+        cached = _bundle_cache.get(name)
+        if cached is not None and cached.mtime == current_mtime:
+            return cached.result
+
+    # Bundle the component
+    try:
+        result = bundle_component(component.ts_path, component_name=name)
+    except RuntimeError:
+        return None
+
+    # Store in cache
+    with _bundle_cache_lock:
+        _bundle_cache[name] = CachedBundle(result=result, mtime=current_mtime)
+
+    return result
+
+
 def list_bundles(request) -> JsonResponse:
     """List all available component bundles.
 
@@ -66,26 +134,24 @@ def get_bundle(request, name: str) -> HttpResponse:
         name: Component name (e.g., "counter" or "store:product")
 
     Returns:
-        JavaScript bundle with Cache-Control: no-cache header.
+        JavaScript bundle with long cache headers.
+        The client should include a hash query parameter for cache busting.
 
     Raises:
         Http404: If component not found or bundling fails.
     """
-    registry = get_registry()
-    component = registry.get(name)
+    result = get_bundle_result(name)
 
-    if component is None:
+    if result is None:
         raise Http404(f"Bundle '{name}' not found")
 
-    try:
-        js_code = bundle_component(component.ts_path, component_name=name)
-    except RuntimeError as e:
-        raise Http404(f"Bundle error: {e}")
-
     return HttpResponse(
-        js_code,
+        result.code,
         content_type="application/javascript",
-        headers={"Cache-Control": "no-cache"},
+        headers={
+            # Long cache since URL includes hash query param for cache busting
+            "Cache-Control": "public, max-age=31536000, immutable",
+        },
     )
 
 
@@ -96,7 +162,7 @@ def get_metadata(request, name: str) -> JsonResponse:
         name: Component name (e.g., "counter" or "store:product")
 
     Returns:
-        JSON object with component metadata (title, description, props schema).
+        JSON object with component metadata (title, description, props schema, hash).
 
     Raises:
         Http404: If component not found.
@@ -107,4 +173,11 @@ def get_metadata(request, name: str) -> JsonResponse:
     if component is None:
         raise Http404(f"Bundle '{name}' not found")
 
-    return JsonResponse(component.metadata)
+    # Get bundle result to include hash
+    result = get_bundle_result(name)
+
+    metadata = dict(component.metadata)
+    if result:
+        metadata["hash"] = result.hash
+
+    return JsonResponse(metadata)

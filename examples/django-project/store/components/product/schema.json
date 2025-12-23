@@ -1,7 +1,7 @@
 {
   "title": "Product Card",
-  "description": "Displays a product with image, name, price, and description",
-  "version": "1.0.0",
+  "description": "Displays a product with image, name, price, and description. Supports list and detail modes.",
+  "version": "1.1.0",
   "type": "object",
   "properties": {
     "name": {
@@ -19,6 +19,16 @@
     "imageUrl": {
       "type": "string",
       "description": "URL to product image"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL to product detail page (makes card clickable)"
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["list", "detail"],
+      "default": "detail",
+      "description": "Display mode: 'list' for compact cards, 'detail' for full view"
     }
   },
   "required": ["name", "price"]

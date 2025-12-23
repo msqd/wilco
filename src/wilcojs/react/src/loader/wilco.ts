@@ -3,4 +3,4 @@
  * This module is available to server components via window.__MODULES__["wilco"].
  */
 
-export { useComponent } from "./useComponent.ts";
+export { useComponent } from "./useComponent.ts"

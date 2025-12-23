@@ -138,8 +138,8 @@ class TestGetBundle:
         assert "detail" in data
         assert "not found" in data["detail"].lower()
 
-    def test_has_no_cache_header(self, client: TestClient) -> None:
-        """Response should have no-cache header for development."""
+    def test_has_immutable_cache_header(self, client: TestClient) -> None:
+        """Response should have long immutable cache header for efficient caching."""
         list_response = client.get("/api/bundles")
         bundles = list_response.json()
 
@@ -153,7 +153,7 @@ class TestGetBundle:
             pytest.skip("esbuild not available")
 
         assert response.status_code == 200
-        assert response.headers.get("cache-control") == "no-cache"
+        assert response.headers.get("cache-control") == "public, max-age=31536000, immutable"
 
     def test_returns_500_on_bundler_error(self, client: TestClient) -> None:
         """Should return 500 when bundler fails."""

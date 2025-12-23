@@ -1,14 +1,28 @@
 """TypeScript component bundler using esbuild."""
 
 import base64
+import hashlib
 import json
 import os
 import shutil
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import NoReturn
+
+
+@dataclass(frozen=True)
+class BundleResult:
+    """Result of bundling a component."""
+
+    code: str
+    """The bundled JavaScript code."""
+
+    hash: str
+    """Content hash of the bundle (first 12 chars of SHA-256)."""
+
 
 # Project root: bundler.py -> wilco/ -> src/ -> project root
 _PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -128,10 +142,12 @@ def _find_esbuild() -> str:
             common_paths.append(Path(appdata) / "npm" / "esbuild.cmd")
     elif sys.platform == "darwin":
         # Homebrew paths
-        common_paths.extend([
-            Path("/opt/homebrew/bin/esbuild"),
-            Path("/usr/local/bin/esbuild"),
-        ])
+        common_paths.extend(
+            [
+                Path("/opt/homebrew/bin/esbuild"),
+                Path("/usr/local/bin/esbuild"),
+            ]
+        )
 
     for path in common_paths:
         if path.exists():
@@ -158,36 +174,44 @@ def _raise_bundler_not_found() -> NoReturn:
     ]
 
     # Option 1: Development setup
-    lines.extend([
-        "Option 1: Install frontend dependencies (recommended for development)",
-        f"  cd {_FRONTEND_DIR}",
-        "  pnpm install  # or: npm install",
-        "",
-    ])
+    lines.extend(
+        [
+            "Option 1: Install frontend dependencies (recommended for development)",
+            f"  cd {_FRONTEND_DIR}",
+            "  pnpm install  # or: npm install",
+            "",
+        ]
+    )
 
     # Option 2: Global install
-    lines.extend([
-        "Option 2: Install esbuild globally",
-        "  npm install -g esbuild",
-        "",
-    ])
+    lines.extend(
+        [
+            "Option 2: Install esbuild globally",
+            "  npm install -g esbuild",
+            "",
+        ]
+    )
 
     # Option 3: npx (if npm available but npx failed)
     if shutil.which("npm"):
-        lines.extend([
-            "Option 3: Ensure npx is available (comes with npm 5.2+)",
-            "  npx --version  # Should show version if working",
-            "",
-        ])
+        lines.extend(
+            [
+                "Option 3: Ensure npx is available (comes with npm 5.2+)",
+                "  npx --version  # Should show version if working",
+                "",
+            ]
+        )
 
     # Diagnostic info
-    lines.extend([
-        "Diagnostic info:",
-        f"  Frontend dir exists: {_FRONTEND_DIR.exists()}",
-        f"  node_modules exists: {(_FRONTEND_DIR / 'node_modules').exists()}",
-        f"  npm in PATH: {shutil.which('npm') is not None}",
-        f"  npx in PATH: {shutil.which('npx') is not None}",
-    ])
+    lines.extend(
+        [
+            "Diagnostic info:",
+            f"  Frontend dir exists: {_FRONTEND_DIR.exists()}",
+            f"  node_modules exists: {(_FRONTEND_DIR / 'node_modules').exists()}",
+            f"  npm in PATH: {shutil.which('npm') is not None}",
+            f"  npx in PATH: {shutil.which('npx') is not None}",
+        ]
+    )
 
     raise BundlerNotFoundError("\n".join(lines))
 
@@ -236,7 +260,7 @@ def bundle_component(
     ts_path: Path,
     component_name: str | None = None,
     external_deps: list[str] | None = None,
-) -> str:
+) -> BundleResult:
     """Bundle a TypeScript component to JavaScript with source maps.
 
     Args:
@@ -245,7 +269,7 @@ def bundle_component(
         external_deps: Dependencies to mark as external (e.g., ['react', 'react-dom'])
 
     Returns:
-        Bundled JavaScript code as string with inline source map
+        BundleResult with bundled JavaScript code and content hash
 
     Raises:
         BundlerNotFoundError: If esbuild is not available
@@ -296,4 +320,7 @@ def bundle_component(
     # Rewrite source map sources for better debugging
     js_code = _rewrite_source_map_sources(js_code, component_name)
 
-    return js_code
+    # Compute content hash (first 12 chars of SHA-256)
+    content_hash = hashlib.sha256(js_code.encode()).hexdigest()[:12]
+
+    return BundleResult(code=js_code, hash=content_hash)

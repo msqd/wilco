@@ -1,20 +1,20 @@
-import React, { useState, useMemo, Suspense, useRef, useEffect } from "react";
-import { ErrorBoundary } from "react-error-boundary";
-import { useBundles, useBundleMetadata } from "./api/bundles.ts";
-import { ServerComponent } from "./loader/ServerComponent.tsx";
-import { PropsEditor, getDefaultValues } from "./components/PropsEditor.tsx";
-import { StackTrace } from "./components/StackTrace.tsx";
+import React, { useState, useMemo, Suspense, useRef, useEffect } from "react"
+import { ErrorBoundary } from "react-error-boundary"
+import { useBundles, useBundleMetadata } from "./api/bundles.ts"
+import { ServerComponent } from "./loader/ServerComponent.tsx"
+import { PropsEditor, getDefaultValues } from "./components/PropsEditor.tsx"
+import { StackTrace } from "./components/StackTrace.tsx"
 
 function ComponentListItem({
   name,
   isSelected,
   onSelect,
 }: {
-  name: string;
-  isSelected: boolean;
-  onSelect: () => void;
+  name: string
+  isSelected: boolean
+  onSelect: () => void
 }) {
-  const { data: metadata } = useBundleMetadata(name);
+  const { data: metadata } = useBundleMetadata(name)
 
   return (
     <li>
@@ -23,7 +23,7 @@ function ComponentListItem({
         {metadata?.description && <span>{metadata.description}</span>}
       </button>
     </li>
-  );
+  )
 }
 
 function ErrorFallback({
@@ -31,9 +31,9 @@ function ErrorFallback({
   onRetry,
   componentStack,
 }: {
-  error: Error;
-  onRetry: () => void;
-  componentStack?: string;
+  error: Error
+  onRetry: () => void
+  componentStack?: string
 }) {
   return (
     <div className="error-fallback">
@@ -53,10 +53,10 @@ function ErrorFallback({
 
       <button onClick={onRetry}>Retry</button>
     </div>
-  );
+  )
 }
 
-type PreviewBackground = "white" | "light" | "dark" | "black" | "transparent";
+type PreviewBackground = "white" | "light" | "dark" | "black" | "transparent"
 
 const bgOptions: { value: PreviewBackground; title: string }[] = [
   { value: "white", title: "White" },
@@ -64,14 +64,14 @@ const bgOptions: { value: PreviewBackground; title: string }[] = [
   { value: "dark", title: "Dark" },
   { value: "black", title: "Black" },
   { value: "transparent", title: "Transparent" },
-];
+]
 
 function BackgroundSelector({
   value,
   onChange,
 }: {
-  value: PreviewBackground;
-  onChange: (bg: PreviewBackground) => void;
+  value: PreviewBackground
+  onChange: (bg: PreviewBackground) => void
 }) {
   return (
     <div className="bg-selector">
@@ -87,37 +87,37 @@ function BackgroundSelector({
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 function ComponentWrapper({ children }: { children: React.ReactNode }) {
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [bounds, setBounds] = useState<DOMRect | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [bounds, setBounds] = useState<DOMRect | null>(null)
 
   useEffect(() => {
-    if (!wrapperRef.current) return;
+    if (!wrapperRef.current) return
 
     const updateBounds = () => {
       if (wrapperRef.current) {
-        setBounds(wrapperRef.current.getBoundingClientRect());
+        setBounds(wrapperRef.current.getBoundingClientRect())
       }
-    };
+    }
 
-    updateBounds();
-    const observer = new ResizeObserver(updateBounds);
-    observer.observe(wrapperRef.current);
+    updateBounds()
+    const observer = new ResizeObserver(updateBounds)
+    observer.observe(wrapperRef.current)
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   // Get canvas-relative positions for rulers
-  const canvas = wrapperRef.current?.parentElement;
-  const canvasBounds = canvas?.getBoundingClientRect();
+  const canvas = wrapperRef.current?.parentElement
+  const canvasBounds = canvas?.getBoundingClientRect()
 
-  const top = bounds && canvasBounds ? bounds.top - canvasBounds.top : 0;
-  const bottom = bounds && canvasBounds ? bounds.bottom - canvasBounds.top : 0;
-  const left = bounds && canvasBounds ? bounds.left - canvasBounds.left : 0;
-  const right = bounds && canvasBounds ? bounds.right - canvasBounds.left : 0;
+  const top = bounds && canvasBounds ? bounds.top - canvasBounds.top : 0
+  const bottom = bounds && canvasBounds ? bounds.bottom - canvasBounds.top : 0
+  const left = bounds && canvasBounds ? bounds.left - canvasBounds.left : 0
+  const right = bounds && canvasBounds ? bounds.right - canvasBounds.left : 0
 
   return (
     <>
@@ -133,31 +133,31 @@ function ComponentWrapper({ children }: { children: React.ReactNode }) {
         {children}
       </div>
     </>
-  );
+  )
 }
 
 function ComponentPreview({ name }: { name: string }) {
-  const { data: metadata, isLoading: metadataLoading } = useBundleMetadata(name);
-  const [propsOverrides, setPropsOverrides] = useState<Record<string, unknown>>({});
-  const [retryCount, setRetryCount] = useState(0);
-  const [componentStack, setComponentStack] = useState<string | undefined>();
-  const [background, setBackground] = useState<PreviewBackground>("transparent");
+  const { data: metadata, isLoading: metadataLoading } = useBundleMetadata(name)
+  const [propsOverrides, setPropsOverrides] = useState<Record<string, unknown>>({})
+  const [retryCount, setRetryCount] = useState(0)
+  const [componentStack, setComponentStack] = useState<string | undefined>()
+  const [background, setBackground] = useState<PreviewBackground>("transparent")
 
   // Compute the full props by merging defaults with overrides
   const props = useMemo(() => {
-    const defaults = getDefaultValues(metadata?.props);
-    return { ...defaults, ...propsOverrides };
-  }, [metadata?.props, propsOverrides]);
+    const defaults = getDefaultValues(metadata?.props)
+    return { ...defaults, ...propsOverrides }
+  }, [metadata?.props, propsOverrides])
 
   const handleRetry = () => {
-    setPropsOverrides({});
-    setComponentStack(undefined);
-    setRetryCount((c) => c + 1);
-  };
+    setPropsOverrides({})
+    setComponentStack(undefined)
+    setRetryCount((c) => c + 1)
+  }
 
   const handleError = (_error: Error, info: { componentStack?: string | null }) => {
-    setComponentStack(info.componentStack ?? undefined);
-  };
+    setComponentStack(info.componentStack ?? undefined)
+  }
 
   if (metadataLoading) {
     return (
@@ -179,7 +179,7 @@ function ComponentPreview({ name }: { name: string }) {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -196,11 +196,7 @@ function ComponentPreview({ name }: { name: string }) {
           <ComponentWrapper>
             <ErrorBoundary
               fallbackRender={({ error }) => (
-                <ErrorFallback
-                  error={error}
-                  onRetry={handleRetry}
-                  componentStack={componentStack}
-                />
+                <ErrorFallback error={error} onRetry={handleRetry} componentStack={componentStack} />
               )}
               onError={handleError}
               resetKeys={[retryCount]}
@@ -219,15 +215,11 @@ function ComponentPreview({ name }: { name: string }) {
           <h3>Controls</h3>
         </div>
         <div className="props-content">
-          <PropsEditor
-            schema={metadata?.props}
-            values={props}
-            onChange={setPropsOverrides}
-          />
+          <PropsEditor schema={metadata?.props} values={props} onChange={setPropsOverrides} />
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function Sidebar({
@@ -235,9 +227,9 @@ function Sidebar({
   selectedBundle,
   onSelect,
 }: {
-  bundles: { name: string }[];
-  selectedBundle: string | null;
-  onSelect: (name: string) => void;
+  bundles: { name: string }[]
+  selectedBundle: string | null
+  onSelect: (name: string) => void
 }) {
   return (
     <aside className="sidebar">
@@ -258,12 +250,12 @@ function Sidebar({
         </ul>
       </div>
     </aside>
-  );
+  )
 }
 
 export default function App() {
-  const [selectedBundle, setSelectedBundle] = useState<string | null>(null);
-  const { data: bundles, isLoading, error } = useBundles();
+  const [selectedBundle, setSelectedBundle] = useState<string | null>(null)
+  const { data: bundles, isLoading, error } = useBundles()
 
   if (isLoading) {
     return (
@@ -281,7 +273,7 @@ export default function App() {
           <div className="empty-state">Loading bundles...</div>
         </main>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -305,25 +297,19 @@ export default function App() {
           </div>
         </main>
       </div>
-    );
+    )
   }
 
   return (
     <div className="app-layout">
-      <Sidebar
-        bundles={bundles || []}
-        selectedBundle={selectedBundle}
-        onSelect={setSelectedBundle}
-      />
+      <Sidebar bundles={bundles || []} selectedBundle={selectedBundle} onSelect={setSelectedBundle} />
       <main className="main-content">
         {selectedBundle ? (
           <ComponentPreview key={selectedBundle} name={selectedBundle} />
         ) : (
-          <div className="empty-state">
-            Select a component from the sidebar to preview
-          </div>
+          <div className="empty-state">Select a component from the sidebar to preview</div>
         )}
       </main>
     </div>
-  );
+  )
 }

@@ -1,31 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Products - Wilco Shop{% endblock %}
+{% block title %}Our Products - Wilco Shop{% endblock %}
 
 {% block content %}
-<h2 style="margin-bottom: 1.5rem;">Products</h2>
-
-{% if products %}
-<div class="product-grid">
-    {% for product in products %}
-    <div class="product-card">
-        <a href="{% url 'store:product_detail' product.pk %}">
-            <div class="product-card-image">
-                <!-- Placeholder for wilco component -->
-                Product Image
-            </div>
-            <div class="product-card-body">
-                <h3 class="product-card-title">{{ product.name }}</h3>
-                <p class="product-card-price">${{ product.price }}</p>
-            </div>
-        </a>
-    </div>
-    {% endfor %}
-</div>
-{% else %}
-<div class="empty-state">
-    <p>No products yet.</p>
-    <p>Add some products in the <a href="/admin/">admin panel</a>.</p>
-</div>
-{% endif %}
+{{ widget }}
 {% endblock %}

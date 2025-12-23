@@ -42,23 +42,32 @@ def create_router(registry: ComponentRegistry) -> APIRouter:
             raise HTTPException(status_code=404, detail=f"Bundle '{name}' not found")
 
         try:
-            js_code = bundle_component(component.ts_path, component_name=name)
+            result = bundle_component(component.ts_path, component_name=name)
         except RuntimeError as e:
             raise HTTPException(status_code=500, detail=str(e))
 
         return Response(
-            content=js_code,
+            content=result.code,
             media_type="application/javascript",
-            headers={"Cache-Control": "no-cache"},
+            headers={"Cache-Control": "public, max-age=31536000, immutable"},
         )
 
     @router.get("/bundles/{name}/metadata")
     def get_bundle_metadata(name: str) -> dict:
-        """Get metadata for a bundle."""
+        """Get metadata for a bundle, including content hash."""
         component = registry.get(name)
         if component is None:
             raise HTTPException(status_code=404, detail=f"Bundle '{name}' not found")
 
-        return component.metadata
+        metadata = dict(component.metadata)
+
+        # Include bundle hash for cache busting
+        try:
+            result = bundle_component(component.ts_path, component_name=name)
+            metadata["hash"] = result.hash
+        except RuntimeError:
+            pass  # Skip hash if bundling fails
+
+        return metadata
 
     return router

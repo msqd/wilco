@@ -67,7 +67,7 @@ def sample_component_dir(temp_dir: Path) -> Path:
     create_component_package(
         category_dir,
         "counter",
-        tsx_content='''
+        tsx_content="""
 import { useState } from "react";
 
 interface CounterProps {
@@ -78,7 +78,7 @@ export default function Counter({ initialValue = 0 }: CounterProps) {
   const [count, setCount] = useState(initialValue);
   return <button onClick={() => setCount(c => c + 1)}>{count}</button>;
 }
-''',
+""",
         schema={
             "title": "Test Counter",
             "description": "A test counter component",
@@ -96,11 +96,11 @@ export default function Counter({ initialValue = 0 }: CounterProps) {
     create_component_package(
         category_dir,
         "simple",
-        tsx_content='''
+        tsx_content="""
 export default function Simple() {
   return <div>Simple</div>;
 }
-''',
+""",
     )
 
     return temp_dir
@@ -130,14 +130,14 @@ def reset_bundler_cache() -> Generator[None, None, None]:
 def sample_tsx_file(temp_dir: Path) -> Path:
     """Create a sample TSX file for bundling tests."""
     tsx_file = temp_dir / "sample.tsx"
-    tsx_file.write_text('''
+    tsx_file.write_text("""
 import { useState } from "react";
 
 export default function Sample() {
   const [value, setValue] = useState(0);
   return <div>{value}</div>;
 }
-''')
+""")
     return tsx_file
 
 
@@ -145,10 +145,10 @@ export default function Sample() {
 def invalid_tsx_file(temp_dir: Path) -> Path:
     """Create an invalid TSX file that will fail bundling."""
     tsx_file = temp_dir / "invalid.tsx"
-    tsx_file.write_text('''
+    tsx_file.write_text("""
 // This is invalid TypeScript/JSX
 export default function Invalid( {
   return <div>missing closing paren
 }
-''')
+""")
     return tsx_file

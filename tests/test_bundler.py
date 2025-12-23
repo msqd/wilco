@@ -265,15 +265,20 @@ class TestBundleComponent:
 
     def test_bundles_valid_tsx_file(self, sample_tsx_file: Path) -> None:
         """Should successfully bundle a valid TSX file."""
+        from wilco.bundler import BundleResult
+
         try:
             result = bundle_component(sample_tsx_file, "test.sample")
         except BundlerNotFoundError:
             pytest.skip("esbuild not available")
 
-        assert isinstance(result, str)
-        assert len(result) > 0
+        assert isinstance(result, BundleResult)
+        assert isinstance(result.code, str)
+        assert len(result.code) > 0
+        assert isinstance(result.hash, str)
+        assert len(result.hash) == 12  # First 12 chars of SHA-256
         # Should contain the transformed code
-        assert "useState" in result or "default" in result
+        assert "useState" in result.code or "default" in result.code
 
     def test_includes_inline_source_map(self, sample_tsx_file: Path) -> None:
         """Bundled code should include inline source map."""
@@ -282,7 +287,7 @@ class TestBundleComponent:
         except BundlerNotFoundError:
             pytest.skip("esbuild not available")
 
-        assert "//# sourceMappingURL=data:application/json;base64," in result
+        assert "//# sourceMappingURL=data:application/json;base64," in result.code
 
     def test_source_map_uses_component_urls(self, sample_tsx_file: Path) -> None:
         """Source map should use component:// URLs."""
@@ -293,7 +298,7 @@ class TestBundleComponent:
 
         # Extract and decode source map
         marker = "//# sourceMappingURL=data:application/json;base64,"
-        b64_map = result.split(marker)[1]
+        b64_map = result.code.split(marker)[1]
         source_map = json.loads(base64.b64decode(b64_map))
 
         assert any("component://test.sample/" in s for s in source_map["sources"])
@@ -306,7 +311,7 @@ class TestBundleComponent:
             pytest.skip("esbuild not available")
 
         # External deps should remain as imports, not bundled
-        assert "react" in result.lower()
+        assert "react" in result.code.lower()
 
     def test_uses_filename_as_default_component_name(self, sample_tsx_file: Path) -> None:
         """Should use filename as component name when not specified."""
@@ -317,7 +322,7 @@ class TestBundleComponent:
 
         # Source map should reference the file
         marker = "//# sourceMappingURL=data:application/json;base64,"
-        b64_map = result.split(marker)[1]
+        b64_map = result.code.split(marker)[1]
         source_map = json.loads(base64.b64decode(b64_map))
 
         assert any("sample" in s for s in source_map["sources"])
@@ -331,9 +336,7 @@ class TestBundleComponent:
         except BundlerNotFoundError:
             pytest.skip("esbuild not available")
 
-    def test_raises_bundler_not_found_when_esbuild_missing(
-        self, sample_tsx_file: Path
-    ) -> None:
+    def test_raises_bundler_not_found_when_esbuild_missing(self, sample_tsx_file: Path) -> None:
         """Should raise BundlerNotFoundError when esbuild unavailable."""
         with patch("wilco.bundler._find_esbuild") as mock_find:
             mock_find.side_effect = BundlerNotFoundError("not found")
@@ -384,12 +387,10 @@ class TestBundlerIntegration:
         assert info_after["resolved_path"] == info_after["cached_path"]
 
         # Verify bundle output
-        assert "export" in result or "default" in result
-        assert "sourceMappingURL" in result
+        assert "export" in result.code or "default" in result.code
+        assert "sourceMappingURL" in result.code
 
-    def test_bundler_performance(
-        self, sample_tsx_file: Path, benchmark: MagicMock
-    ) -> None:
+    def test_bundler_performance(self, sample_tsx_file: Path, benchmark: MagicMock) -> None:
         """Benchmark bundling performance."""
         try:
             # Warm up - ensure esbuild is cached

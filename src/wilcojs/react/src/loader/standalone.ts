@@ -7,183 +7,244 @@
  * Usage:
  *   <div data-wilco-component="product_card"
  *        data-wilco-props='{"name": "Widget", "price": "9.99"}'
- *        data-wilco-api="/api">
+ *        data-wilco-api="/api"
+ *        data-wilco-hash="abc123">
  *   </div>
  *   <script src="/static/wilco/loader.js"></script>
  *
  * The loader will:
  * 1. Find all elements with [data-wilco-component]
- * 2. Fetch the component bundle from the API
+ * 2. Fetch the component bundle from the API (with hash for cache busting)
  * 3. Render the component into the container
  */
 
-import * as React from "react";
-import { createRoot } from "react-dom/client";
-import * as ReactJsxRuntime from "react/jsx-runtime";
+import * as React from "react"
+import { createRoot } from "react-dom/client"
+import * as ReactJsxRuntime from "react/jsx-runtime"
 
-type LoadedComponent = React.ComponentType<Record<string, unknown>>;
+type LoadedComponent = React.ComponentType<Record<string, unknown>>
 
 // Module registry for bundled components
 const moduleRegistry: Record<string, unknown> = {
   react: React,
   "react/jsx-runtime": ReactJsxRuntime,
-};
+}
 
 // Expose globally for component bundles
 declare global {
   interface Window {
-    __MODULES__: Record<string, unknown>;
+    __MODULES__: Record<string, unknown>
     wilco: {
-      renderComponent: typeof renderComponent;
-      loadComponent: typeof loadComponent;
-    };
+      renderComponent: typeof renderComponent
+      loadComponent: typeof loadComponent
+      updateComponentProps: typeof updateComponentProps
+    }
   }
 }
 
-window.__MODULES__ = moduleRegistry;
+interface WilcoContainer extends HTMLElement {
+  _wilcoRoot?: ReturnType<typeof createRoot>
+  _wilcoComponent?: LoadedComponent
+  _wilcoProps?: Record<string, unknown>
+}
 
-// Cache for loaded components
-const componentCache = new Map<string, LoadedComponent>();
+window.__MODULES__ = moduleRegistry
+
+// Promise-based cache for loaded components
+// Key format: "componentName" or "componentName?hash" if hash is provided
+// Caching the promise (not the result) prevents duplicate fetches for concurrent requests
+const componentCache = new Map<string, Promise<LoadedComponent>>()
 
 /**
  * Transform ESM code to work with our runtime module registry.
  */
 function transformEsmToRuntime(code: string, componentName: string): string {
-  let transformed = code;
+  let transformed = code
 
   // Extract and preserve the source map comment
-  const sourceMapMarker = "//# sourceMappingURL=";
-  let sourceMapComment = "";
-  const sourceMapIndex = transformed.lastIndexOf(sourceMapMarker);
+  const sourceMapMarker = "//# sourceMappingURL="
+  let sourceMapComment = ""
+  const sourceMapIndex = transformed.lastIndexOf(sourceMapMarker)
   if (sourceMapIndex !== -1) {
-    sourceMapComment = transformed.slice(sourceMapIndex);
-    transformed = transformed.slice(0, sourceMapIndex);
+    sourceMapComment = transformed.slice(sourceMapIndex)
+    transformed = transformed.slice(0, sourceMapIndex)
   }
 
   // Transform imports: import { x } from "react" -> const { x } = window.__MODULES__["react"]
   transformed = transformed.replace(
     /import\s+(\{[^}]+\}|\*\s+as\s+\w+|\w+)\s+from\s*["']([^"']+)["'];?/g,
     (_, imports, moduleName) => {
-      const fixedImports = imports.replace(/(\w+)\s+as\s+(\w+)/g, "$1: $2");
-      return `const ${fixedImports} = window.__MODULES__["${moduleName}"];`;
-    }
-  );
+      const fixedImports = imports.replace(/(\w+)\s+as\s+(\w+)/g, "$1: $2")
+      return `const ${fixedImports} = window.__MODULES__["${moduleName}"];`
+    },
+  )
 
   // Extract default export name: export { Foo as default } -> return Foo
-  const defaultExportMatch = transformed.match(
-    /export\s*\{\s*(\w+)\s+as\s+default\s*\};?/
-  );
+  const defaultExportMatch = transformed.match(/export\s*\{\s*(\w+)\s+as\s+default\s*\};?/)
   if (defaultExportMatch) {
-    const exportName = defaultExportMatch[1];
-    transformed = transformed.replace(/export\s*\{[^}]*\};?/g, "");
-    transformed += `\nreturn ${exportName};`;
+    const exportName = defaultExportMatch[1]
+    transformed = transformed.replace(/export\s*\{[^}]*\};?/g, "")
+    transformed += `\nreturn ${exportName};`
   }
 
   // Add sourceURL for debugging
-  transformed += `\n//# sourceURL=components://bundles/${componentName}.js`;
+  transformed += `\n//# sourceURL=components://bundles/${componentName}.js`
 
   if (sourceMapComment) {
-    transformed += `\n${sourceMapComment}`;
+    transformed += `\n${sourceMapComment}`
   }
 
-  return transformed;
+  return transformed
 }
 
 /**
  * Compile component code into a React component.
  */
 function compileComponent(code: string, componentName: string): LoadedComponent {
-  const transformedCode = transformEsmToRuntime(code, componentName);
+  const transformedCode = transformEsmToRuntime(code, componentName)
 
   try {
-    const moduleFactory = new Function(transformedCode);
-    return moduleFactory() as LoadedComponent;
+    const moduleFactory = new Function(transformedCode)
+    return moduleFactory() as LoadedComponent
   } catch (err) {
-    console.error(`Failed to compile component '${componentName}':`, err);
-    throw err;
+    console.error(`Failed to compile component '${componentName}':`, err)
+    throw err
   }
 }
 
 /**
  * Load a component by name from the API.
+ *
+ * Uses a promise-based cache to prevent duplicate fetches when multiple
+ * containers request the same component simultaneously.
+ *
+ * @param name - Component name (e.g., "store:product")
+ * @param apiBase - Base URL for the API (default: "/api")
+ * @param hash - Optional content hash for cache busting
  */
-async function loadComponent(
-  name: string,
-  apiBase: string = "/api"
-): Promise<LoadedComponent> {
-  const cached = componentCache.get(name);
-  if (cached) return cached;
+async function loadComponent(name: string, apiBase: string = "/api", hash?: string): Promise<LoadedComponent> {
+  // Build cache key - include hash if provided for cache busting
+  const cacheKey = hash ? `${name}?${hash}` : name
 
-  const response = await fetch(`${apiBase}/bundles/${name}.js`);
-  if (!response.ok) {
-    throw new Error(`Component not found: ${name}`);
+  // Check if we already have a promise for this component
+  const cached = componentCache.get(cacheKey)
+  if (cached) return cached
+
+  // Create the fetch promise and cache it immediately
+  // This prevents race conditions where multiple concurrent calls start separate fetches
+  const fetchPromise = (async () => {
+    // Build URL with optional hash query parameter
+    const url = hash ? `${apiBase}/bundles/${name}.js?${hash}` : `${apiBase}/bundles/${name}.js`
+
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`Component not found: ${name}`)
+    }
+
+    const code = await response.text()
+    return compileComponent(code, name)
+  })()
+
+  componentCache.set(cacheKey, fetchPromise)
+
+  try {
+    return await fetchPromise
+  } catch (err) {
+    // Remove from cache on error so retries can work
+    componentCache.delete(cacheKey)
+    throw err
   }
-
-  const code = await response.text();
-  const Component = compileComponent(code, name);
-  componentCache.set(name, Component);
-
-  return Component;
 }
 
 /**
  * Render a component into a container element.
  */
 async function renderComponent(
-  container: HTMLElement,
+  container: WilcoContainer,
   componentName: string,
   props: Record<string, unknown> = {},
-  apiBase: string = "/api"
+  apiBase: string = "/api",
+  hash?: string,
 ): Promise<void> {
   try {
-    const Component = await loadComponent(componentName, apiBase);
-    const root = createRoot(container);
-    root.render(React.createElement(Component, props));
+    const Component = await loadComponent(componentName, apiBase, hash)
+
+    // Reuse existing root if available, otherwise create new one
+    let root = container._wilcoRoot
+    if (!root) {
+      root = createRoot(container)
+      container._wilcoRoot = root
+    }
+
+    root.render(React.createElement(Component, props))
+
+    // Store references for live updates
+    container._wilcoComponent = Component
+    container._wilcoProps = props
   } catch (err) {
-    console.error(`Failed to render component '${componentName}':`, err);
+    console.error(`Failed to render component '${componentName}':`, err)
     container.innerHTML = `<div style="color: red; padding: 1rem;">
       Failed to load component: ${componentName}
-    </div>`;
+    </div>`
   }
+}
+
+/**
+ * Update props on an already-rendered component.
+ */
+function updateComponentProps(container: WilcoContainer, newProps: Record<string, unknown>): boolean {
+  const Component = container._wilcoComponent
+  const root = container._wilcoRoot
+
+  if (!Component || !root) {
+    console.warn("Cannot update props: component not yet loaded")
+    return false
+  }
+
+  root.render(React.createElement(Component, newProps))
+  container._wilcoProps = newProps
+  return true
 }
 
 /**
  * Initialize all wilco component containers on the page.
  */
 function initializeComponents(): void {
-  const containers = document.querySelectorAll<HTMLElement>(
-    "[data-wilco-component]"
-  );
+  const containers = document.querySelectorAll<WilcoContainer>("[data-wilco-component]")
 
   containers.forEach((container) => {
-    const componentName = container.dataset.wilcoComponent;
-    if (!componentName) return;
+    const componentName = container.dataset.wilcoComponent
+    if (!componentName) return
 
-    const propsJson = container.dataset.wilcoProps || "{}";
-    const apiBase = container.dataset.wilcoApi || "/api";
+    const propsJson = container.dataset.wilcoProps || "{}"
+    const apiBase = container.dataset.wilcoApi || "/api"
+    const hash = container.dataset.wilcoHash
 
-    let props: Record<string, unknown> = {};
+    let props: Record<string, unknown> = {}
     try {
-      props = JSON.parse(propsJson);
+      props = JSON.parse(propsJson)
     } catch (err) {
-      console.error(`Invalid props JSON for component '${componentName}':`, err);
+      console.error(`Invalid props JSON for component '${componentName}':`, err)
     }
 
-    renderComponent(container, componentName, props, apiBase);
-  });
+    renderComponent(container, componentName, props, apiBase, hash)
+  })
 }
 
-// Expose API globally
-window.wilco = {
-  renderComponent,
-  loadComponent,
-};
+// Expose API globally (only once)
+if (!window.wilco) {
+  window.wilco = {
+    renderComponent,
+    loadComponent,
+    updateComponentProps,
+  }
 
-// Auto-initialize on DOM ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", initializeComponents);
-} else {
-  initializeComponents();
+  // Auto-initialize on DOM ready (only once)
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initializeComponents)
+  } else {
+    initializeComponents()
+  }
 }
 
-export { loadComponent, renderComponent, transformEsmToRuntime };
+export { loadComponent, renderComponent, updateComponentProps, transformEsmToRuntime }

@@ -142,19 +142,22 @@ class TestWilcoComponentWidget:
 
     def test_props_are_json_serialized(self) -> None:
         """Props should be serialized as valid JSON in data attribute."""
+        import html as html_module
+
         from wilco.bridges.django import WilcoComponentWidget
 
         props = {"text": "Hello <World>", "count": 42, "active": True}
         widget = WilcoComponentWidget("counter", props=props)
-        html = widget.render()
+        rendered = widget.render()
 
-        # Extract props JSON from the HTML
+        # Extract props JSON from the HTML (now uses double quotes and HTML escaping)
         import re
 
-        match = re.search(r"data-wilco-props='([^']*)'", html)
+        match = re.search(r'data-wilco-props="([^"]*)"', rendered)
         assert match is not None
 
-        props_json = match.group(1)
+        # Unescape HTML entities before parsing as JSON
+        props_json = html_module.unescape(match.group(1))
         parsed = json.loads(props_json)
 
         assert parsed == props
@@ -290,7 +293,7 @@ class TestDjangoViewsWithComponents:
 
         assert response["Content-Type"] == "application/javascript"
         assert "Cache-Control" in response
-        assert response["Cache-Control"] == "no-cache"
+        assert response["Cache-Control"] == "public, max-age=31536000, immutable"
 
     def test_get_bundle_contains_valid_js(self) -> None:
         """get_bundle should return valid JavaScript."""
@@ -390,3 +393,236 @@ class TestURLPatterns:
 
         paths = [str(p.pattern) for p in urlpatterns]
         assert any("metadata" in p for p in paths)
+
+
+class TestLivePreviewAdminMixin:
+    """Tests for LivePreviewAdminMixin."""
+
+    def test_mixin_provides_preview_component_attribute(self) -> None:
+        """Mixin should define preview_component attribute."""
+        from wilco.bridges.django.admin import LivePreviewAdminMixin
+
+        class TestAdmin(LivePreviewAdminMixin):
+            preview_component = "test:component"
+
+            def get_preview_props(self, form_data, instance=None):
+                return {"name": form_data.get("name", "")}
+
+        admin = TestAdmin()
+        assert admin.preview_component == "test:component"
+
+    def test_mixin_requires_get_preview_props_method(self) -> None:
+        """Mixin should define get_preview_props method."""
+        from wilco.bridges.django.admin import LivePreviewAdminMixin
+
+        assert hasattr(LivePreviewAdminMixin, "get_preview_props")
+
+    def test_get_preview_props_returns_dict(self) -> None:
+        """get_preview_props should return a dictionary."""
+        from wilco.bridges.django.admin import LivePreviewAdminMixin
+
+        class TestAdmin(LivePreviewAdminMixin):
+            preview_component = "test:component"
+
+            def get_preview_props(self, form_data, instance=None):
+                return {"name": form_data.get("name", "")}
+
+        admin = TestAdmin()
+        result = admin.get_preview_props({"name": "Test"})
+
+        assert isinstance(result, dict)
+        assert result["name"] == "Test"
+
+    def test_validate_preview_returns_props_on_valid_data(self) -> None:
+        """validate_preview should return props when form is valid."""
+        from django.contrib import admin as django_admin
+        from django.contrib.admin.sites import AdminSite
+        from django.db import models
+
+        from wilco.bridges.django.admin import LivePreviewAdminMixin
+
+        # Create a simple test model
+        class DummyModel(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = "test"
+
+        class TestAdmin(LivePreviewAdminMixin, django_admin.ModelAdmin):
+            preview_component = "test:component"
+
+            def get_preview_props(self, form_data, instance=None):
+                return {"name": form_data.get("name", "")}
+
+            def get_form(self, request, obj=None, **kwargs):
+                from django import forms
+
+                class TestForm(forms.ModelForm):
+                    class Meta:
+                        model = DummyModel
+                        fields = ["name"]
+
+                return TestForm
+
+        admin_instance = TestAdmin(DummyModel, AdminSite())
+        request = MagicMock()
+        request.POST = {"name": "Test Product"}
+        request.method = "POST"
+
+        response = admin_instance.validate_preview(request)
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is True
+        assert data["props"]["name"] == "Test Product"
+
+    def test_validate_preview_returns_errors_on_invalid_data(self) -> None:
+        """validate_preview should return errors when form is invalid."""
+        from django.contrib import admin as django_admin
+        from django.contrib.admin.sites import AdminSite
+        from django.db import models
+
+        from wilco.bridges.django.admin import LivePreviewAdminMixin
+
+        class DummyModel(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = "test"
+
+        class TestAdmin(LivePreviewAdminMixin, django_admin.ModelAdmin):
+            preview_component = "test:component"
+
+            def get_preview_props(self, form_data, instance=None):
+                return {"name": form_data.get("name", "")}
+
+            def get_form(self, request, obj=None, **kwargs):
+                from django import forms
+
+                class TestForm(forms.ModelForm):
+                    class Meta:
+                        model = DummyModel
+                        fields = ["name"]
+
+                    def clean_name(self):
+                        name = self.cleaned_data.get("name")
+                        if not name:
+                            raise forms.ValidationError("Name is required")
+                        return name
+
+                return TestForm
+
+        admin_instance = TestAdmin(DummyModel, AdminSite())
+        request = MagicMock()
+        request.POST = {"name": ""}  # Empty name should fail validation
+        request.method = "POST"
+
+        response = admin_instance.validate_preview(request)
+
+        assert response.status_code == 200
+        data = json.loads(response.content)
+        assert data["success"] is False
+        assert "errors" in data
+        assert "name" in data["errors"]
+
+    def test_validate_preview_only_accepts_post(self) -> None:
+        """validate_preview should reject non-POST requests."""
+        from django.contrib import admin as django_admin
+        from django.contrib.admin.sites import AdminSite
+        from django.db import models
+
+        from wilco.bridges.django.admin import LivePreviewAdminMixin
+
+        class DummyModel(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = "test"
+
+        class TestAdmin(LivePreviewAdminMixin, django_admin.ModelAdmin):
+            preview_component = "test:component"
+
+            def get_preview_props(self, form_data, instance=None):
+                return {}
+
+        admin_instance = TestAdmin(DummyModel, AdminSite())
+        request = MagicMock()
+        request.method = "GET"
+
+        response = admin_instance.validate_preview(request)
+
+        assert response.status_code == 405
+
+    def test_preview_field_includes_live_update_attributes(self) -> None:
+        """preview field should include data attributes for live updates."""
+        from django.contrib import admin as django_admin
+        from django.contrib.admin.sites import AdminSite
+        from django.db import models
+
+        from wilco.bridges.django.admin import LivePreviewAdminMixin
+
+        class DummyModel(models.Model):
+            name = models.CharField(max_length=100)
+
+            class Meta:
+                app_label = "test"
+
+        class TestAdmin(LivePreviewAdminMixin, django_admin.ModelAdmin):
+            preview_component = "test:component"
+            readonly_fields = ["preview"]
+
+            def get_preview_props(self, form_data, instance=None):
+                return {"name": form_data.get("name", "")}
+
+        admin_instance = TestAdmin(DummyModel, AdminSite())
+        obj = MagicMock()
+        obj.pk = 1
+        obj.name = "Test"
+        obj._meta = DummyModel._meta
+
+        # Get the preview HTML
+        html = str(admin_instance.preview(obj))
+
+        assert 'data-wilco-live="true"' in html
+        assert "data-wilco-validate-url" in html
+
+
+class TestLivePreviewWidget:
+    """Tests for WilcoComponentWidget with live preview mode."""
+
+    def test_live_mode_adds_data_attribute(self) -> None:
+        """Live mode should add data-wilco-live attribute."""
+        from wilco.bridges.django import WilcoComponentWidget
+
+        widget = WilcoComponentWidget("test:component", live=True)
+        html = widget.render()
+
+        assert 'data-wilco-live="true"' in html
+
+    def test_live_mode_with_validate_url(self) -> None:
+        """Live mode should include validation URL."""
+        from wilco.bridges.django import WilcoComponentWidget
+
+        widget = WilcoComponentWidget("test:component", live=True, validate_url="/admin/test/validate/")
+        html = widget.render()
+
+        assert 'data-wilco-validate-url="/admin/test/validate/"' in html
+
+    def test_live_mode_includes_live_loader_script(self) -> None:
+        """Live mode should include the live loader script."""
+        from wilco.bridges.django import WilcoComponentWidget
+
+        widget = WilcoComponentWidget("test:component", live=True)
+        html = widget.render()
+
+        assert "wilco/live-loader.js" in html
+
+    def test_non_live_mode_does_not_include_live_attributes(self) -> None:
+        """Non-live mode should not include live attributes."""
+        from wilco.bridges.django import WilcoComponentWidget
+
+        widget = WilcoComponentWidget("test:component")
+        html = widget.render()
+
+        assert "data-wilco-live" not in html
+        assert "data-wilco-validate-url" not in html
