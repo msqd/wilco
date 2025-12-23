@@ -20,8 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Product Component Modes**: Example product component now supports `list` and `detail` display modes.
 - **Product List Component**: New `product_list` component for displaying grids of products.
 - **Product Preview Component**: New `product_preview` component showing both list and detail modes for admin preview.
+- **Goober CSS-in-JS**: Integrated goober (~1KB) for styled-components-like styling with design tokens.
+- **useComponent Hook**: Standalone loader now supports `useComponent()` for dynamic component loading with React Suspense.
+- **Client-side Image Preview**: Live preview supports blob URLs for previewing uploaded images before form submission.
 
 ### Changed
+
+- **Barrel Pattern**: Example components now use barrel pattern with separate implementation and style files.
+- **Component Composition**: ProductList and ProductPreview now use `useComponent("store:product")` instead of inline implementations.
 
 - **Bundle Hash**: Metadata endpoint now includes content hash for cache busting.
 - **Cache Headers**: Bundle responses use `immutable` cache directive for better CDN support.

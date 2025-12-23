@@ -21,13 +21,82 @@
 import * as React from "react"
 import { createRoot } from "react-dom/client"
 import * as ReactJsxRuntime from "react/jsx-runtime"
+import * as goober from "goober"
+
+// Initialize goober with React's createElement
+goober.setup(React.createElement)
 
 type LoadedComponent = React.ComponentType<Record<string, unknown>>
+
+// Suspense cache for useComponent hook
+// Stores both the promise and resolved value for each component
+interface SuspenseEntry {
+  promise: Promise<LoadedComponent>
+  result?: LoadedComponent
+  error?: Error
+}
+const suspenseCache = new Map<string, SuspenseEntry>()
+
+/**
+ * React hook to load a component dynamically with Suspense support.
+ *
+ * This hook works with React Suspense - it throws a promise while loading,
+ * causing React to show the nearest Suspense fallback. Once loaded,
+ * subsequent renders return the component synchronously.
+ *
+ * @param name - Component name (e.g., "store:product")
+ * @returns The loaded React component
+ *
+ * @example
+ * ```tsx
+ * import { useComponent } from '@wilcojs/react';
+ *
+ * function ProductPreview(props) {
+ *   const Product = useComponent('store:product');
+ *   return <Product {...props} mode="detail" />;
+ * }
+ * ```
+ */
+function useComponent(name: string): LoadedComponent {
+  // Check if we have a cached entry
+  let entry = suspenseCache.get(name)
+
+  if (!entry) {
+    // Start loading the component
+    const promise = loadComponent(name).then(
+      (component) => {
+        entry!.result = component
+        return component
+      },
+      (error) => {
+        entry!.error = error
+        throw error
+      },
+    )
+    entry = { promise }
+    suspenseCache.set(name, entry)
+  }
+
+  // If we have an error, throw it
+  if (entry.error) {
+    throw entry.error
+  }
+
+  // If we have a result, return it
+  if (entry.result) {
+    return entry.result
+  }
+
+  // Otherwise, throw the promise to trigger Suspense
+  throw entry.promise
+}
 
 // Module registry for bundled components
 const moduleRegistry: Record<string, unknown> = {
   react: React,
   "react/jsx-runtime": ReactJsxRuntime,
+  "@wilcojs/react": { useComponent },
+  goober: goober,
 }
 
 // Expose globally for component bundles
@@ -38,6 +107,7 @@ declare global {
       renderComponent: typeof renderComponent
       loadComponent: typeof loadComponent
       updateComponentProps: typeof updateComponentProps
+      useComponent: typeof useComponent
     }
   }
 }
@@ -157,6 +227,35 @@ async function loadComponent(name: string, apiBase: string = "/api", hash?: stri
 }
 
 /**
+ * Loading fallback component shown while child components load.
+ */
+function LoadingFallback() {
+  return React.createElement(
+    "div",
+    { style: { color: "#666", padding: "1rem", textAlign: "center" } },
+    "Loading...",
+  )
+}
+
+/**
+ * Wrapper component that provides Suspense boundary for child components.
+ * This allows components to use useComponent() for dynamic loading.
+ */
+function SuspenseWrapper({
+  Component,
+  props,
+}: {
+  Component: LoadedComponent
+  props: Record<string, unknown>
+}) {
+  return React.createElement(
+    React.Suspense,
+    { fallback: React.createElement(LoadingFallback) },
+    React.createElement(Component, props),
+  )
+}
+
+/**
  * Render a component into a container element.
  */
 async function renderComponent(
@@ -176,7 +275,8 @@ async function renderComponent(
       container._wilcoRoot = root
     }
 
-    root.render(React.createElement(Component, props))
+    // Wrap in Suspense to support useComponent in child components
+    root.render(React.createElement(SuspenseWrapper, { Component, props }))
 
     // Store references for live updates
     container._wilcoComponent = Component
@@ -201,7 +301,8 @@ function updateComponentProps(container: WilcoContainer, newProps: Record<string
     return false
   }
 
-  root.render(React.createElement(Component, newProps))
+  // Use SuspenseWrapper to maintain Suspense support for child components
+  root.render(React.createElement(SuspenseWrapper, { Component, props: newProps }))
   container._wilcoProps = newProps
   return true
 }
@@ -237,6 +338,7 @@ if (!window.wilco) {
     renderComponent,
     loadComponent,
     updateComponentProps,
+    useComponent,
   }
 
   // Auto-initialize on DOM ready (only once)
@@ -247,4 +349,4 @@ if (!window.wilco) {
   }
 }
 
-export { loadComponent, renderComponent, updateComponentProps, transformEsmToRuntime }
+export { loadComponent, renderComponent, updateComponentProps, useComponent, transformEsmToRuntime }

@@ -276,7 +276,7 @@ def bundle_component(
         RuntimeError: If bundling fails
     """
     if external_deps is None:
-        external_deps = ["react", "react-dom", "react/jsx-runtime", "@wilcojs/react"]
+        external_deps = ["react", "react-dom", "react/jsx-runtime", "@wilcojs/react", "goober"]
 
     if component_name is None:
         component_name = ts_path.stem
