@@ -255,38 +255,38 @@ Live preview adds functions to ``window.wilco``:
 Building the Loader
 ===================
 
-The standalone loader is built as part of the frontend build process:
+The standalone loader is built using esbuild:
 
 .. code-block:: bash
 
+    # Via Makefile
+    make build-loader
+
+    # Or directly
     cd src/wilcojs/react
     pnpm build:loader
 
-This creates ``dist/loader.js`` which should be copied to
+This compiles ``src/loader/standalone.ts`` directly to
 ``src/wilco/bridges/django/static/wilco/loader.js``.
 
-The build configuration in ``vite.config.ts``:
+The build command in ``package.json``:
 
-.. code-block:: typescript
+.. code-block:: bash
 
-    {
-        build: {
-            lib: {
-                entry: "./src/loader/standalone.ts",
-                name: "wilco",
-                fileName: "loader",
-                formats: ["iife"],
-            },
-            rollupOptions: {
-                output: {
-                    inlineDynamicImports: true,
-                },
-            },
-        },
-    }
+    esbuild src/loader/standalone.ts \
+        --bundle \
+        --minify \
+        --format=iife \
+        --outfile=../../wilco/bridges/django/static/wilco/loader.js
 
 The IIFE format ensures the loader is self-contained and doesn't pollute
 the global namespace (except for ``window.__MODULES__`` and ``window.wilco``).
+
+When building the Python wheel, the loader is automatically rebuilt:
+
+.. code-block:: bash
+
+    make wheel  # Runs build-loader, then uv build
 
 Error Handling
 ==============

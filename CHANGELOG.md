@@ -38,3 +38,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added FastAPI integration guide (`docs/fastapi.rst`)
 - Added Django integration guide (`docs/django.rst`)
 - Added standalone loader internals documentation (`docs/internals/standalone.rst`)
+- Added JavaScript architecture overview (`docs/javascripts.rst`)

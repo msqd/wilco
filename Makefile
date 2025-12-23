@@ -1,12 +1,24 @@
-.PHONY: start test test-backend test-frontend install clean wheel format format-python format-frontend
+.PHONY: start test test-backend test-frontend install clean wheel format format-python format-frontend build-loader publish publish-test
 
 # Start development servers (default target)
 start:
 	overmind start
 
-# Build Python wheel
-wheel:
+# Build the standalone loader (compiles TypeScript to JavaScript)
+build-loader:
+	cd src/wilcojs/react && pnpm build:loader
+
+# Build Python wheel (includes pre-built JavaScript assets)
+wheel: build-loader
 	uv build
+
+# Publish to PyPI
+publish: wheel
+	uv run twine upload dist/*
+
+# Publish to TestPyPI (for testing before production release)
+publish-test: wheel
+	uv run twine upload --repository testpypi dist/*
 
 # Run all tests
 test: test-backend test-frontend

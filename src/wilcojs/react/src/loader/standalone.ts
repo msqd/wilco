@@ -230,11 +230,7 @@ async function loadComponent(name: string, apiBase: string = "/api", hash?: stri
  * Loading fallback component shown while child components load.
  */
 function LoadingFallback() {
-  return React.createElement(
-    "div",
-    { style: { color: "#666", padding: "1rem", textAlign: "center" } },
-    "Loading...",
-  )
+  return React.createElement("div", { style: { color: "#666", padding: "1rem", textAlign: "center" } }, "Loading...")
 }
 
 /**

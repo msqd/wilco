@@ -1,12 +1,34 @@
 [project]
 name = "wilco"
-version = "0.1.0"
-description = "Serve React components from Python"
+dynamic = ["version"]
+description = "Serve React components from Python backends"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
+keywords = ["react", "components", "django", "fastapi", "typescript", "esbuild"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.32.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/user/wilco"
+Documentation = "https://github.com/user/wilco#readme"
+Repository = "https://github.com/user/wilco"
+Issues = "https://github.com/user/wilco/issues"
 
 [project.scripts]
 wilco = "wilco.__main__:main"
@@ -19,11 +41,15 @@ dev = [
     "httpx>=0.27.0",
     "django>=4.2.0",
     "ruff>=0.8.0",
+    "twine>=6.0.0",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/wilco/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wilco"]
@@ -40,4 +66,9 @@ exclude = ["node_modules", ".*"]
 
 [tool.ruff.format]
 indent-style = "space"
+
+[dependency-groups]
+dev = [
+    "hatch>=1.16.2",
+]
 
