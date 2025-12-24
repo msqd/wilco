@@ -1,55 +1,95 @@
-.PHONY: start test test-backend test-frontend install clean wheel format format-python format-frontend build-loader publish publish-test
+.PHONY: start test test-backend test-frontend install clean wheel format format-python format-frontend build-loader publish publish-test help
 
-# Start development servers (default target)
-start:
+# Default target
+.DEFAULT_GOAL := start
+
+########################################################################################################################
+# Development
+########################################################################################################################
+
+start:  ## Start development servers (backend + frontend)
 	overmind start
 
-# Build the standalone loader (compiles TypeScript to JavaScript)
-build-loader:
-	cd src/wilcojs/react && pnpm build:loader
-
-# Build Python wheel (includes pre-built JavaScript assets)
-wheel: build-loader
-	uv build
-
-# Publish to PyPI
-publish: wheel
-	uv run twine upload dist/*
-
-# Publish to TestPyPI (for testing before production release)
-publish-test: wheel
-	uv run twine upload --repository testpypi dist/*
-
-# Run all tests
-test: test-backend test-frontend
-
-# Run backend tests (Python/pytest)
-test-backend:
-	uv run pytest
-
-# Run frontend tests (TypeScript typecheck + Vitest)
-test-frontend:
-	cd src/wilcojs/react && pnpm typecheck && pnpm test:run
-
-# Install all dependencies
-install:
+install:  ## Install all dependencies (Python + JavaScript)
 	uv sync
 	cd src/wilcojs/react && pnpm install
 
-# Clean build artifacts
-clean:
+########################################################################################################################
+# Build
+########################################################################################################################
+
+build-loader:  ## Build the standalone loader (TypeScript -> JavaScript)
+	cd src/wilcojs/react && pnpm build:loader
+
+wheel: build-loader  ## Build Python wheel (includes pre-built JS assets)
+	uv build
+
+########################################################################################################################
+# Publishing
+########################################################################################################################
+
+publish: wheel  ## Publish to PyPI
+	uv run twine upload dist/*
+
+publish-test: wheel  ## Publish to TestPyPI (for testing)
+	uv run twine upload --repository testpypi dist/*
+
+########################################################################################################################
+# Testing
+########################################################################################################################
+
+test: test-backend test-frontend  ## Run all tests
+
+test-backend:  ## Run backend tests (Python/pytest)
+	uv run pytest
+
+test-frontend:  ## Run frontend tests (TypeScript typecheck + Vitest)
+	cd src/wilcojs/react && pnpm typecheck && pnpm test:run
+
+########################################################################################################################
+# Code Quality
+########################################################################################################################
+
+format: format-python format-frontend  ## Format all code
+
+format-python:  ## Format Python files with ruff
+	uv run ruff format src tests
+
+format-frontend:  ## Format frontend files with biome
+	cd src/wilcojs/react && pnpm exec biome format --write .
+
+########################################################################################################################
+# Cleanup
+########################################################################################################################
+
+clean:  ## Clean build artifacts
 	rm -rf .pytest_cache
 	rm -rf dist
 	rm -rf src/wilcojs/react/dist
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
-# Format all code
-format: format-python format-frontend
+########################################################################################################################
+# Help
+########################################################################################################################
 
-# Format Python files with ruff (4 spaces, 120 chars)
-format-python:
-	uv run ruff format src tests
-
-# Format frontend files with biome
-format-frontend:
-	cd src/wilcojs/react && pnpm exec biome format --write .
+help:  ## Show available commands
+	@echo "Available commands:"
+	@echo
+	@echo "\033[1mDevelopment\033[0m"
+	@grep -E '^(start|install):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mBuild\033[0m"
+	@grep -E '^(build-loader|wheel):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mPublishing\033[0m"
+	@grep -E '^(publish|publish-test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mTesting\033[0m"
+	@grep -E '^(test|test-backend|test-frontend):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mCode Quality\033[0m"
+	@grep -E '^(format|format-python|format-frontend):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mCleanup\033[0m"
+	@grep -E '^(clean):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo

@@ -1,8 +1,8 @@
 =================
-Standalone Loader
+Standalone loader
 =================
 
-.. contents:: Table of Contents
+.. contents:: Table of contents
    :local:
    :depth: 2
 
@@ -20,10 +20,10 @@ The loader:
 3. Transforms ESM bundles for runtime execution
 4. Manages component lifecycle (mounting, updating, unmounting)
 
-How It Works
+How it works
 ============
 
-Data Attributes
+Data attributes
 ---------------
 
 Components are defined using HTML data attributes:
@@ -56,7 +56,7 @@ Optional attributes:
     Content hash for cache busting. When provided, the loader appends
     it as a query parameter to the bundle URL.
 
-Initialization Flow
+Initialization flow
 -------------------
 
 1. **DOM Ready**: Loader waits for DOMContentLoaded
@@ -66,7 +66,7 @@ Initialization Flow
 5. **Compile**: Executes transformed code via ``new Function()``
 6. **Render**: Creates React root and renders component
 
-Module Registry
+Module registry
 ===============
 
 The loader provides a global module registry that component bundles use:
@@ -97,7 +97,7 @@ The loader transforms this at runtime:
     const { useState } = window.__MODULES__["react"];
     return MyComponent;
 
-ESM Transformation
+ESM transformation
 ==================
 
 The ``transformEsmToRuntime`` function converts ESM syntax:
@@ -205,13 +205,13 @@ Update props on an already-rendered component.
 
 Returns ``true`` if successful, ``false`` if component not yet loaded.
 
-Live Preview Extension
+Live preview extension
 ======================
 
 The ``live-loader.js`` script extends the standalone loader with live
 preview functionality for Django admin forms.
 
-Enabling Live Preview
+Enabling live preview
 ---------------------
 
 Add additional data attributes:
@@ -227,7 +227,7 @@ Add additional data attributes:
     <script src="/static/wilco/loader.js" defer></script>
     <script src="/static/wilco/live-loader.js" defer></script>
 
-How Live Preview Works
+How live preview works
 ----------------------
 
 1. **Event Listening**: Listens for ``blur`` events on form fields
@@ -252,7 +252,7 @@ Live preview adds functions to ``window.wilco``:
 ``clearValidationError(container)``
     Remove validation error display.
 
-Building the Loader
+Building the loader
 ===================
 
 The standalone loader is built using esbuild:
@@ -288,10 +288,10 @@ When building the Python wheel, the loader is automatically rebuilt:
 
     make wheel  # Runs build-loader, then uv build
 
-Error Handling
+Error handling
 ==============
 
-Component Load Errors
+Component load errors
 ---------------------
 
 If a component fails to load, the container displays an error:
@@ -304,7 +304,7 @@ If a component fails to load, the container displays an error:
 
 Errors are also logged to the console with full details.
 
-Compilation Errors
+Compilation errors
 ------------------
 
 If the transformed code fails to compile, the error is logged:
@@ -313,7 +313,7 @@ If the transformed code fails to compile, the error is logged:
 
     console.error("Failed to compile component 'store:product':", error);
 
-Invalid Props JSON
+Invalid props JSON
 ------------------
 
 If ``data-wilco-props`` contains invalid JSON, the error is logged and
@@ -322,7 +322,7 @@ the component renders with empty props.
 Debugging
 =========
 
-Source Maps
+Source maps
 -----------
 
 Component bundles include inline source maps. In browser DevTools, you can:
@@ -337,7 +337,7 @@ The sourceURL comment helps identify component sources:
 
     components://bundles/store:product.js
 
-Performance Considerations
+Performance considerations
 --------------------------
 
 - **Caching**: Bundles are cached with long ``Cache-Control`` headers

@@ -2,145 +2,91 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Project overview
 
-**wilco** is a proof-of-concept framework that enables Python backends to serve isolated React/TypeScript components to a Vite-based frontend. Components are defined in the Python codebase alongside their TypeScript implementations, then dynamically bundled with esbuild and loaded by the frontend at runtime.
+**wilco** is a framework that enables Python backends to serve isolated React/TypeScript components. Components are defined in the Python codebase alongside their TypeScript implementations, then dynamically bundled with esbuild and loaded by the frontend at runtime.
 
 ## Architecture
 
 ```
 wilco/
 ├── pyproject.toml              # Python package config
-├── uv.lock
 ├── src/
-│   ├── wilco/                  # Python package
-│   │   ├── __init__.py
-│   │   ├── __main__.py         # Development server entry point
+│   ├── wilco/                  # Python package (see src/wilco/CLAUDE.md)
 │   │   ├── registry.py         # Component discovery
 │   │   ├── bundler.py          # esbuild integration
-│   │   ├── bridges/
-│   │   │   ├── __init__.py
-│   │   │   └── fastapi.py      # Mountable FastAPI router
+│   │   ├── bridges/            # Framework integrations
 │   │   └── examples/           # Example components
-│   └── wilcojs/                # JavaScript/TypeScript packages
-│       └── react/              # React frontend app
-│           ├── package.json
-│           ├── index.html
-│           ├── src/
-│           │   ├── App.tsx
-│           │   ├── api/
-│           │   │   └── bundles.ts
-│           │   └── loader/
-│           │       ├── ServerComponent.tsx
-│           │       ├── useComponent.ts
-│           │       └── wilco.ts
-│           ├── tsconfig.json
-│           └── vite.config.ts
+│   └── wilcojs/                # JavaScript packages (see src/wilcojs/CLAUDE.md)
+│       └── react/              # React frontend
 ├── tests/                      # Python tests
-└── docs/
+├── docs/                       # Documentation (RST/Sphinx)
+└── examples/                   # Example projects (django-project, etc.)
 ```
-
-### Key Concepts
-
-- **Co-located components**: Each component has a Python package with `__init__.py`, `index.tsx` (React implementation), and optional `schema.json` (metadata/props)
-- **Dynamic bundling**: Backend uses esbuild (from frontend's node_modules) to bundle TypeScript components on-demand
-- **Runtime loading**: Frontend transforms ESM imports to use `window.__MODULES__`, then executes bundled code via `new Function()`
-- **Bridge pattern**: The `wilco.bridges.fastapi` module provides a mountable router factory for easy integration
-
-### API Endpoints
-
-- `GET /api/bundles` - List available bundles (names only)
-- `GET /api/bundles/{name}.js` - Get bundled JavaScript for a component
-- `GET /api/bundles/{name}/metadata` - Get component metadata (title, description, props)
 
 ## Commands
 
-### Backend (Python/uv)
+### Development (recommended)
 
 ```bash
-# Install dependencies
-uv sync
-
-# Run development server (port 8000)
-uv run python -m wilco
-
-# Run tests
-uv run pytest
-uv run pytest tests/test_file.py -k "test_name"
+make start    # Start both backend + frontend via overmind
+make install  # Install all dependencies (Python + JavaScript)
+make test     # Run all tests (backend + frontend)
+make help     # Show all available commands
 ```
 
-### Frontend (Vite/pnpm)
+### Running services manually
 
 ```bash
-cd src/wilcojs/react
+# Use overmind directly
+overmind start
 
-# Install dependencies
-pnpm install
-
-# Run development server (port 5173, proxies /api to backend)
-pnpm dev
-
-# Type checking
-pnpm typecheck
-
-# Build for production
-pnpm build
-```
-
-### Running the POC
-
-**Option 1: Using Procfile (recommended)**
-```bash
-# Install a process manager (honcho, foreman, or overmind)
-pip install honcho  # or: brew install overmind
-
-# Start both services
-honcho start        # or: overmind start
-```
-
-**Option 2: Manual**
-```bash
-# Terminal 1
-uv run python -m wilco
-
-# Terminal 2
-cd src/wilcojs/react && pnpm dev
+# Or run separately:
+# Terminal 1: uv run python -m wilco
+# Terminal 2: cd src/wilcojs/react && pnpm dev
 ```
 
 Open http://localhost:5173
 
-### Hot Reloading
+## Documentation
 
-- **Backend**: uvicorn runs with `reload=True`, auto-reloads on Python file changes
-- **Frontend**: Vite provides HMR (Hot Module Replacement) for instant updates
+All wilco library documentation lives in `docs/` using reStructuredText (Sphinx):
 
-## Adding New Components
+- `docs/fastapi.rst` - FastAPI bridge integration
+- `docs/django.rst` - Django bridge integration
+- `docs/specs/` - Component specifications
+- `docs/internals/` - Internal architecture
 
-1. Create a component package: `src/wilco/examples/<name>/` (or your own components directory)
-2. Add `__init__.py` (can be empty)
-3. Add `index.tsx` with a default export React component
-4. Optionally add `schema.json` with title, description, and props schema
-5. Component will be auto-discovered and available at `/api/bundles/<name>.js`
+Major features should be mentioned in `README.md` with links to detailed documentation.
 
-## Using the Bridge Pattern
+## Key concepts
 
-The `wilco.bridges.fastapi` module provides a `create_router()` factory for integrating with any FastAPI app:
+- **Co-located components**: Each component has `__init__.py`, `index.tsx`, and optional `schema.json`
+- **Barrel pattern**: Use `index.ts` only for exports; put components in their own files
+- **useComponent**: When a component needs another component, use `useComponent` hook instead of direct imports
+- **Bridge pattern**: Framework-specific integrations (see `docs/fastapi.rst`, `docs/django.rst`)
 
-```python
-from fastapi import FastAPI
-from wilco import ComponentRegistry
-from wilco.bridges.fastapi import create_router
+## Development guidelines
 
-app = FastAPI()
-registry = ComponentRegistry(Path("./my_components"))
-app.include_router(create_router(registry), prefix="/api")
-```
+### Interactive decision making
 
-## Frontend State Management
+When adding features, fixing bugs, or writing code, carefully consider the impact and available options. **Always present the user with interactive choices** when there are multiple valid approaches.
 
-Uses `@tanstack/react-query` for server state:
-- `useBundles()` - Fetch list of available bundles
-- `useBundleMetadata(name)` - Fetch metadata for a specific bundle
-- `useBundleCode(name)` - Fetch bundled JavaScript code
+### Testing requirements
 
-Hooks are defined in `src/wilcojs/react/src/api/bundles.ts`.
+All features (frontend and backend) must be tested. Balance test coverage to ensure each test brings value and helps maintain the codebase.
+
+**Critical**:
+- Run tests for new features as you add them
+- Before considering any work done, run ALL tests: `make test`
+
+### Documentation
+
+- Library internals: Document in `docs/` as RST files
+- Major features: Add to `README.md` with links to detailed docs
+- See sub-package CLAUDE.md files for specific guidelines
+
+## Sub-package instructions
+
+- **Python library**: See `src/wilco/CLAUDE.md`
+- **Frontend/React**: See `src/wilcojs/CLAUDE.md`

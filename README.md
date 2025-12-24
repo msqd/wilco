@@ -12,13 +12,25 @@ Wilco lets you define React components alongside your Python code and serve them
 - **Component composition**: Components can dynamically load other components
 - **Framework agnostic**: Mount the API router in any FastAPI (or compatible) app
 
-## Quick Start
+## Quick start
 
 ### Installation
 
 ```bash
+# Core library only
 pip install wilco
+
+# With FastAPI support
+pip install wilco[fastapi]
+
+# With Django support
+pip install wilco[django]
+
+# With both frameworks
+pip install wilco[fastapi,django]
 ```
+
+See [FastAPI Integration](docs/fastapi.rst) and [Django Integration](docs/django.rst) for framework-specific guides.
 
 ### Create a component
 
@@ -80,7 +92,7 @@ function App() {
 }
 ```
 
-## API Endpoints
+## API endpoints
 
 | Endpoint | Description |
 |----------|-------------|
@@ -88,7 +100,7 @@ function App() {
 | `GET /api/bundles/{name}.js` | Get bundled JavaScript |
 | `GET /api/bundles/{name}/metadata` | Get component metadata |
 
-## Component Structure
+## Component structure
 
 Each component is a Python package with:
 
@@ -100,7 +112,7 @@ Each component is a Python package with:
 
 Components can include additional `.tsx` files—they're all bundled together.
 
-## Component Composition
+## Component composition
 
 Components can load other components dynamically:
 
@@ -120,7 +132,7 @@ export default function Dashboard() {
 }
 ```
 
-## Development Server
+## Development server
 
 Run the built-in development server to preview components:
 
@@ -142,7 +154,7 @@ Open http://localhost:5173 to browse and test your components.
 - Node.js (for esbuild bundling)
 - React 18+ on the frontend
 
-## About the Name
+## About the name
 
 Named after **Roger Wilco**, the janitor-turned-hero from Sierra's *Space Quest* series. Roger stumbles into saving the galaxy while just trying to do his job. Like its namesake, this framework gets the job done despite the chaos—bridging Python backends with React frontends through dynamic bundling magic.
 

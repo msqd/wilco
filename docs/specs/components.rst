@@ -1,8 +1,8 @@
 ========================
-Component Specification
+Component specification
 ========================
 
-.. contents:: Table of Contents
+.. contents:: Table of contents
    :local:
    :depth: 3
 
@@ -13,7 +13,7 @@ Wilco components are server-defined React/TypeScript UI elements that can be
 dynamically loaded and rendered by the frontend. This specification defines
 the structure, discovery, bundling, and composition of components.
 
-Design Principles
+Design principles
 -----------------
 
 1. **Simplicity**: Minimal required files, sensible defaults
@@ -22,10 +22,10 @@ Design Principles
 4. **Reusability**: Components can compose other components seamlessly
 5. **Flexibility**: Optional features enhance but don't complicate basics
 
-Component Structure
+Component structure
 ===================
 
-Directory Layout
+Directory layout
 ----------------
 
 Each component is a Python package (directory with ``__init__.py``) located
@@ -40,7 +40,7 @@ under the components directory:
         ├── schema.json      # Optional: Props schema + metadata
         └── *.tsx            # Optional: Additional component files
 
-Component Naming
+Component naming
 ----------------
 
 Component names are derived from their filesystem path relative to the
@@ -57,7 +57,7 @@ The TSX component inside typically uses PascalCase (e.g., ``TextInput.tsx``
 inside ``text_input/``). Use a library like ``pyheck`` for case transformations
 if needed when generating display names from package paths.
 
-Required Files
+Required files
 --------------
 
 __init__.py
@@ -123,7 +123,7 @@ The barrel approach allows better code organization with subcomponents:
 
 All files are bundled together as an atomic package.
 
-Optional Files
+Optional files
 --------------
 
 schema.json
@@ -175,10 +175,10 @@ When absent, the component accepts any props and has no UI metadata.
 - ``properties``: Prop definitions using JSON Schema types
 - ``required``: Array of required prop names
 
-Component Composition
+Component composition
 =====================
 
-The ``useComponent`` Hook
+The ``useComponent`` hook
 -------------------------
 
 Components can dynamically load and render other components using the
@@ -244,7 +244,7 @@ component tree:
       );
     }
 
-Error Handling
+Error handling
 --------------
 
 When a component fails to load (not found, bundle error, etc.), the hook
@@ -264,7 +264,7 @@ throws an error. This should be caught by a React Error Boundary:
       );
     }
 
-Dependency Resolution
+Dependency resolution
 ---------------------
 
 Dependencies between components are resolved **lazily**:
@@ -277,10 +277,10 @@ Dependencies between components are resolved **lazily**:
 **No explicit dependency declaration is required.** The server does not need
 to know about component dependencies ahead of time.
 
-Discovery and Registry
+Discovery and registry
 ======================
 
-Component Discovery
+Component discovery
 -------------------
 
 The backend discovers components by scanning the components directory:
@@ -299,16 +299,16 @@ The backend discovers components by scanning the components directory:
             schema = load_optional(package_dir / 'schema.json')
             registry.register(name, package_dir, schema)
 
-Registry Refresh
+Registry refresh
 ----------------
 
 The registry can be refreshed at runtime to pick up new or modified
 components without server restart (useful for development).
 
-API Endpoints
+API endpoints
 =============
 
-List Components
+List components
 ---------------
 
 .. code-block:: text
@@ -325,7 +325,7 @@ Returns list of available component names:
       {"name": "ui.button"}
     ]
 
-Get Component Bundle
+Get component bundle
 --------------------
 
 .. code-block:: text
@@ -341,7 +341,7 @@ Returns bundled JavaScript code for the component. The bundle:
 
 Response headers include ``Cache-Control: no-cache`` for development.
 
-Get Component Metadata
+Get component metadata
 ----------------------
 
 .. code-block:: text
@@ -377,7 +377,7 @@ If no ``schema.json`` exists, returns minimal metadata:
 Bundling
 ========
 
-esbuild Integration
+esbuild integration
 -------------------
 
 Components are bundled using esbuild with the following configuration:
@@ -388,7 +388,7 @@ Components are bundled using esbuild with the following configuration:
 - **External**: react, react-dom, react/jsx-runtime
 - **Source maps**: Inline with original sources
 
-Source Map Handling
+Source map handling
 -------------------
 
 Source maps are rewritten to use a custom URL scheme for debugging:
@@ -403,7 +403,7 @@ This allows the frontend to:
 2. Map generated code back to original TypeScript
 3. Display meaningful error locations
 
-Module Resolution
+Module resolution
 -----------------
 
 The frontend provides a module registry that bundled code uses:
@@ -426,10 +426,10 @@ ESM imports in bundled code are transformed to use this registry:
     // Transformed
     const { useState } = window.__MODULES__['react'];
 
-Type Safety
+Type safety
 ===========
 
-Current: Runtime Validation
+Current: runtime validation
 ---------------------------
 
 Props are validated at runtime using JSON Schema:
@@ -438,7 +438,7 @@ Props are validated at runtime using JSON Schema:
 2. PropsEditor UI enforces schema constraints
 3. Invalid props show validation errors
 
-Future: TypeScript Generation
+Future: TypeScript generation
 -----------------------------
 
 *Planned but not yet implemented.*
@@ -464,7 +464,7 @@ This will enable:
 Examples
 ========
 
-Minimal Component
+Minimal component
 -----------------
 
 The simplest possible component:
@@ -482,7 +482,7 @@ The simplest possible component:
       return <div>Hello, World!</div>;
     }
 
-Component with Props
+Component with props
 --------------------
 
 A component with typed props and schema:
@@ -527,7 +527,7 @@ A component with typed props and schema:
       "required": ["name"]
     }
 
-Composable Component
+Composable component
 --------------------
 
 A component that uses other components:
@@ -564,7 +564,7 @@ A component that uses other components:
       );
     }
 
-Multi-File Component
+Multi-file component
 --------------------
 
 A larger component with internal organization:
@@ -594,7 +594,7 @@ A larger component with internal organization:
       return <Calendar {...props} />;
     }
 
-Migration from Current Structure
+Migration from current structure
 ================================
 
 The current component structure uses co-located ``.py`` and ``.tsx`` files:
@@ -624,7 +624,7 @@ Migration steps:
 Appendix
 ========
 
-JSON Schema Quick Reference
+JSON Schema quick reference
 ---------------------------
 
 Common property types:
@@ -643,7 +643,7 @@ Common property types:
       }
     }
 
-Error Codes
+Error codes
 -----------
 
 +------------------------+------------------------------------------------+

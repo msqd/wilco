@@ -4,8 +4,6 @@ import react from "@vitejs/plugin-react"
 
 export default defineConfig({
   plugins: [react()],
-  // Suppress source map warnings in tests
-  logLevel: "error",
   server: {
     proxy: {
       "/api": {

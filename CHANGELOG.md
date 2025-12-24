@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Optional Dependencies**: Install framework-specific dependencies with extras: `pip install wilco[fastapi]`, `pip install wilco[django]`, or both: `pip install wilco[fastapi,django]`. Core package has no required dependencies.
+
 - **Django Admin Live Preview**: New `LivePreviewAdminMixin` enables real-time component preview in Django admin forms. The preview updates automatically when form fields lose focus, showing validation errors or the updated component.
 - **Standalone Loader**: Self-contained JavaScript loader (`loader.js`) for rendering wilco components in server-rendered pages without a full React app. Includes React, transforms ESM bundles at runtime, and manages component lifecycle.
 - **Live Loader Extension**: Additional `live-loader.js` script that adds live preview functionality to the standalone loader, with debounced validation and error display.

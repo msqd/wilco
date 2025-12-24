@@ -1,5 +1,27 @@
-**/.DS_Store
-**/__pycache__/*.pyc
-/.idea/
+# OS
+*/.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.ruff_cache/
+.pytest_cache/
+.benchmarks/
+
+# JavaScript
 node_modules/
+
+# IDEs
+.idea/
+*.iml
+
+# Build outputs
 /dist/
+
+# Runtime
+.overmind.sock
+
+# Claude Code
+.claude/

@@ -1,8 +1,8 @@
 ==================
-Django Integration
+Django integration
 ==================
 
-.. contents:: Table of Contents
+.. contents:: Table of contents
    :local:
    :depth: 2
 
@@ -18,6 +18,17 @@ The Django bridge provides deep integration with Django, including:
 
 Installation
 ============
+
+Install wilco with Django support using the optional extra:
+
+.. code-block:: bash
+
+    pip install wilco[django]
+
+This installs wilco with Django (>= 4.2.0).
+
+Configuration
+-------------
 
 Add ``wilco.bridges.django`` to your ``INSTALLED_APPS``:
 
@@ -39,10 +50,10 @@ Include the wilco URLs in your ``urls.py``:
         # ...
     ]
 
-Quick Start
+Quick start
 ===========
 
-Components in Django Apps
+Components in Django apps
 -------------------------
 
 Place components in a ``components/`` directory inside any Django app:
@@ -61,7 +72,7 @@ Place components in a ``components/`` directory inside any Django app:
 Components are automatically discovered and prefixed with the app label.
 For example, ``myapp/components/product/`` becomes ``myapp:product``.
 
-Global Components
+Global components
 -----------------
 
 You can also set a global components directory:
@@ -83,12 +94,12 @@ Settings
 ``WILCO_AUTODISCOVER``
     Whether to auto-discover components from Django apps (default: ``True``).
 
-Template Tags
+Template tags
 =============
 
 Wilco provides template tags for rendering components in Django templates.
 
-Loading Components
+Loading components
 ------------------
 
 .. code-block:: html+django
@@ -136,12 +147,12 @@ Includes the wilco loader script. Call once at the end of your template.
         {% wilco_loader_script %}
     </body>
 
-Admin Widget
+Admin widget
 ============
 
 The ``WilcoComponentWidget`` class renders components in the Django admin.
 
-Basic Usage
+Basic usage
 -----------
 
 .. code-block:: python
@@ -167,7 +178,7 @@ Basic Usage
                 },
             ).render()
 
-Widget Options
+Widget options
 --------------
 
 .. code-block:: python
@@ -180,13 +191,13 @@ Widget Options
         validate_url=None,  # URL for validation endpoint (required if live=True)
     )
 
-Live Preview Admin Mixin
+Live preview admin mixin
 ========================
 
 The ``LivePreviewAdminMixin`` adds automatic live preview to admin forms.
 When users edit form fields, the preview updates in real-time.
 
-Basic Setup
+Basic setup
 -----------
 
 .. code-block:: python
@@ -213,7 +224,7 @@ Basic Setup
                 "description": form_data.get("description", ""),
             }
 
-How It Works
+How it works
 ------------
 
 1. The mixin adds a ``validate_preview/`` endpoint to the admin URLs
@@ -222,7 +233,7 @@ How It Works
 4. On success: new props are returned and the component re-renders
 5. On failure: validation errors are displayed above the preview
 
-Required Implementation
+Required implementation
 -----------------------
 
 You must implement ``get_preview_props``:
@@ -241,7 +252,7 @@ You must implement ``get_preview_props``:
             Dictionary of props for the component.
         """
 
-Handling File Fields
+Handling file fields
 --------------------
 
 File fields require special handling since they're not included in POST data
@@ -264,7 +275,7 @@ when unchanged:
             "imageUrl": image_url,
         }
 
-Customizing Preview Display
+Customizing preview display
 ---------------------------
 
 Override ``get_preview_props_from_obj`` for different logic when displaying
@@ -291,7 +302,7 @@ an existing object vs. processing form data:
             "discountedPrice": price * 0.9,
         }
 
-API Endpoints
+API endpoints
 =============
 
 The Django bridge provides these endpoints:
@@ -305,7 +316,7 @@ The Django bridge provides these endpoints:
 ``GET /api/bundles/{name}/metadata``
     Get component metadata including hash.
 
-Bundle Caching
+Bundle caching
 --------------
 
 Bundles are cached in memory with file modification time (mtime) invalidation.
@@ -323,7 +334,7 @@ To manually clear the cache:
     # Clear specific component
     clear_bundle_cache("store:product")
 
-Complete Example
+Complete example
 ================
 
 Here's a full example integrating wilco with Django Unfold admin:

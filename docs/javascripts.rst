@@ -1,8 +1,8 @@
 =======================
-JavaScript Architecture
+JavaScript architecture
 =======================
 
-.. contents:: Table of Contents
+.. contents:: Table of contents
    :local:
    :depth: 2
 
@@ -22,7 +22,7 @@ All JavaScript assets are pre-built and included in the Python wheel, so users
 don't need Node.js installed to use wilco. However, **esbuild is required**
 for runtime component bundling.
 
-File Structure
+File structure
 ==============
 
 .. code-block:: text
@@ -38,7 +38,7 @@ File Structure
 The ``loader.js`` file is compiled from ``standalone.ts`` using esbuild. This
 happens during package release (via ``make wheel``), not at install time.
 
-Standalone Loader
+Standalone loader
 =================
 
 The standalone loader (``loader.js``) is a self-contained IIFE that bundles:
@@ -50,7 +50,7 @@ The standalone loader (``loader.js``) is a self-contained IIFE that bundles:
 
 Size: ~195KB minified (includes React)
 
-How It Works
+How it works
 ------------
 
 1. Waits for ``DOMContentLoaded``
@@ -72,7 +72,7 @@ Example usage:
     </div>
     <script src="/static/wilco/loader.js" defer></script>
 
-Module Registry
+Module registry
 ---------------
 
 Components are bundled with external dependencies (React, goober) that are
@@ -94,7 +94,7 @@ This allows components to use standard imports:
     import React, { useState } from "react";
     import { styled } from "goober";
 
-useComponent Hook
+useComponent hook
 -----------------
 
 The loader provides a ``useComponent`` hook for dynamic component loading
@@ -128,7 +128,7 @@ The loader exposes ``window.wilco`` for programmatic control:
     // Update props on a mounted component
     window.wilco.updateComponentProps(container, newProps);
 
-Live Loader
+Live loader
 ===========
 
 The live loader (``live-loader.js``) extends the standalone loader for Django
@@ -154,7 +154,7 @@ Usage:
     <script src="/static/wilco/loader.js" defer></script>
     <script src="/static/wilco/live-loader.js" defer></script>
 
-Image Preview
+Image preview
 -------------
 
 When users select an image file, the live loader creates a blob URL for
@@ -168,7 +168,7 @@ instant preview without uploading:
 
 This works transparently with components that accept ``imageUrl`` props.
 
-Building the Loader
+Building the loader
 ===================
 
 The loader is pre-built in the wheel, but for development:
@@ -198,7 +198,7 @@ The build command uses esbuild:
         --format=iife \
         --outfile=../../wilco/bridges/django/static/wilco/loader.js
 
-Runtime Requirements
+Runtime requirements
 ====================
 
 To **use** wilco components (render on pages):
@@ -220,7 +220,7 @@ Install esbuild globally:
 
 Or let wilco use npx to download it automatically.
 
-Component Bundles
+Component bundles
 =================
 
 When a component is requested, wilco's Python bundler:
@@ -242,7 +242,7 @@ Bundler configuration:
 
 External dependencies are resolved via the module registry at runtime.
 
-See Also
+See also
 ========
 
 - :doc:`internals/standalone` - Detailed loader internals

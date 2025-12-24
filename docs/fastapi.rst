@@ -1,8 +1,8 @@
 ==================
-FastAPI Integration
+FastAPI integration
 ==================
 
-.. contents:: Table of Contents
+.. contents:: Table of contents
    :local:
    :depth: 2
 
@@ -16,14 +16,20 @@ getting metadata for components.
 Installation
 ============
 
-Wilco is designed to work with FastAPI out of the box. Ensure you have
-both packages installed:
+Install wilco with FastAPI support using the optional extra:
 
 .. code-block:: bash
 
-    pip install wilco fastapi uvicorn
+    pip install wilco[fastapi]
 
-Quick Start
+This installs wilco with FastAPI (>= 0.115.0). For development, you'll also
+want uvicorn:
+
+.. code-block:: bash
+
+    pip install wilco[fastapi] uvicorn
+
+Quick start
 ===========
 
 Here's a minimal example that serves components from a directory:
@@ -53,7 +59,7 @@ This creates three endpoints:
 - ``GET /api/bundles/{name}.js`` - Get bundled JavaScript
 - ``GET /api/bundles/{name}/metadata`` - Get component metadata
 
-API Reference
+API reference
 =============
 
 create_router
@@ -141,10 +147,10 @@ The ``hash`` field can be used for cache busting on the frontend.
 
 - ``404``: Component not found
 
-Component Registry
+Component registry
 ==================
 
-Multiple Sources
+Multiple sources
 ----------------
 
 You can register components from multiple directories:
@@ -180,7 +186,7 @@ To enable cache busting:
 
 The hash changes whenever the component source changes.
 
-Full Example
+Full example
 ============
 
 Here's a complete example with CORS and development server:
@@ -218,7 +224,7 @@ Here's a complete example with CORS and development server:
         import uvicorn
         uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
 
-Frontend Integration
+Frontend integration
 ====================
 
 From the frontend, you can load components using the wilco loader:

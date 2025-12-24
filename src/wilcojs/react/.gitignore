@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+*.iml
+
+# Testing/benchmarks
+.pytest_cache/
+.benchmarks/
