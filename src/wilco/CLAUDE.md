@@ -11,7 +11,7 @@ wilco/
 ├── registry.py         # Component discovery and registration
 ├── bundler.py          # esbuild integration for bundling TypeScript
 ├── bridges/            # Framework-specific integrations
-│   ├── fastapi.py      # FastAPI router factory
+│   ├── fastapi/        # FastAPI router factory
 │   └── django/         # Django app with views, widgets, templatetags
 └── examples/           # Example components for testing/demos
 ```

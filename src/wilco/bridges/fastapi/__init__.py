@@ -14,8 +14,8 @@ if importlib.util.find_spec("fastapi") is None:
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-from ..bundler import bundle_component
-from ..registry import ComponentRegistry
+from ...bundler import bundle_component
+from ...registry import ComponentRegistry
 
 
 def create_router(registry: ComponentRegistry) -> APIRouter:
@@ -82,3 +82,6 @@ def create_router(registry: ComponentRegistry) -> APIRouter:
         return metadata
 
     return router
+
+
+__all__ = ["create_router"]
