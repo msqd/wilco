@@ -70,7 +70,7 @@ Major features should be mentioned in `README.md` with links to detailed documen
 
 ### Interactive decision making
 
-When adding features, fixing bugs, or writing code, carefully consider the impact and available options. **Always present the user with interactive choices** when there are multiple valid approaches.
+When adding features, fixing bugs, or writing code, carefully consider the impact and available options. **Always present the user with interactive choices** when there are multiple valid approaches, using AskUserQuestion.
 
 ### Testing requirements
 

@@ -24,4 +24,5 @@ node_modules/
 .overmind.sock
 
 # Claude Code
-.claude/
+.claude/*
+!.claude/commands/
