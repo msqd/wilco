@@ -6,10 +6,7 @@ Requires: pip install wilco[fastapi]
 import importlib.util
 
 if importlib.util.find_spec("fastapi") is None:
-    raise ImportError(
-        "FastAPI is required for the FastAPI bridge. "
-        "Install it with: pip install wilco[fastapi]"
-    )
+    raise ImportError("FastAPI is required for the FastAPI bridge. Install it with: pip install wilco[fastapi]")
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response

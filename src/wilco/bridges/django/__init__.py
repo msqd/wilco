@@ -43,10 +43,7 @@ For live preview in admin:
 import importlib.util
 
 if importlib.util.find_spec("django") is None:
-    raise ImportError(
-        "Django is required for the Django bridge. "
-        "Install it with: pip install wilco[django]"
-    )
+    raise ImportError("Django is required for the Django bridge. Install it with: pip install wilco[django]")
 
 from .admin import LivePreviewAdminMixin
 from .apps import WilcoBridgeConfig
