@@ -124,10 +124,13 @@ MEDIA_ROOT = BASE_DIR / "resources" / "media"
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
 # Unfold Admin Theme
 def _static(path):
     from django.templatetags.static import static
+
     return lambda request: static(path)
+
 
 UNFOLD = {
     "SITE_TITLE": "Wilco Shop Administration",
