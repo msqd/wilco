@@ -1,38 +1,48 @@
-.PHONY: start test test-backend test-frontend install clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
+.PHONY: start test test-backend test-frontend install install-dev clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
 
 # Default target
 .DEFAULT_GOAL := start
+
+# helpers
+define execute
+@echo "⚙️ \033[36m$@\033[0m: \033[2m$(1)\033[0m"
+@$(1)
+endef
 
 ########################################################################################################################
 # Development
 ########################################################################################################################
 
 start:  ## Start development servers (backend + frontend)
-	overmind start
+	$(call execute,overmind start)
 
-install:  ## Install all dependencies (Python + JavaScript)
-	uv sync
-	cd src/wilcojs/react && pnpm install
+install:  ## Install dependencies (Python + JavaScript)
+	$(call execute,uv sync)
+	$(call execute,cd src/wilcojs/react && pnpm install)
+
+install-dev:  ## Install dependencies with dev tools (Python + JavaScript)
+	$(call execute,uv sync --extra dev --group dev)
+	$(call execute,cd src/wilcojs/react && pnpm install)
 
 ########################################################################################################################
 # Build
 ########################################################################################################################
 
 build-loader:  ## Build the standalone loader (TypeScript -> JavaScript)
-	cd src/wilcojs/react && pnpm build:loader
+	$(call execute,cd src/wilcojs/react && pnpm build:loader)
 
 wheel: build-loader  ## Build Python wheel (includes pre-built JS assets)
-	uv build
+	$(call execute,uv build)
 
 ########################################################################################################################
 # Publishing
 ########################################################################################################################
 
 publish: wheel  ## Publish to PyPI
-	uv run twine upload dist/*
+	$(call execute,uv run twine upload dist/*)
 
 publish-test: wheel  ## Publish to TestPyPI (for testing)
-	uv run twine upload --repository testpypi dist/*
+	$(call execute,uv run twine upload --repository testpypi dist/*)
 
 ########################################################################################################################
 # Testing
@@ -40,21 +50,21 @@ publish-test: wheel  ## Publish to TestPyPI (for testing)
 
 test: test-backend test-frontend  ## Run all tests
 
-test-backend:  ## Run backend tests (Python/pytest)
-	uv run pytest
+test-backend: install-dev  ## Run backend tests (Python/pytest)
+	$(call execute,uv run pytest)
 
 test-frontend:  ## Run frontend tests (TypeScript typecheck + Vitest)
-	cd src/wilcojs/react && pnpm typecheck && pnpm test:run
+	$(call execute,cd src/wilcojs/react && pnpm typecheck && pnpm test:run)
 
 ########################################################################################################################
 # Documentation
 ########################################################################################################################
 
-docs:  ## Build documentation with Sphinx
-	uv run sphinx-build -b html docs docs/_build/html
+docs: install-dev  ## Build documentation with Sphinx
+	$(call execute,uv run sphinx-build -b html docs docs/_build/html)
 
-docs-watch:  ## Build documentation and watch for changes
-	uv run sphinx-autobuild docs docs/_build/html --watch src
+docs-watch: install-dev  ## Build documentation and watch for changes
+	$(call execute,uv run sphinx-autobuild docs docs/_build/html --watch src)
 
 ########################################################################################################################
 # Code Quality
@@ -62,11 +72,11 @@ docs-watch:  ## Build documentation and watch for changes
 
 format: format-python format-frontend  ## Format all code
 
-format-python:  ## Format Python files with ruff
-	uv run ruff format src tests
+format-python: install-dev  ## Format Python files with ruff
+	$(call execute,uv run ruff format src tests)
 
 format-frontend:  ## Format frontend files with biome
-	cd src/wilcojs/react && pnpm exec biome format --write .
+	$(call execute,cd src/wilcojs/react && pnpm exec biome format --write .)
 
 ########################################################################################################################
 # Cleanup
@@ -87,7 +97,7 @@ help:  ## Show available commands
 	@echo "Available commands:"
 	@echo
 	@echo "\033[1mDevelopment\033[0m"
-	@grep -E '^(start|install):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(start|install|install-dev):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mBuild\033[0m"
 	@grep -E '^(build-loader|wheel):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

@@ -1,10 +1,6 @@
 =======================
-JavaScript architecture
+JavaScript Architecture
 =======================
-
-.. contents:: Table of contents
-   :local:
-   :depth: 2
 
 Overview
 ========
@@ -100,7 +96,7 @@ useComponent hook
 The loader provides a ``useComponent`` hook for dynamic component loading
 with React Suspense:
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     import { useComponent } from "@wilcojs/react";
 

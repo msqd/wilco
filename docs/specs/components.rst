@@ -1,10 +1,6 @@
-========================
-Component specification
-========================
-
-.. contents:: Table of contents
-   :local:
-   :depth: 3
+=======================
+Component Specification
+=======================
 
 Overview
 ========
@@ -81,7 +77,7 @@ The entry point for the component. Must export a default React component.
 
 **Option 1: Direct implementation**
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // index.tsx - component defined directly
     interface ButtonProps {
@@ -100,7 +96,7 @@ The entry point for the component. Must export a default React component.
 
 **Option 2: Barrel file (recommended for larger components)**
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // index.tsx - re-exports from implementation file
     export { default } from './Button';
@@ -184,7 +180,7 @@ The ``useComponent`` hook
 Components can dynamically load and render other components using the
 ``useComponent`` hook:
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     import { useComponent } from '@wilcojs/react';
 
@@ -211,7 +207,7 @@ Implementation with React Query
 - **Background refetching**: Stale components can be refreshed automatically
 - **Suspense integration**: Works seamlessly with React Suspense boundaries
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // Simplified implementation
     import { useSuspenseQuery } from '@tanstack/react-query';
@@ -229,7 +225,7 @@ Implementation with React Query
 The hook requires a ``QueryClientProvider`` and ``Suspense`` boundary in the
 component tree:
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     import { QueryClientProvider } from '@tanstack/react-query';
     import { Suspense } from 'react';
@@ -250,7 +246,7 @@ Error handling
 When a component fails to load (not found, bundle error, etc.), the hook
 throws an error. This should be caught by a React Error Boundary:
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     import { ErrorBoundary } from 'react-error-boundary';
 
@@ -408,7 +404,7 @@ Module resolution
 
 The frontend provides a module registry that bundled code uses:
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     window.__MODULES__ = {
       'react': React,
@@ -445,7 +441,7 @@ Future: TypeScript generation
 
 TypeScript type definitions will be generated from JSON Schema:
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // Generated from schema.json
     export interface CounterProps {
@@ -475,7 +471,7 @@ The simplest possible component:
     ├── __init__.py
     └── index.tsx
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // index.tsx
     export default function Hello() {
@@ -494,7 +490,7 @@ A component with typed props and schema:
     ├── index.tsx
     └── schema.json
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // index.tsx
     interface GreetingProps {
@@ -538,7 +534,7 @@ A component that uses other components:
     ├── __init__.py
     └── index.tsx
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // index.tsx
     import { useComponent } from '@wilcojs/react';
@@ -580,7 +576,7 @@ A larger component with internal organization:
     ├── utils.ts
     └── schema.json
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // index.tsx
     export { default } from './DatePicker';

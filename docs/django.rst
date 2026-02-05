@@ -1,10 +1,6 @@
 ==================
-Django integration
+Django Integration
 ==================
-
-.. contents:: Table of contents
-   :local:
-   :depth: 2
 
 Overview
 ========
@@ -394,7 +390,7 @@ Here's a full example integrating wilco with Django Unfold admin:
 
 Component with both list and detail views:
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     // components/product_preview/index.tsx
     import React from "react";

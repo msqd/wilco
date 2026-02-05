@@ -1,10 +1,6 @@
-==================
-FastAPI integration
-==================
-
-.. contents:: Table of contents
-   :local:
-   :depth: 2
+===================
+FastAPI Integration
+===================
 
 Overview
 ========
@@ -175,7 +171,7 @@ Caching
 
 The FastAPI bridge returns long-lived cache headers for component bundles:
 
-.. code-block:: http
+.. code-block:: text
 
     Cache-Control: public, max-age=31536000, immutable
 
@@ -229,7 +225,7 @@ Frontend integration
 
 From the frontend, you can load components using the wilco loader:
 
-.. code-block:: typescript
+.. code-block:: tsx
 
     import { useComponent } from '@wilcojs/react';
 
