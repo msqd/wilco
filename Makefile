@@ -1,4 +1,4 @@
-.PHONY: start test test-backend test-frontend install clean wheel format format-python format-frontend build-loader publish publish-test help
+.PHONY: start test test-backend test-frontend install clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
 
 # Default target
 .DEFAULT_GOAL := start
@@ -47,6 +47,16 @@ test-frontend:  ## Run frontend tests (TypeScript typecheck + Vitest)
 	cd src/wilcojs/react && pnpm typecheck && pnpm test:run
 
 ########################################################################################################################
+# Documentation
+########################################################################################################################
+
+docs:  ## Build documentation with Sphinx
+	uv run sphinx-build -b html docs docs/_build/html
+
+docs-watch:  ## Build documentation and watch for changes
+	uv run sphinx-autobuild docs docs/_build/html --watch src
+
+########################################################################################################################
 # Code Quality
 ########################################################################################################################
 
@@ -65,6 +75,7 @@ format-frontend:  ## Format frontend files with biome
 clean:  ## Clean build artifacts
 	rm -rf .pytest_cache
 	rm -rf dist
+	rm -rf docs/_build
 	rm -rf src/wilcojs/react/dist
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
@@ -86,6 +97,9 @@ help:  ## Show available commands
 	@echo
 	@echo "\033[1mTesting\033[0m"
 	@grep -E '^(test|test-backend|test-frontend):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mDocumentation\033[0m"
+	@grep -E '^(docs|docs-watch):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mCode Quality\033[0m"
 	@grep -E '^(format|format-python|format-frontend):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

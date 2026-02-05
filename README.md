@@ -2,35 +2,25 @@
 
 **Server-defined React components for Python backends.**
 
-Wilco lets you define React components alongside your Python code and serve them dynamically to any frontend. Components are bundled on-demand with esbuild and loaded at runtime—no build step required for your component library.
+[![PyPI version](https://img.shields.io/pypi/v/wilco.svg)](https://pypi.python.org/pypi/wilco)
+[![Python versions](https://img.shields.io/pypi/pyversions/wilco.svg)](https://pypi.python.org/pypi/wilco)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Why wilco?
+**Documentation:** [FastAPI Guide](docs/fastapi.rst) | [Django Guide](docs/django.rst)
 
-- **Co-locate components with backend logic**: Keep your UI components next to the Python code that powers them
-- **No frontend build pipeline**: Components are bundled on-the-fly when requested
-- **Full source map support**: Debug your TypeScript directly in browser devtools
-- **Component composition**: Components can dynamically load other components
-- **Framework agnostic**: Mount the API router in any FastAPI (or compatible) app
+## Features
 
-## Quick start
+- **Co-locate components with backend logic** — Keep UI components next to the Python code that powers them
+- **No frontend build pipeline** — Components bundled on-the-fly with esbuild when requested
+- **Full source map support** — Debug TypeScript directly in browser devtools
+- **Component composition** — Components can dynamically load other components
+- **Framework agnostic** — Works with FastAPI, Django, or any ASGI-compatible framework
 
-### Installation
+## Quick Start
 
 ```bash
-# Core library only
-pip install wilco
-
-# With FastAPI support
-pip install wilco[fastapi]
-
-# With Django support
-pip install wilco[django]
-
-# With both frameworks
-pip install wilco[fastapi,django]
+pip install wilco[fastapi]  # or wilco[django]
 ```
-
-See [FastAPI Integration](docs/fastapi.rst) and [Django Integration](docs/django.rst) for framework-specific guides.
 
 ### Create a component
 
@@ -55,19 +45,6 @@ export default function Greeting({ name, formal = false }: GreetingProps) {
 }
 ```
 
-```json
-{
-  "title": "Greeting",
-  "description": "A friendly greeting component",
-  "type": "object",
-  "properties": {
-    "name": { "type": "string" },
-    "formal": { "type": "boolean", "default": false }
-  },
-  "required": ["name"]
-}
-```
-
 ### Mount the API
 
 ```python
@@ -81,7 +58,7 @@ registry = ComponentRegistry(Path("./my_components"))
 app.include_router(create_router(registry), prefix="/api")
 ```
 
-### Load components in React
+### Load in React
 
 ```tsx
 import { useComponent } from '@wilcojs/react';
@@ -92,7 +69,9 @@ function App() {
 }
 ```
 
-## API endpoints
+For component schemas, composition patterns, and framework-specific guides, see the [documentation](docs/).
+
+## API Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
@@ -100,64 +79,22 @@ function App() {
 | `GET /api/bundles/{name}.js` | Get bundled JavaScript |
 | `GET /api/bundles/{name}/metadata` | Get component metadata |
 
-## Component structure
-
-Each component is a Python package with:
-
-| File | Required | Description |
-|------|----------|-------------|
-| `__init__.py` | Yes | Package marker |
-| `index.tsx` | Yes | React component (default export) |
-| `schema.json` | No | Props schema and metadata |
-
-Components can include additional `.tsx` files—they're all bundled together.
-
-## Component composition
-
-Components can load other components dynamically:
-
-```tsx
-import { useComponent } from '@wilcojs/react';
-
-export default function Dashboard() {
-  const Chart = useComponent('chart');
-  const Table = useComponent('table');
-
-  return (
-    <div>
-      <Chart data={...} />
-      <Table rows={...} />
-    </div>
-  );
-}
-```
-
-## Development server
-
-Run the built-in development server to preview components:
-
-```bash
-uv run python -m wilco
-```
-
-Then start the frontend:
-
-```bash
-cd src/wilcojs/react && pnpm dev
-```
-
-Open http://localhost:5173 to browse and test your components.
-
 ## Requirements
 
 - Python 3.10+
 - Node.js (for esbuild bundling)
 - React 18+ on the frontend
 
-## About the name
+## Development
 
-Named after **Roger Wilco**, the janitor-turned-hero from Sierra's *Space Quest* series. Roger stumbles into saving the galaxy while just trying to do his job. Like its namesake, this framework gets the job done despite the chaos—bridging Python backends with React frontends through dynamic bundling magic.
+This project follows strict TDD methodology. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+
+```bash
+make test    # Run all tests
+make docs    # Build documentation
+make help    # Show all available commands
+```
 
 ## License
 
-MIT
+MIT License — see [LICENSE](LICENSE) for details.
