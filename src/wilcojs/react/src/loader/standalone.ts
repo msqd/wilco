@@ -298,9 +298,10 @@ async function renderComponent(
     container._wilcoProps = props
   } catch (err) {
     console.error(`Failed to render component '${componentName}':`, err)
-    container.innerHTML = `<div style="color: red; padding: 1rem;">
-      Failed to load component: ${componentName}
-    </div>`
+    const errorDiv = document.createElement("div")
+    errorDiv.style.cssText = "color: red; padding: 1rem;"
+    errorDiv.textContent = `Failed to load component: ${componentName}`
+    container.replaceChildren(errorDiv)
   }
 }
 
@@ -341,9 +342,10 @@ function initializeComponents(): void {
       props = JSON.parse(propsJson)
     } catch (err) {
       console.error(`Invalid props JSON for component '${componentName}':`, err)
-      container.innerHTML = `<div style="color: red; padding: 1rem;">
-        Invalid props JSON for component: ${componentName}
-      </div>`
+      const errorDiv = document.createElement("div")
+      errorDiv.style.cssText = "color: red; padding: 1rem;"
+      errorDiv.textContent = `Invalid props JSON for component: ${componentName}`
+      container.replaceChildren(errorDiv)
       return // Don't attempt render with potentially wrong props
     }
 

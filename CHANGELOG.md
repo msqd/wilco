@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Security
 
 - Component name validation prevents path traversal attacks (`..` and `/` characters are rejected)
+- Standalone loader error messages use `textContent` instead of `innerHTML` to prevent XSS
 
 ## [0.1.3] - 2025-12-24
 
