@@ -3,6 +3,13 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/loader/wilco.ts",
+      "import": "./src/loader/wilco.ts"
+    }
+  },
+  "main": "./src/loader/wilco.ts",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -29,12 +36,14 @@
     "vitest": "^4.0.16"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.90.12",
     "goober": "^2.1.18",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
     "react-error-boundary": "^6.0.0",
     "source-map-js": "^1.2.1",
     "stacktracey": "^2.1.8"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   }
 }

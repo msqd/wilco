@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Peer Dependencies**: React, ReactDOM, and TanStack Query are now peer dependencies, allowing host applications to provide their own versions
+- **Package Exports**: Added proper ESM exports field for better bundler compatibility
 - **Named Export Resolution**: `useComponent('contact', 'ContactRow')` now correctly returns the named export instead of the default
 - **Import Transformation**: Standalone loader correctly handles default imports with `.default` accessor
 - **Multi-line Exports**: Export statements spanning multiple lines are now properly handled

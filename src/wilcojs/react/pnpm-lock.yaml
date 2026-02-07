@@ -9,16 +9,16 @@ importers:
   .:
     dependencies:
       '@tanstack/react-query':
-        specifier: ^5.90.12
+        specifier: ^5.0.0
         version: 5.90.12(react@19.2.3)
       goober:
         specifier: ^2.1.18
         version: 2.1.18(csstype@3.2.3)
       react:
-        specifier: ^19.2.3
+        specifier: ^18.0.0 || ^19.0.0
         version: 19.2.3
       react-dom:
-        specifier: ^19.2.3
+        specifier: ^18.0.0 || ^19.0.0
         version: 19.2.3(react@19.2.3)
       react-error-boundary:
         specifier: ^6.0.0
