@@ -1,4 +1,4 @@
-.PHONY: install setup migrate fixtures users start clean help
+.PHONY: install setup start clean help
 
 # Default target
 .DEFAULT_GOAL := start
@@ -17,17 +17,19 @@ start:  ## Start development server
 install:  ## Install Python dependencies
 	uv sync
 
-setup: install migrate fixtures users  ## Full setup: install, migrate, load fixtures, create users
-
-migrate:  ## Run database migrations
-	uv run python manage.py migrate
-
-fixtures:  ## Load sample product data
+setup: install  ## Full setup: install deps, migrate, load fixtures, create users, collect static
+	@echo "Running migrations..."
+	uv run python manage.py migrate --no-input
+	@echo "Copying product images..."
+	@mkdir -p resources/media/products
+	@cp -r ../common/fixtures/images/products/* resources/media/products/
+	@echo "Loading sample products..."
 	uv run python manage.py loaddata resources/fixtures/sample_products.json
-
-users:  ## Create both admin and demo users
 	@echo "Creating demo users..."
-	@uv run python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@example.com', 'admin'); User.objects.filter(username='demo').exists() or User.objects.create_user('demo', 'demo@example.com', 'demo')"
+	@uv run python manage.py shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); admin, _ = User.objects.get_or_create(username='admin', defaults={'email': 'admin@example.com', 'is_superuser': True, 'is_staff': True}); admin.set_password('admin'); admin.save(); demo, _ = User.objects.get_or_create(username='demo', defaults={'email': 'demo@example.com'}); demo.set_password('demo'); demo.save(); print('Users ready: admin/admin, demo/demo')"
+	@echo "Collecting static files..."
+	uv run python manage.py collectstatic --no-input
+	@echo "Setup complete!"
 
 ########################################################################################################################
 # Cleanup
@@ -36,6 +38,8 @@ users:  ## Create both admin and demo users
 clean:  ## Clean database and cache
 	rm -rf .venv
 	rm -f db.sqlite3
+	rm -rf staticfiles
+	rm -rf resources/media
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 ########################################################################################################################
@@ -45,11 +49,11 @@ clean:  ## Clean database and cache
 help:  ## Show available commands
 	@echo "Available commands:"
 	@echo
+	@echo "\033[1mSetup\033[0m"
+	@grep -E '^(install|setup):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
 	@echo "\033[1mDevelopment\033[0m"
 	@grep -E '^(start):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
-	@echo
-	@echo "\033[1mSetup\033[0m"
-	@grep -E '^(install|setup|migrate|fixtures|users):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mCleanup\033[0m"
 	@grep -E '^(clean):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

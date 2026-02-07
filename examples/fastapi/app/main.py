@@ -33,7 +33,9 @@ app.add_middleware(
 
 # Static files
 STATIC_DIR = Path(__file__).parent.parent / "resources" / "static"
+MEDIA_DIR = Path(__file__).parent.parent / "resources" / "media"
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 
 # SQLAdmin for admin panel
 admin = Admin(app, engine, title="Wilco Shop Admin")
@@ -58,7 +60,7 @@ def list_products(db: Session = Depends(get_db)) -> list[dict]:
             "name": p.name,
             "price": float(p.price),
             "description": p.description or "",
-            "imageUrl": p.image if p.image else f"https://picsum.photos/seed/{p.id}/600/400",
+            "imageUrl": f"/media/{p.image}" if p.image else f"https://picsum.photos/seed/{p.id}/600/400",
         }
         for p in products
     ]
@@ -78,5 +80,5 @@ def get_product(product_id: int, db: Session = Depends(get_db)) -> dict:
         "name": product.name,
         "price": float(product.price),
         "description": product.description or "",
-        "imageUrl": product.image if product.image else f"https://picsum.photos/seed/{product.id}/600/400",
+        "imageUrl": f"/media/{product.image}" if product.image else f"https://picsum.photos/seed/{product.id}/600/400",
     }
