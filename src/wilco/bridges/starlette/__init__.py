@@ -65,7 +65,14 @@ def create_routes(registry: ComponentRegistry) -> list[Route]:
     async def get_bundle(request: Request) -> Response:
         """Get the bundled JavaScript for a component."""
         name = request.path_params["name"]
-        result = handlers.get_bundle(name)
+
+        try:
+            result = handlers.get_bundle(name)
+        except ValueError:
+            return JSONResponse(
+                {"detail": f"Invalid component name: '{name}'"},
+                status_code=422,
+            )
 
         if result is None:
             return JSONResponse(
@@ -82,7 +89,14 @@ def create_routes(registry: ComponentRegistry) -> list[Route]:
     async def get_metadata(request: Request) -> JSONResponse:
         """Get metadata for a component."""
         name = request.path_params["name"]
-        metadata = handlers.get_metadata(name)
+
+        try:
+            metadata = handlers.get_metadata(name)
+        except ValueError:
+            return JSONResponse(
+                {"detail": f"Invalid component name: '{name}'"},
+                status_code=422,
+            )
 
         if metadata is None:
             return JSONResponse(
@@ -95,7 +109,7 @@ def create_routes(registry: ComponentRegistry) -> list[Route]:
     return [
         Route("/bundles", list_bundles, methods=["GET"]),
         Route("/bundles/{name}.js", get_bundle, methods=["GET"]),
-        Route("/bundles/{name:path}/metadata", get_metadata, methods=["GET"]),
+        Route("/bundles/{name}/metadata", get_metadata, methods=["GET"]),
     ]
 
 

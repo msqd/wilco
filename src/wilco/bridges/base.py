@@ -142,11 +142,8 @@ class BridgeHandlers:
         if cached is not None:
             return cached
 
-        # Bundle the component
-        try:
-            result = bundle_component(component.ts_path, component_name=name)
-        except RuntimeError:
-            return None
+        # Bundle the component (let RuntimeError propagate as 500)
+        result = bundle_component(component.ts_path, component_name=name)
 
         # Store in cache
         self._cache.set(name, result, mtime=current_mtime)

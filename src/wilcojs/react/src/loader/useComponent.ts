@@ -2,7 +2,12 @@ import { useMemo, type ComponentType } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { registerSourceMap } from "./sourceMapRegistry.ts"
 import { transformImports, importFromString } from "./esm.ts"
-import { ComponentNotFoundError, ExportNotFoundError, InvalidComponentNameError } from "./errors.ts"
+import {
+  BundleLoadError,
+  ComponentNotFoundError,
+  ExportNotFoundError,
+  InvalidComponentNameError,
+} from "./errors.ts"
 
 /**
  * Validate component name at API boundary.
@@ -25,7 +30,13 @@ const moduleCache = new Map<string, Record<string, unknown>>()
 async function fetchBundleCode(name: string): Promise<string> {
   const response = await fetch(`/api/bundles/${name}.js`)
   if (!response.ok) {
-    throw new ComponentNotFoundError(name)
+    if (response.status === 404) {
+      throw new ComponentNotFoundError(name)
+    }
+    throw new BundleLoadError(
+      name,
+      new Error(`Server returned ${response.status}: ${response.statusText}`)
+    )
   }
   return response.text()
 }
@@ -51,7 +62,15 @@ async function loadModule(
   const transformedCode = transformImports(code)
 
   // Use native ESM import via blob URL
-  const module = await importFromString(transformedCode)
+  let module: Record<string, unknown>
+  try {
+    module = await importFromString(transformedCode)
+  } catch (err) {
+    throw new BundleLoadError(
+      componentName,
+      err instanceof Error ? err : new Error(String(err))
+    )
+  }
 
   // Cache the result
   moduleCache.set(code, module)
