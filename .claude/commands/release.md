@@ -13,10 +13,13 @@ Follow the release process from @RELEASE.md.
 3. Bump version with: `uv run hatch version <bump>`
 4. Update CHANGELOG.md: move [Unreleased] entries to new version section with today's date
 5. Run `make format` and `make test`
-6. Stage all changes: `git add -A`
-7. Commit with message: `release: <version>`
-8. Create tag: `git tag <version>`
-9. Ask user for confirmation before pushing
-10. Push with tags: `git push origin main --tags`
+6. Build wheel: `make wheel`
+7. Check wheel contents: `unzip -l dist/wilco-*.whl`
+8. Publish to TestPyPI: `make publish-test`
+9. Stage all changes: `git add -A`
+10. Commit with message: `release: <version>`
+11. Create tag: `git tag <version>`
+12. Ask user for confirmation before pushing
+13. Push with tags: `git push origin main --tags`
 
 Use AskUserQuestion to get the version bump choice before proceeding.

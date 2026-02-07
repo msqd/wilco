@@ -4,6 +4,8 @@ import react from "@vitejs/plugin-react"
 
 export default defineConfig({
   plugins: [react()],
+  // Suppress source map warnings (known Vite issue with test files)
+  logLevel: "error",
   server: {
     proxy: {
       "/api": {
