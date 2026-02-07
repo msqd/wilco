@@ -1,9 +1,8 @@
 """Tests for wilco.bridges.base shared bridge utilities."""
 
-import tempfile
 import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -129,7 +128,7 @@ class TestBridgeHandlers:
         comp_dir = tmp_path / "components" / "test_comp"
         comp_dir.mkdir(parents=True)
         (comp_dir / "__init__.py").write_text("")
-        (comp_dir / "index.tsx").write_text('export default function() { return <div>Test</div>; }')
+        (comp_dir / "index.tsx").write_text("export default function() { return <div>Test</div>; }")
         (comp_dir / "schema.json").write_text('{"title": "Test Component"}')
 
         return ComponentRegistry(tmp_path / "components")
@@ -195,7 +194,7 @@ class TestBridgeHandlers:
             # Simulate file modification
             component = sample_registry.get("test_comp")
             time.sleep(0.01)  # Ensure mtime changes
-            component.ts_path.write_text('export default function() { return <div>Updated</div>; }')
+            component.ts_path.write_text("export default function() { return <div>Updated</div>; }")
 
             # Second call after modification
             handlers.get_bundle("test_comp")

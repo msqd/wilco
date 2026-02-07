@@ -1,7 +1,6 @@
 """Functional tests for wilco.bridges.starlette API endpoints."""
 
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from starlette.applications import Starlette
