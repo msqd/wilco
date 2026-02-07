@@ -39,11 +39,11 @@ def product_detail(request, pk):
             "name": product.name,
             "price": float(product.price),
             "description": product.description or "",
-            "imageUrl": product.image.url if product.image else "https://picsum.photos/seed/{}/600/400".format(product.pk),
+            "imageUrl": product.image.url
+            if product.image
+            else "https://picsum.photos/seed/{}/600/400".format(product.pk),
             "mode": "detail",
         },
     )
 
-    return render(
-        request, "store/product_detail.html", {"product": product, "widget": widget}
-    )
+    return render(request, "store/product_detail.html", {"product": product, "widget": widget})

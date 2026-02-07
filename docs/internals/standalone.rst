@@ -1,10 +1,6 @@
 =================
-Standalone loader
+Standalone Loader
 =================
-
-.. contents:: Table of contents
-   :local:
-   :depth: 2
 
 Overview
 ========
