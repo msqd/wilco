@@ -270,11 +270,18 @@ class TestComponentRegistryGet:
 
         assert component is None
 
-    def test_returns_none_for_empty_name(self, sample_registry: ComponentRegistry) -> None:
-        """Should return None for empty string name."""
-        component = sample_registry.get("")
+    def test_raises_for_empty_name(self, sample_registry: ComponentRegistry) -> None:
+        """Should raise ValueError for empty string name."""
+        with pytest.raises(ValueError, match="must be a non-empty string"):
+            sample_registry.get("")
 
-        assert component is None
+    def test_raises_for_path_traversal(self, sample_registry: ComponentRegistry) -> None:
+        """Should raise ValueError for path traversal attempts."""
+        with pytest.raises(ValueError, match="cannot contain path traversal"):
+            sample_registry.get("../../../etc/passwd")
+
+        with pytest.raises(ValueError, match="cannot contain path traversal"):
+            sample_registry.get("widgets/counter")
 
 
 class TestComponentRegistryRefresh:

@@ -1,115 +1,131 @@
 import { useMemo, type ComponentType } from "react"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { registerSourceMap } from "./sourceMapRegistry.ts"
+import { transformImports, importFromString } from "./esm.ts"
+import { ComponentNotFoundError, ExportNotFoundError, InvalidComponentNameError } from "./errors.ts"
+
+/**
+ * Validate component name at API boundary.
+ * Throws InvalidComponentNameError for invalid names.
+ */
+function validateComponentName(name: unknown): asserts name is string {
+  if (!name || typeof name !== "string") {
+    throw new InvalidComponentNameError(name, "must be a non-empty string")
+  }
+  if (name.includes("..") || name.includes("/")) {
+    throw new InvalidComponentNameError(name, "cannot contain path traversal characters")
+  }
+}
 
 type LoadedComponent = ComponentType<Record<string, unknown>>
 
-// Cache for compiled components (code -> component)
-const compiledCache = new Map<string, LoadedComponent>()
+// Cache for compiled modules (code -> module exports)
+const moduleCache = new Map<string, Record<string, unknown>>()
 
 async function fetchBundleCode(name: string): Promise<string> {
   const response = await fetch(`/api/bundles/${name}.js`)
   if (!response.ok) {
-    throw new Error(`Component not found: ${name}`)
+    throw new ComponentNotFoundError(name)
   }
   return response.text()
 }
 
 /**
- * Transform ESM code to work with our runtime module registry.
- * Preserves source map comments for debugging.
+ * Load an ESM module from code, using native browser import().
+ * Caches the module to avoid re-importing the same code.
  */
-function transformEsmToRuntime(code: string, componentName: string): string {
-  let transformed = code
-
-  // Extract and preserve the source map comment
-  const sourceMapMarker = "//# sourceMappingURL="
-  let sourceMapComment = ""
-  const sourceMapIndex = transformed.lastIndexOf(sourceMapMarker)
-  if (sourceMapIndex !== -1) {
-    sourceMapComment = transformed.slice(sourceMapIndex)
-    transformed = transformed.slice(0, sourceMapIndex)
+async function loadModule(
+  code: string,
+  componentName: string
+): Promise<Record<string, unknown>> {
+  // Check cache first
+  const cached = moduleCache.get(code)
+  if (cached) {
+    return cached
   }
 
-  // Transform imports: import { x } from "react" -> const { x } = window.__MODULES__["react"]
-  // Also convert "as" renames to destructuring syntax: { jsx as jsx2 } -> { jsx: jsx2 }
-  transformed = transformed.replace(
-    /import\s+(\{[^}]+\}|\*\s+as\s+\w+|\w+)\s+from\s*["']([^"']+)["'];?/g,
-    (_, imports, moduleName) => {
-      // Convert ESM "as" syntax to destructuring ":" syntax
-      const fixedImports = imports.replace(/(\w+)\s+as\s+(\w+)/g, "$1: $2")
-      return `const ${fixedImports} = window.__MODULES__["${moduleName}"];`
-    },
-  )
-
-  // Extract default export name: export { Foo as default } -> return Foo
-  const defaultExportMatch = transformed.match(/export\s*\{\s*(\w+)\s+as\s+default\s*\};?/)
-  if (defaultExportMatch) {
-    const exportName = defaultExportMatch[1]
-    // Remove the export statement and add return
-    transformed = transformed.replace(/export\s*\{[^}]*\};?/g, "")
-    transformed += `\nreturn ${exportName};`
-  }
-
-  // Add sourceURL for better debugging (shows component name in devtools)
-  transformed += `\n//# sourceURL=components://bundles/${componentName}.js`
-
-  // Re-add source map comment
-  if (sourceMapComment) {
-    transformed += `\n${sourceMapComment}`
-  }
-
-  return transformed
-}
-
-function compileComponent(code: string, componentName: string): LoadedComponent {
-  const cacheKey = `${componentName}:${code}`
-  const cached = compiledCache.get(cacheKey)
-  if (cached) return cached
-
-  // Register source map BEFORE compiling
+  // Register source map before importing
   registerSourceMap(componentName, code)
 
-  const transformedCode = transformEsmToRuntime(code, componentName)
+  // Transform imports to use our module registry
+  const transformedCode = transformImports(code)
 
-  try {
-    const moduleFactory = new Function(transformedCode)
-    const Component = moduleFactory() as LoadedComponent
-    compiledCache.set(cacheKey, Component)
-    return Component
-  } catch (err) {
-    console.error("Failed to execute component code:", err)
-    console.error("Transformed code:", transformedCode.slice(0, 500))
-    throw err
+  // Use native ESM import via blob URL
+  const module = await importFromString(transformedCode)
+
+  // Cache the result
+  moduleCache.set(code, module)
+
+  return module
+}
+
+/**
+ * Get a specific export from a module.
+ */
+function getExport(
+  module: Record<string, unknown>,
+  exportName: string,
+  componentName: string
+): LoadedComponent {
+  const component = module[exportName]
+
+  if (component === undefined) {
+    throw new ExportNotFoundError(exportName, componentName, Object.keys(module))
   }
+
+  return component as LoadedComponent
 }
 
 /**
  * Hook to dynamically load and render a server component.
- * Uses React Query's useSuspenseQuery for caching and Suspense integration.
  *
- * @param name - The component name (e.g., "counter")
+ * Uses React Query's useSuspenseQuery for caching and Suspense integration.
+ * Components are fetched from `/api/bundles/{name}.js` and cached in memory.
+ *
+ * @param name - The component name (e.g., "counter", "store:product")
+ * @param exportName - Named export to use (default: "default")
  * @returns The loaded React component
+ *
+ * @throws {InvalidComponentNameError} If name is empty or contains path traversal characters
+ * @throws {ComponentNotFoundError} If the component doesn't exist on the server
+ * @throws {ExportNotFoundError} If the requested export doesn't exist in the module
  *
  * @example
  * ```tsx
  * import { useComponent } from '@wilcojs/react';
  *
  * function Dashboard() {
+ *   // Load default export
  *   const Counter = useComponent('counter');
+ *
+ *   // Load named export
+ *   const ContactRow = useComponent('contact', 'ContactRow');
+ *
  *   return <Counter initialValue={10} />;
  * }
  * ```
  */
-// Export for testing
-export { transformEsmToRuntime, compileComponent }
+export function useComponent(name: string, exportName = "default"): LoadedComponent {
+  // Validate inputs at API boundary
+  validateComponentName(name)
 
-export function useComponent(name: string): LoadedComponent {
+  // Fetch the bundle code
   const { data: code } = useSuspenseQuery({
     queryKey: ["component", name],
     queryFn: () => fetchBundleCode(name),
     staleTime: Infinity, // Components don't go stale
   })
 
-  return useMemo(() => compileComponent(code, name), [code, name])
+  // Load the module (async, but cached after first load)
+  const { data: module } = useSuspenseQuery({
+    queryKey: ["component-module", name, code],
+    queryFn: () => loadModule(code, name),
+    staleTime: Infinity,
+  })
+
+  // Get the specific export
+  return useMemo(
+    () => getExport(module, exportName, name),
+    [module, exportName, name]
+  )
 }

@@ -127,6 +127,7 @@ const componentCache = new Map<string, Promise<LoadedComponent>>()
 
 /**
  * Transform ESM code to work with our runtime module registry.
+ * @internal This function is exported for testing purposes only.
  */
 function transformEsmToRuntime(code: string, componentName: string): string {
   let transformed = code
@@ -140,20 +141,38 @@ function transformEsmToRuntime(code: string, componentName: string): string {
     transformed = transformed.slice(0, sourceMapIndex)
   }
 
-  // Transform imports: import { x } from "react" -> const { x } = window.__MODULES__["react"]
+  // Transform named imports: import { x, y as z } from "module"
   transformed = transformed.replace(
-    /import\s+(\{[^}]+\}|\*\s+as\s+\w+|\w+)\s+from\s*["']([^"']+)["'];?/g,
-    (_, imports, moduleName) => {
+    /import\s*\{([^}]+)\}\s*from\s*["']([^"']+)["'];?/g,
+    (_, imports: string, moduleName: string) => {
       const fixedImports = imports.replace(/(\w+)\s+as\s+(\w+)/g, "$1: $2")
-      return `const ${fixedImports} = window.__MODULES__["${moduleName}"];`
+      return `const {${fixedImports}} = window.__MODULES__["${moduleName}"];`
     },
   )
 
-  // Extract default export name: export { Foo as default } -> return Foo
-  const defaultExportMatch = transformed.match(/export\s*\{\s*(\w+)\s+as\s+default\s*\};?/)
+  // Transform default imports: import React from "module"
+  transformed = transformed.replace(
+    /import\s+(\w+)\s+from\s*["']([^"']+)["'];?/g,
+    (_, name: string, moduleName: string) => {
+      return `const ${name} = window.__MODULES__["${moduleName}"].default;`
+    },
+  )
+
+  // Transform namespace imports: import * as React from "module"
+  transformed = transformed.replace(
+    /import\s*\*\s*as\s+(\w+)\s+from\s*["']([^"']+)["'];?/g,
+    (_, name: string, moduleName: string) => {
+      return `const ${name} = window.__MODULES__["${moduleName}"];`
+    },
+  )
+
+  // Extract default export name: export { ..., Foo as default, ... } -> return Foo
+  // Use [\s\S] to handle multi-line export statements
+  const defaultExportMatch = transformed.match(/export\s*\{[\s\S]*?(\w+)\s+as\s+default[\s\S]*?\};?/)
   if (defaultExportMatch) {
     const exportName = defaultExportMatch[1]
-    transformed = transformed.replace(/export\s*\{[^}]*\};?/g, "")
+    // Remove all export statements (using [\s\S] for multi-line support)
+    transformed = transformed.replace(/export\s*\{[\s\S]*?\};?/g, "")
     transformed += `\nreturn ${exportName};`
   }
 
@@ -322,6 +341,10 @@ function initializeComponents(): void {
       props = JSON.parse(propsJson)
     } catch (err) {
       console.error(`Invalid props JSON for component '${componentName}':`, err)
+      container.innerHTML = `<div style="color: red; padding: 1rem;">
+        Invalid props JSON for component: ${componentName}
+      </div>`
+      return // Don't attempt render with potentially wrong props
     }
 
     renderComponent(container, componentName, props, apiBase, hash)
@@ -345,4 +368,9 @@ if (!window.wilco) {
   }
 }
 
-export { loadComponent, renderComponent, updateComponentProps, useComponent, transformEsmToRuntime }
+// Public API exports
+export { renderComponent, updateComponentProps }
+
+// Internal exports - exposed for testing and advanced use cases
+// @internal
+export { loadComponent, useComponent, transformEsmToRuntime }

@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Typed Error Classes**: Explicit error types for better error handling:
+  - `ComponentNotFoundError` - when a component doesn't exist on the server
+  - `ExportNotFoundError` - when a requested export doesn't exist in a module
+  - `BundleLoadError` - when a bundle fails to load or compile
+  - `InvalidComponentNameError` - when an invalid component name is provided
+- **Native ESM Loading**: Components now use blob URLs with dynamic `import()` for proper ES module export handling
+- **Input Validation**: Component names are validated to prevent path traversal attacks
+- **Comprehensive Test Coverage**: 118 JavaScript tests and 165 Python tests covering all critical paths
+
+### Changed
+
+- **Named Export Resolution**: `useComponent('contact', 'ContactRow')` now correctly returns the named export instead of the default
+- **Import Transformation**: Standalone loader correctly handles default imports with `.default` accessor
+- **Multi-line Exports**: Export statements spanning multiple lines are now properly handled
+- **Error Messages**: Improved with context about available exports when an export is not found
+- **Source Map Warnings**: Now include error details for easier debugging
+
+### Fixed
+
+- Named exports in dynamically loaded components now work correctly
+- Invalid JSON props in Django containers display an error instead of silently using empty props
+- Default imports in standalone loader correctly access the `.default` property
+
+### Removed
+
+- Dead code from `sourceMapRegistry.ts`:
+  - `unregisterSourceMap()` - exported but never used
+  - `getComponentSources()` - exported but never used
+  - `hasSourceMap()` - exported but never used
+
+### Security
+
+- Component name validation prevents path traversal attacks (`..` and `/` characters are rejected)
+
 ## [0.1.3] - 2025-12-24
 
 ### Added

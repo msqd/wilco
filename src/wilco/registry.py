@@ -139,7 +139,21 @@ class ComponentRegistry:
             self._discover_from(path, prefix)
 
     def get(self, name: str) -> Component | None:
-        """Get a component by name."""
+        """Get a component by name.
+
+        Args:
+            name: Component name (e.g., "counter" or "myapp:widget").
+
+        Returns:
+            The component if found, None otherwise.
+
+        Raises:
+            ValueError: If name is empty or contains path traversal characters.
+        """
+        if not name or not isinstance(name, str):
+            raise ValueError("Component name must be a non-empty string")
+        if ".." in name or "/" in name:
+            raise ValueError("Component name cannot contain path traversal characters")
         return self.components.get(name)
 
     def refresh(self) -> None:

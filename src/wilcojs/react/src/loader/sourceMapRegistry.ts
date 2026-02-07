@@ -34,8 +34,11 @@ function extractInlineSourceMap(code: string): RawSourceMap | null {
   try {
     const jsonString = atob(base64Data)
     return JSON.parse(jsonString) as RawSourceMap
-  } catch {
-    console.warn("Failed to parse inline source map")
+  } catch (error) {
+    // Intentionally silent - source maps are optional debugging aids.
+    // Log for developer awareness but don't throw.
+    const message = error instanceof Error ? error.message : String(error)
+    console.warn(`Failed to parse inline source map: ${message}`)
     return null
   }
 }
@@ -62,14 +65,6 @@ export function registerSourceMap(componentName: string, bundleCode: string): vo
   } catch (err) {
     console.warn(`Failed to create source map consumer for ${componentName}:`, err)
   }
-}
-
-/**
- * Unregister source map for a component.
- * Call this when unloading a component.
- */
-export function unregisterSourceMap(componentName: string): void {
-  sourceMapRegistry.delete(componentName)
 }
 
 export interface OriginalPosition {
@@ -130,21 +125,3 @@ export function parseComponentUrl(url: string): { componentName: string; fileNam
   }
 }
 
-/**
- * Get all sources for a component's source map.
- */
-export function getComponentSources(componentName: string): string[] {
-  const entry = sourceMapRegistry.get(componentName)
-  if (!entry || !entry.sourceMap.sources) {
-    return []
-  }
-
-  return entry.sourceMap.sources
-}
-
-/**
- * Check if a component has a registered source map.
- */
-export function hasSourceMap(componentName: string): boolean {
-  return sourceMapRegistry.has(componentName)
-}
