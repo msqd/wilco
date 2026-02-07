@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Database
+db.sqlite3
+*.log
+
+# Media (populated at setup time from common/fixtures)
+resources/media/
+
+# Frontend build
+frontend/dist/
+frontend/node_modules/
+
+# IDE
+*.iml

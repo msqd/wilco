@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `InvalidComponentNameError` - when an invalid component name is provided
 - **Native ESM Loading**: Components now use blob URLs with dynamic `import()` for proper ES module export handling
 - **Input Validation**: Component names are validated to prevent path traversal attacks
-- **Comprehensive Test Coverage**: 118 JavaScript tests and 165 Python tests covering all critical paths
+- **FastAPI Example**: Complete ecommerce example with FastAPI backend, SQLAlchemy, SQLAdmin, and React/TypeScript frontend demonstrating wilco integration
 
 ### Changed
 
