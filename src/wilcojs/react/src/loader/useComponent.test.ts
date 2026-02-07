@@ -9,7 +9,7 @@ import { ErrorBoundary } from "react-error-boundary"
 
 // Mock fetch for bundle loading
 const mockFetch = vi.fn()
-global.fetch = mockFetch
+globalThis.fetch = mockFetch
 
 describe("useComponent", () => {
   let queryClient: QueryClient
@@ -250,7 +250,7 @@ export { ContactCard, ContactRow, ContactCard as default };
     // Validation happens synchronously, no need to wait
     expect(capturedError).not.toBeNull()
     expect(capturedError).toBeInstanceOf(InvalidComponentNameError)
-    expect(capturedError?.message).toContain("must be a non-empty string")
+    expect(capturedError!.message).toContain("must be a non-empty string")
   })
 
   it("throws InvalidComponentNameError for path traversal", () => {
@@ -281,6 +281,6 @@ export { ContactCard, ContactRow, ContactCard as default };
 
     expect(capturedError).not.toBeNull()
     expect(capturedError).toBeInstanceOf(InvalidComponentNameError)
-    expect(capturedError?.message).toContain("cannot contain path traversal")
+    expect(capturedError!.message).toContain("cannot contain path traversal")
   })
 })
