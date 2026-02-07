@@ -2,9 +2,10 @@
 
 **Server-defined React components for Python backends.**
 
-[![PyPI version](https://img.shields.io/pypi/v/wilco.svg)](https://pypi.python.org/pypi/wilco)
-[![Python versions](https://img.shields.io/pypi/pyversions/wilco.svg)](https://pypi.python.org/pypi/wilco)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/wilco.svg)](https://pypi.org/project/wilco/)
+[![Python versions](https://img.shields.io/pypi/pyversions/wilco.svg)](https://pypi.org/project/wilco/)
+[![CI](https://github.com/msqd/wilco/actions/workflows/cicd.yml/badge.svg)](https://github.com/msqd/wilco/actions/workflows/cicd.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 **Documentation:** [FastAPI Guide](docs/fastapi.rst) | [Django Guide](docs/django.rst)
 
