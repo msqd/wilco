@@ -1,0 +1,43 @@
+{
+  "title": "Product List",
+  "description": "Displays a grid of product cards",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "products": {
+      "type": "array",
+      "description": "Array of products to display",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Product name"
+          },
+          "price": {
+            "type": "number",
+            "description": "Product price in USD"
+          },
+          "description": {
+            "type": "string",
+            "description": "Product description"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "URL to product image"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL to product detail page"
+          }
+        },
+        "required": ["name", "price"]
+      }
+    },
+    "title": {
+      "type": "string",
+      "description": "Optional title to display above the grid"
+    }
+  },
+  "required": ["products"]
+}

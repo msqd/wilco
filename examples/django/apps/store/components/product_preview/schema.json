@@ -1,0 +1,26 @@
+{
+  "title": "Product Preview",
+  "description": "Preview a product in both list and detail modes",
+  "props": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Product name"
+      },
+      "price": {
+        "type": "number",
+        "description": "Product price"
+      },
+      "description": {
+        "type": "string",
+        "description": "Product description"
+      },
+      "imageUrl": {
+        "type": "string",
+        "description": "URL of the product image"
+      }
+    },
+    "required": ["name", "price"]
+  }
+}

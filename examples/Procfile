@@ -1,0 +1,9 @@
+# Run all examples with different port ranges
+# Django: DJANGO_PORT (default 8000)
+# FastAPI: FASTAPI_PORT (default 8100), frontend at FASTAPI_PORT+1
+# Starlette: STARLETTE_PORT (default 8200)
+
+django: make -C django start HTTP_PORT=${DJANGO_PORT:-8000}
+fastapi-backend: cd fastapi && uv run uvicorn app.main:app --reload --port ${FASTAPI_PORT:-8100}
+fastapi-frontend: cd fastapi/frontend && VITE_PORT=$((${FASTAPI_PORT:-8100} + 1)) VITE_API_PORT=${FASTAPI_PORT:-8100} pnpm dev
+starlette: make -C starlette start HTTP_PORT=${STARLETTE_PORT:-8200}

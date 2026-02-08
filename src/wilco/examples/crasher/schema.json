@@ -1,0 +1,20 @@
+{
+  "title": "Crasher (Test)",
+  "description": "A component that crashes on purpose to test error handling",
+  "version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "shouldCrash": {
+      "type": "boolean",
+      "title": "Should Crash",
+      "description": "Toggle to trigger or prevent the crash",
+      "default": true
+    },
+    "errorMessage": {
+      "type": "string",
+      "title": "Error Message",
+      "description": "Custom error message to throw",
+      "default": "This is an intentional error for testing!"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "@wilcojs/react",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/loader/wilco.ts",
+      "import": "./src/loader/wilco.ts"
+    }
+  },
+  "main": "./src/loader/wilco.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:loader": "esbuild src/loader/standalone.ts --bundle --minify --format=iife --outfile=../../wilco/bridges/django/static/wilco/loader.js",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^4.0.16",
+    "esbuild": "^0.27.2",
+    "jsdom": "^27.3.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4",
+    "vitest": "^4.0.16"
+  },
+  "dependencies": {
+    "goober": "^2.1.18",
+    "react-error-boundary": "^6.0.0",
+    "source-map-js": "^1.2.1",
+    "stacktracey": "^2.1.8"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  }
+}
