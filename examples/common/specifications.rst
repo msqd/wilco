@@ -254,7 +254,7 @@ Component Registration
 
 Examples configure wilco to discover shared components:
 
-- Set ``WILCO_COMPONENTS_DIR`` or registry path to ``examples/common/components``
+- Set ``WILCO_COMPONENT_SOURCES`` or registry path to ``examples/common/components``
 - Components are namespaced as ``store:product``, ``store:product_list``, etc.
 - The ``useComponent`` hook enables dynamic component loading within other components
 

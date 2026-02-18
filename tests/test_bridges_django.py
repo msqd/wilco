@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -29,7 +29,9 @@ def setup_django_once():
                 "django.contrib.auth",
             ],
             USE_TZ=True,
-            WILCO_COMPONENTS_DIR=components_dir,
+            WILCO_COMPONENT_SOURCES=[
+                (components_dir, ""),
+            ],
             WILCO_AUTODISCOVER=False,
         )
 
@@ -178,11 +180,15 @@ class TestDjangoViews:
     @pytest.fixture(autouse=True)
     def clear_registry_cache(self):
         """Clear the registry cache before each test."""
-        from wilco.bridges.django.views import get_registry
+        from wilco.bridges.django.views import get_registry, _get_handlers
 
         get_registry.cache_clear()
+        _get_handlers.cache_clear()
+        _get_handlers.cache_clear()
         yield
         get_registry.cache_clear()
+        _get_handlers.cache_clear()
+        _get_handlers.cache_clear()
 
     def test_list_bundles_returns_json(self) -> None:
         """list_bundles should return JsonResponse."""
@@ -220,7 +226,7 @@ class TestDjangoViews:
     def test_get_registry_returns_component_registry(self) -> None:
         """get_registry should return a ComponentRegistry instance."""
         from wilco import ComponentRegistry
-        from wilco.bridges.django.views import get_registry
+        from wilco.bridges.django.views import get_registry, _get_handlers
 
         registry = get_registry()
 
@@ -228,7 +234,7 @@ class TestDjangoViews:
 
     def test_get_registry_is_cached(self) -> None:
         """get_registry should return the same instance on repeated calls."""
-        from wilco.bridges.django.views import get_registry
+        from wilco.bridges.django.views import get_registry, _get_handlers
 
         registry1 = get_registry()
         registry2 = get_registry()
@@ -244,15 +250,19 @@ class TestDjangoViewsWithComponents:
         """Ensure components directory is configured."""
         from django.conf import settings
 
-        from wilco.bridges.django.views import get_registry
+        from wilco.bridges.django.views import get_registry, _get_handlers
 
         components_dir = Path(__file__).parent.parent / "src" / "wilco" / "examples"
-        settings.WILCO_COMPONENTS_DIR = components_dir
+        settings.WILCO_COMPONENT_SOURCES = [(components_dir, "")]
         settings.WILCO_AUTODISCOVER = False
 
         get_registry.cache_clear()
+        _get_handlers.cache_clear()
+        _get_handlers.cache_clear()
         yield
         get_registry.cache_clear()
+        _get_handlers.cache_clear()
+        _get_handlers.cache_clear()
 
     def test_list_bundles_returns_components(self) -> None:
         """list_bundles should return available components."""
@@ -312,6 +322,26 @@ class TestDjangoViewsWithComponents:
         assert "export" in content or "default" in content
 
 
+    def test_get_bundle_caches_on_repeated_calls(self) -> None:
+        """get_bundle should cache results and not re-bundle on repeated calls."""
+        from wilco.bridges.django.views import get_bundle
+
+        request = MagicMock()
+
+        # First call to populate cache
+        try:
+            response1 = get_bundle(request, "counter")
+        except Exception:
+            pytest.skip("esbuild not available")
+
+        # Patch bundle_component for second call - should not be called (cached)
+        with patch("wilco.bridges.base.bundle_component") as mock_bundle:
+            response2 = get_bundle(request, "counter")
+
+        assert response1.content == response2.content
+        mock_bundle.assert_not_called()
+
+
 class TestDjangoAutoDiscovery:
     """Tests for Django app autodiscovery."""
 
@@ -320,28 +350,34 @@ class TestDjangoAutoDiscovery:
         """Configure for autodiscovery testing."""
         from django.conf import settings
 
-        from wilco.bridges.django.views import get_registry
+        from wilco.bridges.django.views import get_registry, _get_handlers
 
         # Save original settings
-        original_components_dir = getattr(settings, "WILCO_COMPONENTS_DIR", None)
+        original_sources = getattr(settings, "WILCO_COMPONENT_SOURCES", None)
         original_autodiscover = getattr(settings, "WILCO_AUTODISCOVER", True)
 
-        settings.WILCO_COMPONENTS_DIR = None
+        if hasattr(settings, "WILCO_COMPONENT_SOURCES"):
+            delattr(settings, "WILCO_COMPONENT_SOURCES")
         settings.WILCO_AUTODISCOVER = True
 
         get_registry.cache_clear()
+        _get_handlers.cache_clear()
 
         yield
 
         # Restore original settings
-        settings.WILCO_COMPONENTS_DIR = original_components_dir
+        if original_sources is not None:
+            settings.WILCO_COMPONENT_SOURCES = original_sources
+        elif hasattr(settings, "WILCO_COMPONENT_SOURCES"):
+            delattr(settings, "WILCO_COMPONENT_SOURCES")
         settings.WILCO_AUTODISCOVER = original_autodiscover
         get_registry.cache_clear()
+        _get_handlers.cache_clear()
 
     def test_registry_created_with_autodiscover_enabled(self) -> None:
         """Registry should be created when autodiscover is enabled."""
         from wilco import ComponentRegistry
-        from wilco.bridges.django.views import get_registry
+        from wilco.bridges.django.views import get_registry, _get_handlers
 
         registry = get_registry()
 
@@ -351,17 +387,125 @@ class TestDjangoAutoDiscovery:
         """When autodiscover is disabled, apps should not be scanned."""
         from django.conf import settings
 
-        from wilco.bridges.django.views import get_registry
+        from wilco.bridges.django.views import get_registry, _get_handlers
 
         settings.WILCO_AUTODISCOVER = False
-        settings.WILCO_COMPONENTS_DIR = None
+        if hasattr(settings, "WILCO_COMPONENT_SOURCES"):
+            delattr(settings, "WILCO_COMPONENT_SOURCES")
         get_registry.cache_clear()
+        _get_handlers.cache_clear()
 
         registry = get_registry()
 
         # With no components dir and autodiscover disabled,
         # registry should be empty
         assert len(registry.components) == 0
+
+
+class TestComponentSources:
+    """Tests for WILCO_COMPONENT_SOURCES setting."""
+
+    @pytest.fixture(autouse=True)
+    def setup_sources(self, tmp_path):
+        """Configure for component sources testing."""
+        from django.conf import settings
+
+        from wilco.bridges.django.views import get_registry, _get_handlers
+
+        # Save original settings
+        original_sources = getattr(settings, "WILCO_COMPONENT_SOURCES", None)
+        original_autodiscover = getattr(settings, "WILCO_AUTODISCOVER", True)
+
+        self.tmp_path = tmp_path
+
+        get_registry.cache_clear()
+        _get_handlers.cache_clear()
+
+        yield
+
+        # Restore original settings
+        if original_sources is not None:
+            settings.WILCO_COMPONENT_SOURCES = original_sources
+        elif hasattr(settings, "WILCO_COMPONENT_SOURCES"):
+            delattr(settings, "WILCO_COMPONENT_SOURCES")
+        settings.WILCO_AUTODISCOVER = original_autodiscover
+        get_registry.cache_clear()
+        _get_handlers.cache_clear()
+
+    def test_sources_with_prefix(self) -> None:
+        """WILCO_COMPONENT_SOURCES should load components with prefix."""
+        from django.conf import settings
+
+        from wilco.bridges.django.views import get_registry, _get_handlers
+
+        # Create a component directory
+        comp_dir = self.tmp_path / "mywidget"
+        comp_dir.mkdir()
+        (comp_dir / "index.tsx").write_text("export default function() {}")
+
+        if hasattr(settings, "WILCO_COMPONENT_SOURCES"):
+            delattr(settings, "WILCO_COMPONENT_SOURCES")
+        settings.WILCO_AUTODISCOVER = False
+        settings.WILCO_COMPONENT_SOURCES = [
+            (str(self.tmp_path), "store"),
+        ]
+        get_registry.cache_clear()
+        _get_handlers.cache_clear()
+
+        registry = get_registry()
+
+        assert "store:mywidget" in registry.components
+
+    def test_sources_without_prefix(self) -> None:
+        """WILCO_COMPONENT_SOURCES should work without prefix."""
+        from django.conf import settings
+
+        from wilco.bridges.django.views import get_registry, _get_handlers
+
+        comp_dir = self.tmp_path / "widget"
+        comp_dir.mkdir()
+        (comp_dir / "index.tsx").write_text("export default function() {}")
+
+        if hasattr(settings, "WILCO_COMPONENT_SOURCES"):
+            delattr(settings, "WILCO_COMPONENT_SOURCES")
+        settings.WILCO_AUTODISCOVER = False
+        settings.WILCO_COMPONENT_SOURCES = [
+            (str(self.tmp_path), ""),
+        ]
+        get_registry.cache_clear()
+        _get_handlers.cache_clear()
+
+        registry = get_registry()
+
+        assert "widget" in registry.components
+
+    def test_multiple_sources(self) -> None:
+        """WILCO_COMPONENT_SOURCES should support multiple entries."""
+        from django.conf import settings
+
+        from wilco.bridges.django.views import get_registry, _get_handlers
+
+        source1 = self.tmp_path / "s1"
+        source2 = self.tmp_path / "s2"
+        for s in (source1, source2):
+            comp = s / "widget"
+            comp.mkdir(parents=True)
+            (comp / "index.tsx").write_text("export default function() {}")
+
+        if hasattr(settings, "WILCO_COMPONENT_SOURCES"):
+            delattr(settings, "WILCO_COMPONENT_SOURCES")
+        settings.WILCO_AUTODISCOVER = False
+        settings.WILCO_COMPONENT_SOURCES = [
+            (str(source1), "app1"),
+            (str(source2), "app2"),
+        ]
+        get_registry.cache_clear()
+        _get_handlers.cache_clear()
+
+        registry = get_registry()
+
+        assert "app1:widget" in registry.components
+        assert "app2:widget" in registry.components
 
 
 class TestURLPatterns:

@@ -1,1 +1,0 @@
-# Product preview component package

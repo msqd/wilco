@@ -37,12 +37,13 @@ def create_component_package(
     tsx_content: str,
     schema: dict | None = None,
 ) -> Path:
-    """Helper to create a component package with the new structure."""
+    """Helper to create a component directory.
+
+    Components only require an index.tsx file. The __init__.py is NOT created
+    by default since it is optional for component discovery.
+    """
     pkg_dir = parent_dir / name
     pkg_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create __init__.py
-    (pkg_dir / "__init__.py").write_text(f"# {name} component package\n")
 
     # Create index.tsx
     (pkg_dir / "index.tsx").write_text(tsx_content)

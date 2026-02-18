@@ -3,9 +3,12 @@
 # Default target
 .DEFAULT_GOAL := start
 
+# Environment
+export VIRTUAL_ENV := $(CURDIR)/.venv
+
 # Port configuration
-HTTP_PORT ?= 8000
-FRONTEND_PORT ?= $(shell echo $$(($(HTTP_PORT) + 1)))
+HTTP_PORT ?= 8301
+FRONTEND_PORT ?= $(shell echo $$(($(HTTP_PORT) - 1)))
 
 ########################################################################################################################
 # Development
@@ -67,7 +70,7 @@ help:  ## Show available commands
 	@echo "FastAPI Example"
 	@echo "==============="
 	@echo
-	@echo "Ports: HTTP_PORT (default: 8000), FRONTEND_PORT (default: HTTP_PORT+1)"
+	@echo "Ports: HTTP_PORT (default: 8301), FRONTEND_PORT (default: HTTP_PORT-1)"
 	@echo "  make start HTTP_PORT=9000"
 	@echo
 	@echo "\033[1mSetup\033[0m"

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+<a href="/" class="back-link">&larr; Back to products</a>
+
+<div class="product-detail">
+    {{ widget | safe }}
+</div>
+{% endblock %}

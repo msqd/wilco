@@ -1,0 +1,9 @@
+/* Disable shadows in Unfold admin, but preserve them in wilco components */
+*:not([data-wilco-component] *) {
+    box-shadow: none !important;
+}
+
+/* Thumbnail column: fit content */
+.column-thumbnail {
+    width: 64px;
+}

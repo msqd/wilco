@@ -33,14 +33,15 @@ uv run ruff format src tests
 
 ## Adding components
 
-Components are co-located Python packages with TypeScript implementations:
+Components are directories with a TypeScript entry point:
 
 ```
 examples/my_component/
-├── __init__.py       # Python package (can be empty)
 ├── index.tsx         # React component (default export)
 └── schema.json       # Optional: title, description, props schema
 ```
+
+The `__init__.py` file is **not required** for component discovery. Components only need an `index.tsx` (or `index.ts`) file. Add `__init__.py` only if the component directory needs to be importable as a Python package.
 
 Components are auto-discovered and available at `/api/bundles/<name>.js`.
 

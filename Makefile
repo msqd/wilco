@@ -1,4 +1,4 @@
-.PHONY: start test test-backend test-frontend install install-dev clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
+.PHONY: start test test-backend test-frontend test-e2e install install-dev clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
 
 # Default target
 .DEFAULT_GOAL := start
@@ -56,6 +56,9 @@ test-backend: install-dev  ## Run backend tests (Python/pytest)
 test-frontend:  ## Run frontend tests (TypeScript typecheck + Vitest)
 	$(call execute,cd src/wilcojs/react && pnpm typecheck && pnpm test:run)
 
+test-e2e:  ## Run E2E tests for all examples (requires setup)
+	$(call execute,cd examples/e2e && pnpm test)
+
 ########################################################################################################################
 # Documentation
 ########################################################################################################################
@@ -106,7 +109,7 @@ help:  ## Show available commands
 	@grep -E '^(publish|publish-test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mTesting\033[0m"
-	@grep -E '^(test|test-backend|test-frontend):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(test|test-backend|test-frontend|test-e2e):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mDocumentation\033[0m"
 	@grep -E '^(docs|docs-watch):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

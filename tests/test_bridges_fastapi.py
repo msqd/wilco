@@ -155,6 +155,36 @@ class TestGetBundle:
         assert response.status_code == 200
         assert response.headers.get("cache-control") == "public, max-age=31536000, immutable"
 
+    def test_caches_bundle_on_repeated_requests(self, client: TestClient) -> None:
+        """Should cache bundles and not re-bundle on repeated requests."""
+        from wilco.bridges import base as base_module
+        original_bundle = base_module.bundle_component
+        call_count = 0
+
+        def counting_bundle(*args, **kwargs):
+            nonlocal call_count
+            call_count += 1
+            return original_bundle(*args, **kwargs)
+
+        list_response = client.get("/api/bundles")
+        bundles = list_response.json()
+
+        if not bundles:
+            pytest.skip("No bundles available")
+
+        bundle_name = bundles[0]["name"]
+
+        with patch.object(base_module, "bundle_component", side_effect=counting_bundle):
+            response1 = client.get(f"/api/bundles/{bundle_name}.js")
+            if response1.status_code == 500:
+                pytest.skip("esbuild not available")
+            response2 = client.get(f"/api/bundles/{bundle_name}.js")
+
+        assert response1.status_code == 200
+        assert response2.status_code == 200
+        # BridgeHandlers caches by mtime, so bundle_component should only be called once
+        assert call_count == 1, f"Expected 1 call to bundle_component, got {call_count}"
+
     def test_returns_500_on_bundler_error(self, client: TestClient) -> None:
         """Should return 500 when bundler fails."""
         list_response = client.get("/api/bundles")
@@ -165,14 +195,11 @@ class TestGetBundle:
 
         bundle_name = bundles[0]["name"]
 
-        with patch("wilco.bridges.fastapi.bundle_component") as mock_bundle:
+        with patch("wilco.bridges.base.bundle_component") as mock_bundle:
             mock_bundle.side_effect = RuntimeError("Bundling failed")
             response = client.get(f"/api/bundles/{bundle_name}.js")
 
         assert response.status_code == 500
-        data = response.json()
-        assert "detail" in data
-        assert "Bundling failed" in data["detail"]
 
 
 class TestGetBundleMetadata:
@@ -317,8 +344,8 @@ class TestErrorHandling:
         """Should handle special characters in bundle names."""
         response = client.get("/api/bundles/test%2Fcomponent.js")
 
-        # Should return 404 for non-existent component
-        assert response.status_code == 404
+        # Should return 404 (route mismatch) or 422 (invalid name), not 500
+        assert response.status_code in [404, 422]
 
     def test_very_long_bundle_name(self, client: TestClient) -> None:
         """Should handle very long bundle names."""

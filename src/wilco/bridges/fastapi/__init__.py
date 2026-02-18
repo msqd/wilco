@@ -11,8 +11,8 @@ if importlib.util.find_spec("fastapi") is None:
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-from ...bundler import bundle_component
 from ...registry import ComponentRegistry
+from ..base import CACHE_CONTROL_IMMUTABLE, BridgeHandlers
 
 
 def create_router(registry: ComponentRegistry) -> APIRouter:
@@ -35,46 +35,43 @@ def create_router(registry: ComponentRegistry) -> APIRouter:
         app.include_router(create_router(registry), prefix="/api")
         ```
     """
+    handlers = BridgeHandlers(registry)
     router = APIRouter()
 
     @router.get("/bundles")
     def list_bundles() -> list[dict]:
         """List all available bundles (basic info only)."""
-        return [{"name": name} for name in registry.components.keys()]
+        return handlers.list_bundles()
 
     @router.get("/bundles/{name}.js")
     def get_bundle(name: str) -> Response:
         """Get the bundled JavaScript for a component."""
-        component = registry.get(name)
-        if component is None:
-            raise HTTPException(status_code=404, detail=f"Bundle '{name}' not found")
-
         try:
-            result = bundle_component(component.ts_path, component_name=name)
+            result = handlers.get_bundle(name)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
         except RuntimeError as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+        if result is None:
+            raise HTTPException(status_code=404, detail=f"Bundle '{name}' not found")
 
         return Response(
             content=result.code,
             media_type="application/javascript",
-            headers={"Cache-Control": "public, max-age=31536000, immutable"},
+            headers={"Cache-Control": CACHE_CONTROL_IMMUTABLE},
         )
 
     @router.get("/bundles/{name}/metadata")
     def get_bundle_metadata(name: str) -> dict:
         """Get metadata for a bundle, including content hash."""
-        component = registry.get(name)
-        if component is None:
-            raise HTTPException(status_code=404, detail=f"Bundle '{name}' not found")
-
-        metadata = dict(component.metadata)
-
-        # Include bundle hash for cache busting
         try:
-            result = bundle_component(component.ts_path, component_name=name)
-            metadata["hash"] = result.hash
-        except RuntimeError:
-            pass  # Skip hash if bundling fails
+            metadata = handlers.get_metadata(name)
+        except ValueError as e:
+            raise HTTPException(status_code=422, detail=str(e))
+
+        if metadata is None:
+            raise HTTPException(status_code=404, detail=f"Bundle '{name}' not found")
 
         return metadata
 

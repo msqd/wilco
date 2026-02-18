@@ -13,5 +13,11 @@ dependencies = [
     "wilco",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "httpx>=0.27.0",
+]
+
 [tool.uv.sources]
 wilco = { path = "../..", editable = true }

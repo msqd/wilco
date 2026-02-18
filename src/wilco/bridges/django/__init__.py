@@ -10,7 +10,7 @@ This package provides Django integration for wilco, including:
 
 Usage:
     1. Add 'wilco.bridges.django' to INSTALLED_APPS
-    2. Set WILCO_COMPONENTS_DIR in settings
+    2. Set WILCO_COMPONENT_SOURCES in settings
     3. Include wilco URLs in your urlconf
 
 Example:
@@ -19,7 +19,9 @@ Example:
         ...
         "wilco.bridges.django",
     ]
-    WILCO_COMPONENTS_DIR = BASE_DIR / "components"
+    WILCO_COMPONENT_SOURCES = [
+        (BASE_DIR / "components", ""),
+    ]
 
     # urls.py
     from django.urls import include, path

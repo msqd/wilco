@@ -11,6 +11,7 @@ from starlette.templating import Jinja2Templates
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from wilco import ComponentRegistry
+from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 from wilco.bridges.starlette import create_routes
 
 from .admin import create_admin, get_preview_routes
@@ -106,9 +107,6 @@ BASE_DIR = Path(__file__).parent.parent
 TEMPLATES_DIR = BASE_DIR / "resources" / "templates"
 STATIC_DIR = BASE_DIR / "resources" / "static"
 MEDIA_DIR = BASE_DIR / "resources" / "media"
-
-# Wilco static files from the package
-WILCO_STATIC_DIR = Path(__file__).parent.parent.parent.parent / "src" / "wilco" / "bridges" / "django" / "static"
 
 # Component registry - use shared components from examples/common
 # Add with prefix "store" so components are named store:product, store:product_list, etc.

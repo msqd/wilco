@@ -1,1 +1,0 @@
-# Store components package

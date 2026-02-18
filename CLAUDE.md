@@ -61,7 +61,7 @@ Major features should be mentioned in `README.md` with links to detailed documen
 
 ## Key concepts
 
-- **Co-located components**: Each component has `__init__.py`, `index.tsx`, and optional `schema.json`
+- **Co-located components**: Each component has `index.tsx` and optional `schema.json` (`__init__.py` is optional)
 - **Barrel pattern**: Use `index.ts` only for exports; put components in their own files
 - **useComponent**: When a component needs another component, use `useComponent` hook instead of direct imports
 - **Bridge pattern**: Framework-specific integrations (see `docs/fastapi.rst`, `docs/django.rst`)

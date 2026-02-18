@@ -323,7 +323,9 @@ In your template:
 Example application
 ===================
 
-A complete example application is available in ``examples/starlette/``. It demonstrates:
+A complete example application is available in the `examples/starlette/
+<https://github.com/msqd/wilco/tree/main/examples/starlette>`_ directory.
+It demonstrates:
 
 - Jinja2 template-based rendering with wilco components
 - Starlette-Admin for product management

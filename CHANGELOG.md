@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Flask Bridge**: New `wilco.bridges.flask` module for Flask framework integration
+- **Flask Example**: Complete example with Flask-Admin and live preview
+- **FastAPI Live Preview**: ASGI middleware and JavaScript for real-time component
+  preview in SQLAdmin edit/create forms
+- **Django Vanilla Example**: Standard Django admin with `LivePreviewAdminMixin`
+  (alongside existing Unfold variant)
+- **ASGI Minimal Example**: Pure ASGI application for educational/low-dependency use
+- **WSGI Minimal Example**: Pure WSGI application for educational/low-dependency use
+- **E2E Test Suite**: Playwright-based end-to-end tests for all example applications
+- **`STATIC_DIR` export**: `wilco.bridges.base.STATIC_DIR` exposes path to wilco's
+  static files (loader.js) for non-Django frameworks
+- **`ComponentRegistry.sources` property**: Read-only access to registered sources
+- **HTTP Caching specification**: Documentation for cache control strategy
+
+### Changed
+
+- **Django example renamed** from `django/` to `django-unfold/` to distinguish from
+  the new vanilla variant
+- **`BridgeHandlers` shared logic**: FastAPI and Django bridges now use centralized
+  `BridgeHandlers` from `wilco.bridges.base` instead of duplicating bundle
+  cache/serving logic
+- **Component name validation**: Stricter regex-based validation (alphanumerics,
+  underscores, dots, colons only) replacing simple path traversal check
+- **Registry `add_source`**: Now warns instead of crashing when source path doesn't
+  exist or isn't a directory
+- **Symlink handling**: Component discovery uses resolved paths to avoid duplicates
+
 ## [0.3.0] - 2026-02-08
 
 This release marks a fresh start with a new license model.

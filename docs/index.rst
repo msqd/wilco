@@ -28,6 +28,12 @@ then dynamically bundled with esbuild and loaded by the frontend at runtime.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Specifications
+
+   specs/index
+
+.. toctree::
+   :maxdepth: 1
    :caption: Reference
 
    reference/components
@@ -133,6 +139,26 @@ All framework integrations expose these endpoints:
      - Get bundled JavaScript for a component
    * - ``GET /api/bundles/{name}/metadata``
      - Get component metadata (schema, props)
+
+Examples
+--------
+
+Complete example applications are available on GitHub:
+
+.. list-table::
+   :widths: 20 80
+   :header-rows: 1
+
+   * - Framework
+     - Description
+   * - `FastAPI <https://github.com/msqd/wilco/tree/main/examples/fastapi>`_
+     - React SPA frontend with SQLAdmin, REST API, and component bundles
+   * - `Django <https://github.com/msqd/wilco/tree/main/examples/django>`_
+     - Jinja2 templates, Django Unfold admin with live preview, component discovery
+   * - `Starlette <https://github.com/msqd/wilco/tree/main/examples/starlette>`_
+     - Jinja2 templates, Starlette-Admin, SQLAlchemy models, shared components
+
+See the :doc:`how-to/index` guides for detailed integration instructions.
 
 Quick links
 -----------

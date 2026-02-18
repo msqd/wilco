@@ -1,0 +1,14 @@
+[project]
+name = "django-vanilla-example"
+version = "0.1.0"
+description = "Example Django ecommerce site using standard admin (no Unfold)"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "django>=5.0",
+    "pillow>=12.0.0",
+    "wilco",
+]
+
+[tool.uv.sources]
+wilco = { path = "../..", editable = true }

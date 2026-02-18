@@ -245,7 +245,9 @@ on component composition.
 Example application
 ===================
 
-A complete example application is available in ``examples/fastapi/``. It demonstrates:
+A complete example application is available in the `examples/fastapi/
+<https://github.com/msqd/wilco/tree/main/examples/fastapi>`_ directory.
+It demonstrates:
 
 - A React SPA frontend (Vite + React 19)
 - SQLAdmin for product management

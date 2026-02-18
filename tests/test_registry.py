@@ -77,8 +77,8 @@ class TestComponentRegistryInit:
         """Should store the component source in the sources list."""
         registry = ComponentRegistry(sample_component_dir)
 
-        assert len(registry._sources) == 1
-        assert registry._sources[0] == (sample_component_dir, "")
+        assert len(registry.sources) == 1
+        assert registry.sources[0] == (sample_component_dir, "")
 
 
 class TestComponentDiscovery:
@@ -91,8 +91,8 @@ class TestComponentDiscovery:
         # Should find widgets.counter (has __init__.py and index.tsx)
         assert "widgets.counter" in registry.components
 
-    def test_requires_init_py(self, temp_dir: Path) -> None:
-        """Should skip directories without __init__.py."""
+    def test_discovers_without_init_py(self, temp_dir: Path) -> None:
+        """Should discover components even without __init__.py."""
         category = temp_dir / "widgets"
         pkg_dir = category / "nopackage"
         pkg_dir.mkdir(parents=True)
@@ -102,7 +102,7 @@ class TestComponentDiscovery:
 
         registry = ComponentRegistry(temp_dir)
 
-        assert "widgets.nopackage" not in registry.components
+        assert "widgets.nopackage" in registry.components
 
     def test_requires_index_tsx(self, temp_dir: Path) -> None:
         """Should skip packages without index.tsx or index.ts."""
@@ -277,11 +277,30 @@ class TestComponentRegistryGet:
 
     def test_raises_for_path_traversal(self, sample_registry: ComponentRegistry) -> None:
         """Should raise ValueError for path traversal attempts."""
-        with pytest.raises(ValueError, match="cannot contain path traversal"):
+        with pytest.raises(ValueError, match="invalid characters"):
             sample_registry.get("../../../etc/passwd")
 
-        with pytest.raises(ValueError, match="cannot contain path traversal"):
+        with pytest.raises(ValueError, match="invalid characters"):
             sample_registry.get("widgets/counter")
+
+    def test_raises_for_backslash(self, sample_registry: ComponentRegistry) -> None:
+        """Should raise ValueError for backslash in name."""
+        with pytest.raises(ValueError, match="invalid characters"):
+            sample_registry.get("..\\..\\etc\\passwd")
+
+    def test_raises_for_special_characters(self, sample_registry: ComponentRegistry) -> None:
+        """Should raise ValueError for names with special characters."""
+        for bad_name in ["widget<script>", "widget name", "widget;drop", "widget&foo"]:
+            with pytest.raises(ValueError, match="invalid characters"):
+                sample_registry.get(bad_name)
+
+    def test_allows_valid_name_characters(self, sample_registry: ComponentRegistry) -> None:
+        """Should accept names with alphanumerics, dots, underscores, colons."""
+        # These should not raise (even if component doesn't exist)
+        assert sample_registry.get("valid.name") is None
+        assert sample_registry.get("store:widget") is None
+        assert sample_registry.get("my_component") is None
+        assert sample_registry.get("App123") is None
 
 
 class TestComponentRegistryRefresh:
@@ -387,8 +406,8 @@ class TestMultiSourceRegistry:
         registry = ComponentRegistry()
         registry.add_source(temp_dir, prefix="myapp")
 
-        assert len(registry._sources) == 1
-        assert registry._sources[0] == (temp_dir, "myapp")
+        assert len(registry.sources) == 1
+        assert registry.sources[0] == (temp_dir, "myapp")
 
     def test_add_source_discovers_components(self, temp_dir: Path) -> None:
         """Should discover components from added source."""
@@ -424,7 +443,7 @@ class TestMultiSourceRegistry:
         registry.add_source(source1, prefix="app1")
         registry.add_source(source2, prefix="app2")
 
-        assert len(registry._sources) == 2
+        assert len(registry.sources) == 2
         assert "app1:widget" in registry.components
         assert "app2:widget" in registry.components
 
@@ -473,3 +492,51 @@ class TestMultiSourceRegistry:
 
         assert "app1:widget" in registry.components
         assert "app2:new" in registry.components
+
+    def test_later_source_overrides_earlier_on_name_collision(self, temp_dir: Path) -> None:
+        """When two sources produce the same component name, the later source wins."""
+        source1 = temp_dir / "source1"
+        source2 = temp_dir / "source2"
+        source1.mkdir()
+        source2.mkdir()
+
+        create_component_package(source1, "widget", "// source1")
+        create_component_package(source2, "widget", "// source2")
+
+        registry = ComponentRegistry()
+        registry.add_source(source1)
+        registry.add_source(source2)
+
+        component = registry.get("widget")
+        assert component is not None
+        # Later source should override
+        assert component.package_dir == source2 / "widget"
+
+    def test_add_source_warns_for_nonexistent_path(self, temp_dir: Path) -> None:
+        """Should emit a warning when source path doesn't exist."""
+        import warnings
+
+        registry = ComponentRegistry()
+        nonexistent = temp_dir / "does_not_exist"
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            registry.add_source(nonexistent)
+
+        assert len(w) == 1
+        assert "does not exist" in str(w[0].message)
+
+    def test_add_source_warns_for_file_path(self, temp_dir: Path) -> None:
+        """Should emit a warning when source path is a file, not a directory."""
+        import warnings
+
+        registry = ComponentRegistry()
+        file_path = temp_dir / "somefile.txt"
+        file_path.write_text("not a directory")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            registry.add_source(file_path)
+
+        assert len(w) == 1
+        assert "not a directory" in str(w[0].message)

@@ -1,0 +1,25 @@
+{
+  "name": "wilco-e2e-tests",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "test:django-unfold": "WILCO_E2E_FRAMEWORK=django-unfold playwright test --project=django-unfold",
+    "test:django-vanilla": "WILCO_E2E_FRAMEWORK=django-vanilla playwright test --project=django-vanilla",
+    "test:flask": "WILCO_E2E_FRAMEWORK=flask playwright test --project=flask",
+    "test:fastapi": "WILCO_E2E_FRAMEWORK=fastapi playwright test --project=fastapi",
+    "test:starlette": "WILCO_E2E_FRAMEWORK=starlette playwright test --project=starlette",
+    "test:asgi-minimal": "WILCO_E2E_FRAMEWORK=asgi-minimal playwright test --project=asgi-minimal",
+    "test:wsgi-minimal": "WILCO_E2E_FRAMEWORK=wsgi-minimal playwright test --project=wsgi-minimal",
+    "test:headed": "playwright test --headed",
+    "test:debug": "PWDEBUG=1 playwright test",
+    "test:ui": "playwright test --ui",
+    "install-browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^22.14.0",
+    "typescript": "^5.9.0"
+  }
+}

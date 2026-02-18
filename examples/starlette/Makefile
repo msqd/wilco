@@ -3,8 +3,11 @@
 # Default target
 .DEFAULT_GOAL := start
 
+# Environment
+export VIRTUAL_ENV := $(CURDIR)/.venv
+
 # Port configuration
-HTTP_PORT ?= 8000
+HTTP_PORT ?= 8400
 
 ########################################################################################################################
 # Development
@@ -51,7 +54,7 @@ help:  ## Show available commands
 	@echo "Starlette Example"
 	@echo "================="
 	@echo
-	@echo "Port: HTTP_PORT (default: 8000)"
+	@echo "Port: HTTP_PORT (default: 8400)"
 	@echo "  make start HTTP_PORT=9000"
 	@echo
 	@echo "\033[1mSetup\033[0m"

@@ -6,11 +6,15 @@ This module provides common functionality used by all framework-specific bridges
 """
 
 from dataclasses import dataclass
+from pathlib import Path
 from threading import Lock
 from typing import Optional
 
 from wilco import BundleResult, ComponentRegistry
 from wilco.bundler import bundle_component
+
+# Path to wilco's static files (loader.js, live-loader.js)
+STATIC_DIR = Path(__file__).parent / "django" / "static"
 
 
 @dataclass(frozen=True)
@@ -187,4 +191,4 @@ class BridgeHandlers:
 # Cache header constant used by all bridges
 CACHE_CONTROL_IMMUTABLE = "public, max-age=31536000, immutable"
 
-__all__ = ["CachedBundle", "BundleCache", "BridgeHandlers", "CACHE_CONTROL_IMMUTABLE"]
+__all__ = ["CachedBundle", "BundleCache", "BridgeHandlers", "CACHE_CONTROL_IMMUTABLE", "STATIC_DIR"]

@@ -246,10 +246,12 @@ async function loadComponent(name: string, apiBase: string = "/api", hash?: stri
 }
 
 /**
- * Loading fallback component shown while child components load.
+ * Loading fallback component shown while child components load via useComponent.
+ * Returns null to avoid any visible flash — with cached assets, the component
+ * renders near-instantly so no placeholder is needed.
  */
 function LoadingFallback() {
-  return React.createElement("div", { style: { color: "#666", padding: "1rem", textAlign: "center" } }, "Loading...")
+  return null
 }
 
 /**

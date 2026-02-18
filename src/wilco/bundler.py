@@ -4,6 +4,7 @@ import base64
 import hashlib
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -287,7 +288,7 @@ def bundle_component(
         out_path = out_file.name
 
     # Build command - esbuild_cmd may be a path or "npx --yes esbuild"
-    cmd = esbuild_cmd.split() + [
+    cmd = shlex.split(esbuild_cmd) + [
         str(ts_path),
         "--bundle",
         "--format=esm",

@@ -1,0 +1,19 @@
+[project]
+name = "wilco-wsgi-minimal-example"
+version = "0.1.0"
+description = "Minimal WSGI example demonstrating wilco integration without a framework"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "jinja2>=3.1",
+    "gunicorn>=23.0",
+    "wilco",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.uv.sources]
+wilco = { path = "../../", editable = true }

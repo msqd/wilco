@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Build output
+dist/
+
+# State files
+.server-state.json

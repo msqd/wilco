@@ -68,24 +68,24 @@ Place components in a ``components/`` directory inside any Django app:
 Components are automatically discovered and prefixed with the app label.
 For example, ``myapp/components/product/`` becomes ``myapp:product``.
 
-Global components
------------------
+Explicit component sources
+--------------------------
 
-You can also set a global components directory:
+You can configure explicit component sources with optional prefixes:
 
 .. code-block:: python
 
     # settings.py
-    WILCO_COMPONENTS_DIR = BASE_DIR / "shared_components"
-
-Components in this directory are not prefixed:
-``shared_components/button/`` becomes ``button``.
+    WILCO_COMPONENT_SOURCES = [
+        (BASE_DIR / "shared_components", ""),       # No prefix: button
+        (BASE_DIR / "store" / "components", "store"),  # Prefixed: store:product
+    ]
 
 Settings
 ========
 
-``WILCO_COMPONENTS_DIR``
-    Path to a global components directory. Optional.
+``WILCO_COMPONENT_SOURCES``
+    List of ``(path, prefix)`` tuples for explicit component sources. Optional.
 
 ``WILCO_AUTODISCOVER``
     Whether to auto-discover components from Django apps (default: ``True``).
@@ -422,7 +422,9 @@ Component with both list and detail views:
 Example application
 ===================
 
-A complete example application is available in ``examples/django/``. It demonstrates:
+A complete example application is available in the `examples/django/
+<https://github.com/msqd/wilco/tree/main/examples/django>`_ directory.
+It demonstrates:
 
 - Jinja2 template-based rendering with wilco components
 - Django Unfold admin with live preview
