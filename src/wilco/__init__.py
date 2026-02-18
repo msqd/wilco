@@ -3,7 +3,7 @@
 from .bundler import BundleResult, BundlerNotFoundError, bundle_component
 from .registry import Component, ComponentRegistry
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "Component",
