@@ -184,10 +184,8 @@ class TestDjangoViews:
 
         get_registry.cache_clear()
         _get_handlers.cache_clear()
-        _get_handlers.cache_clear()
         yield
         get_registry.cache_clear()
-        _get_handlers.cache_clear()
         _get_handlers.cache_clear()
 
     def test_list_bundles_returns_json(self) -> None:
@@ -226,7 +224,7 @@ class TestDjangoViews:
     def test_get_registry_returns_component_registry(self) -> None:
         """get_registry should return a ComponentRegistry instance."""
         from wilco import ComponentRegistry
-        from wilco.bridges.django.views import get_registry, _get_handlers
+        from wilco.bridges.django.views import get_registry
 
         registry = get_registry()
 
@@ -234,7 +232,7 @@ class TestDjangoViews:
 
     def test_get_registry_is_cached(self) -> None:
         """get_registry should return the same instance on repeated calls."""
-        from wilco.bridges.django.views import get_registry, _get_handlers
+        from wilco.bridges.django.views import get_registry
 
         registry1 = get_registry()
         registry2 = get_registry()
@@ -258,10 +256,8 @@ class TestDjangoViewsWithComponents:
 
         get_registry.cache_clear()
         _get_handlers.cache_clear()
-        _get_handlers.cache_clear()
         yield
         get_registry.cache_clear()
-        _get_handlers.cache_clear()
         _get_handlers.cache_clear()
 
     def test_list_bundles_returns_components(self) -> None:
@@ -321,7 +317,6 @@ class TestDjangoViewsWithComponents:
         assert len(content) > 0
         assert "export" in content or "default" in content
 
-
     def test_get_bundle_caches_on_repeated_calls(self) -> None:
         """get_bundle should cache results and not re-bundle on repeated calls."""
         from wilco.bridges.django.views import get_bundle
@@ -377,7 +372,7 @@ class TestDjangoAutoDiscovery:
     def test_registry_created_with_autodiscover_enabled(self) -> None:
         """Registry should be created when autodiscover is enabled."""
         from wilco import ComponentRegistry
-        from wilco.bridges.django.views import get_registry, _get_handlers
+        from wilco.bridges.django.views import get_registry
 
         registry = get_registry()
 

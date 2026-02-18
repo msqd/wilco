@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-18
+
 ### Added
 
 - **Flask Bridge**: New `wilco.bridges.flask` module for Flask framework integration
+  with Blueprint-based API (`create_blueprint`), matching FastAPI/Starlette bridges
 - **Flask Example**: Complete example with Flask-Admin and live preview
 - **FastAPI Live Preview**: ASGI middleware and JavaScript for real-time component
   preview in SQLAdmin edit/create forms
@@ -21,20 +24,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`STATIC_DIR` export**: `wilco.bridges.base.STATIC_DIR` exposes path to wilco's
   static files (loader.js) for non-Django frameworks
 - **`ComponentRegistry.sources` property**: Read-only access to registered sources
+- **Flask documentation**: Complete how-to guide for Flask integration
 - **HTTP Caching specification**: Documentation for cache control strategy
 
 ### Changed
 
 - **Django example renamed** from `django/` to `django-unfold/` to distinguish from
   the new vanilla variant
-- **`BridgeHandlers` shared logic**: FastAPI and Django bridges now use centralized
-  `BridgeHandlers` from `wilco.bridges.base` instead of duplicating bundle
-  cache/serving logic
+- **`BridgeHandlers` shared logic**: FastAPI, Django, and Flask bridges now use
+  centralized `BridgeHandlers` from `wilco.bridges.base` instead of duplicating
+  bundle cache/serving logic
 - **Component name validation**: Stricter regex-based validation (alphanumerics,
   underscores, dots, colons only) replacing simple path traversal check
 - **Registry `add_source`**: Now warns instead of crashing when source path doesn't
   exist or isn't a directory
 - **Symlink handling**: Component discovery uses resolved paths to avoid duplicates
+- **Documentation**: All how-to guides updated with correct ports, live preview
+  sections, and Flask coverage
 
 ## [0.3.0] - 2026-02-08
 
@@ -68,5 +74,6 @@ This release marks a fresh start with a new license model.
 - **Source Maps**: Full debugging support in browser devtools
 - **Error Handling**: Typed error classes for better debugging
 
-[Unreleased]: https://github.com/msqd/wilco/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/msqd/wilco/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/msqd/wilco/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/msqd/wilco/releases/tag/0.3.0

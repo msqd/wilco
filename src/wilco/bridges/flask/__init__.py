@@ -61,6 +61,8 @@ def create_blueprint(registry: ComponentRegistry) -> Blueprint:
             result = handlers.get_bundle(name)
         except ValueError:
             return jsonify({"detail": f"Invalid component name: '{name}'"}), 422
+        except RuntimeError as e:
+            return jsonify({"detail": f"Bundling failed: {e}"}), 500
 
         if result is None:
             return jsonify({"detail": f"Bundle '{name}' not found"}), 404

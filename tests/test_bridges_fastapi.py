@@ -158,6 +158,7 @@ class TestGetBundle:
     def test_caches_bundle_on_repeated_requests(self, client: TestClient) -> None:
         """Should cache bundles and not re-bundle on repeated requests."""
         from wilco.bridges import base as base_module
+
         original_bundle = base_module.bundle_component
         call_count = 0
 
