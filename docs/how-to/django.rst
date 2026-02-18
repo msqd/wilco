@@ -318,18 +318,6 @@ Bundle caching
 Bundles are cached in memory with file modification time (mtime) invalidation.
 When a source file changes, the cache is automatically invalidated.
 
-To manually clear the cache:
-
-.. code-block:: python
-
-    from wilco.bridges.django.views import clear_bundle_cache
-
-    # Clear all
-    clear_bundle_cache()
-
-    # Clear specific component
-    clear_bundle_cache("store:product")
-
 Complete example
 ================
 
@@ -422,22 +410,47 @@ Component with both list and detail views:
 Example application
 ===================
 
-A complete example application is available in the `examples/django/
-<https://github.com/msqd/wilco/tree/main/examples/django>`_ directory.
-It demonstrates:
+Example applications
+====================
+
+Two complete Django example applications are available:
+
+Django Unfold (``django-unfold/``)
+----------------------------------
+
+The `examples/django-unfold/
+<https://github.com/msqd/wilco/tree/main/examples/django-unfold>`_ directory
+demonstrates Django with the Unfold admin theme:
 
 - Jinja2 template-based rendering with wilco components
-- Django Unfold admin with live preview
+- Django Unfold admin with live preview (tabbed interface)
 - Django ORM models for products
 - Component discovery from Django apps
 
-To run the example:
-
 .. code-block:: bash
 
-    cd examples/django
+    cd examples/django-unfold
     make setup   # Install deps, migrate, load fixtures
     make start   # Run development server
 
 Visit http://localhost:8000 for the store, http://localhost:8000/admin for the admin
+(credentials: admin/admin).
+
+Django Vanilla (``django-vanilla/``)
+------------------------------------
+
+The `examples/django-vanilla/
+<https://github.com/msqd/wilco/tree/main/examples/django-vanilla>`_ directory
+demonstrates Django with the standard built-in admin:
+
+- Same features as Django Unfold but with standard admin UI
+- ``LivePreviewAdminMixin`` works with both admin themes
+
+.. code-block:: bash
+
+    cd examples/django-vanilla
+    make setup   # Install deps, migrate, load fixtures
+    make start   # Run development server
+
+Visit http://localhost:8100 for the store, http://localhost:8100/admin for the admin
 (credentials: admin/admin).

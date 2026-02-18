@@ -8,7 +8,7 @@
 [![Documentation](https://readthedocs.org/projects/python-wilco/badge/?version=latest)](https://python-wilco.readthedocs.io/)
 [![License](https://img.shields.io/badge/license-MSL--1.0-blue.svg)](LICENSE.md)
 
-**Documentation:** [FastAPI Guide](https://python-wilco.readthedocs.io/en/latest/how-to/fastapi.html) | [Django Guide](https://python-wilco.readthedocs.io/en/latest/how-to/django.html) | [Starlette Guide](https://python-wilco.readthedocs.io/en/latest/how-to/starlette.html)
+**Documentation:** [FastAPI Guide](https://python-wilco.readthedocs.io/en/latest/how-to/fastapi.html) | [Django Guide](https://python-wilco.readthedocs.io/en/latest/how-to/django.html) | [Flask Guide](https://python-wilco.readthedocs.io/en/latest/how-to/flask.html) | [Starlette Guide](https://python-wilco.readthedocs.io/en/latest/how-to/starlette.html)
 
 ## Features
 
@@ -16,12 +16,12 @@
 - **No frontend build pipeline** — Components bundled on-the-fly with esbuild when requested
 - **Full source map support** — Debug TypeScript directly in browser devtools
 - **Component composition** — Components can dynamically load other components
-- **Framework agnostic** — Works with FastAPI, Django, Starlette, or any ASGI-compatible framework
+- **Framework agnostic** — Works with FastAPI, Django, Flask, Starlette, or any ASGI/WSGI-compatible framework
 
 ## Quick Start
 
 ```bash
-pip install wilco[fastapi]  # or wilco[django] or wilco[starlette]
+pip install wilco[fastapi]  # or wilco[django], wilco[flask], wilco[starlette]
 ```
 
 ### Create a component

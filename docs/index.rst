@@ -24,6 +24,7 @@ then dynamically bundled with esbuild and loaded by the frontend at runtime.
 
    how-to/fastapi
    how-to/django
+   how-to/flask
    how-to/starlette
 
 .. toctree::
@@ -52,7 +53,7 @@ Features
 - **No frontend build pipeline** — Components bundled on-the-fly with esbuild when requested
 - **Full source map support** — Debug TypeScript directly in browser devtools
 - **Component composition** — Components can dynamically load other components via ``useComponent``
-- **Framework agnostic** — Works with FastAPI, Django, Starlette, or any ASGI-compatible framework
+- **Framework agnostic** — Works with FastAPI, Django, Flask, Starlette, or any ASGI/WSGI-compatible framework
 
 Quick example
 -------------
@@ -116,7 +117,7 @@ Documentation
    * - :doc:`tutorials/index`
      - Learning-oriented lessons to get started with wilco
    * - :doc:`how-to/index`
-     - Goal-oriented guides for specific tasks (FastAPI, Django, Starlette)
+     - Goal-oriented guides for specific tasks (FastAPI, Django, Flask, Starlette)
    * - :doc:`reference/index`
      - Technical reference for APIs and specifications
    * - :doc:`explanation/index`
@@ -151,12 +152,20 @@ Complete example applications are available on GitHub:
 
    * - Framework
      - Description
-   * - `FastAPI <https://github.com/msqd/wilco/tree/main/examples/fastapi>`_
-     - React SPA frontend with SQLAdmin, REST API, and component bundles
-   * - `Django <https://github.com/msqd/wilco/tree/main/examples/django>`_
+   * - `Django Unfold <https://github.com/msqd/wilco/tree/main/examples/django-unfold>`_
      - Jinja2 templates, Django Unfold admin with live preview, component discovery
+   * - `Django Vanilla <https://github.com/msqd/wilco/tree/main/examples/django-vanilla>`_
+     - Jinja2 templates, standard Django admin with live preview
+   * - `Flask <https://github.com/msqd/wilco/tree/main/examples/flask>`_
+     - Jinja2 templates, Flask-Admin with live preview, SQLAlchemy models
+   * - `FastAPI <https://github.com/msqd/wilco/tree/main/examples/fastapi>`_
+     - React SPA frontend with SQLAdmin, live preview, REST API, and component bundles
    * - `Starlette <https://github.com/msqd/wilco/tree/main/examples/starlette>`_
-     - Jinja2 templates, Starlette-Admin, SQLAlchemy models, shared components
+     - Jinja2 templates, Starlette-Admin with live preview, SQLAlchemy models
+   * - `ASGI Minimal <https://github.com/msqd/wilco/tree/main/examples/asgi-minimal>`_
+     - Pure ASGI application for educational/low-dependency use
+   * - `WSGI Minimal <https://github.com/msqd/wilco/tree/main/examples/wsgi-minimal>`_
+     - Pure WSGI application for educational/low-dependency use
 
 See the :doc:`how-to/index` guides for detailed integration instructions.
 

@@ -13,4 +13,5 @@ accomplishing specific tasks with your preferred Python framework.
 
    fastapi
    django
+   flask
    starlette

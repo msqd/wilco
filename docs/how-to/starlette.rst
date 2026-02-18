@@ -51,7 +51,7 @@ Here's a minimal example that serves components from a directory:
 
     if __name__ == "__main__":
         import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+        uvicorn.run(app, host="0.0.0.0", port=8400)
 
 This creates three endpoints:
 
@@ -237,7 +237,7 @@ Here's a complete example with CORS middleware:
 
     if __name__ == "__main__":
         import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+        uvicorn.run(app, host="0.0.0.0", port=8400, reload=True)
 
 Frontend integration
 ====================
@@ -340,7 +340,7 @@ To run the example:
     make setup   # Install deps, create database, load fixtures
     make start   # Run development server
 
-Visit http://localhost:8000 for the store, http://localhost:8000/admin for the admin.
+Visit http://localhost:8400 for the store, http://localhost:8400/admin for the admin.
 
 Live preview in Starlette-Admin
 ===============================
@@ -518,13 +518,12 @@ Ensure your static file mounts serve both the wilco loader and your preview scri
 
     from starlette.staticfiles import StaticFiles
 
-    # Wilco static files from the package
-    WILCO_STATIC_DIR = Path("path/to/wilco/bridges/django/static")
+    from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 
     routes = [
         # Your routes...
         Mount("/static", StaticFiles(directory="resources/static"), name="static"),
-        Mount("/wilco-static", StaticFiles(directory=WILCO_STATIC_DIR), name="wilco_static"),
+        Mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="wilco_static"),
     ]
 
 Comparison with FastAPI

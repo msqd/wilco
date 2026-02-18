@@ -15,13 +15,13 @@ wilco/
 │   ├── wilco/                  # Python package (see src/wilco/CLAUDE.md)
 │   │   ├── registry.py         # Component discovery
 │   │   ├── bundler.py          # esbuild integration
-│   │   ├── bridges/            # Framework integrations
+│   │   ├── bridges/            # Framework integrations (Django, FastAPI, Flask, Starlette)
 │   │   └── examples/           # Example components
 │   └── wilcojs/                # JavaScript packages (see src/wilcojs/CLAUDE.md)
 │       └── react/              # React frontend
 ├── tests/                      # Python tests
 ├── docs/                       # Documentation (RST/Sphinx)
-└── examples/                   # Example projects (django-project, etc.)
+└── examples/                   # Example projects (django-unfold, django-vanilla, flask, fastapi, starlette, asgi-minimal, wsgi-minimal)
 ```
 
 ## Commands
@@ -52,10 +52,11 @@ Open http://localhost:5173
 
 All wilco library documentation lives in `docs/` using reStructuredText (Sphinx):
 
-- `docs/fastapi.rst` - FastAPI bridge integration
-- `docs/django.rst` - Django bridge integration
+- `docs/how-to/fastapi.rst` - FastAPI bridge integration
+- `docs/how-to/django.rst` - Django bridge integration
+- `docs/how-to/flask.rst` - Flask bridge integration
+- `docs/how-to/starlette.rst` - Starlette bridge integration
 - `docs/specs/` - Component specifications
-- `docs/internals/` - Internal architecture
 
 Major features should be mentioned in `README.md` with links to detailed documentation.
 
@@ -64,7 +65,7 @@ Major features should be mentioned in `README.md` with links to detailed documen
 - **Co-located components**: Each component has `index.tsx` and optional `schema.json` (`__init__.py` is optional)
 - **Barrel pattern**: Use `index.ts` only for exports; put components in their own files
 - **useComponent**: When a component needs another component, use `useComponent` hook instead of direct imports
-- **Bridge pattern**: Framework-specific integrations (see `docs/fastapi.rst`, `docs/django.rst`)
+- **Bridge pattern**: Framework-specific integrations (see `docs/how-to/fastapi.rst`, `docs/how-to/django.rst`, `docs/how-to/flask.rst`, `docs/how-to/starlette.rst`)
 
 ## Development guidelines
 

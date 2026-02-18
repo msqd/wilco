@@ -86,8 +86,8 @@ All examples provide an admin interface for managing products:
 Example-Specific Implementations
 --------------------------------
 
-Django Example
-~~~~~~~~~~~~~~
+Django Unfold Example
+~~~~~~~~~~~~~~~~~~~~~
 
 **Frontend Approach:** Server-rendered templates with embedded wilco components
 
@@ -101,11 +101,38 @@ Django Example
 - Tabbed interface (Details, Preview)
 - Side-by-side list/detail mode preview
 
-**Wilco Components:**
+**Wilco Components:** Uses shared components from ``examples/common/components/store/``
 
 - ``store:product`` - Single product (list/detail modes)
 - ``store:product_list`` - Product grid using ``useComponent``
 - ``store:product_preview`` - Admin preview component
+
+Django Vanilla Example
+~~~~~~~~~~~~~~~~~~~~~~
+
+**Frontend Approach:** Server-rendered templates with embedded wilco components (same as Unfold)
+
+**Admin:** Standard Django built-in admin
+
+- ``LivePreviewAdminMixin`` works with both admin themes
+- Same live preview functionality as Unfold variant
+
+Flask Example
+~~~~~~~~~~~~~
+
+**Frontend Approach:** Server-rendered templates with Jinja2
+
+- Uses Jinja2 templates (``base.html``, ``product_list.html``, ``product_detail.html``)
+- Components rendered via ``WilcoComponentWidget``
+- Single server process
+
+**Admin:** Flask-Admin
+
+- ModelView for products with live preview
+- Script injection via ``after_request`` hook
+- Validation endpoints for real-time preview
+
+**Wilco Components:** Uses shared components from ``examples/common/components/store/``
 
 FastAPI Example
 ~~~~~~~~~~~~~~~
@@ -115,13 +142,13 @@ FastAPI Example
 - Full React application with React Router
 - Fetches data via REST API (``/api/products``)
 - Tailwind CSS styling
-- Separate dev server (port 5173)
+- Separate dev server (port 8300, API on 8301)
 
 **Admin:** SQLAdmin
 
 - Web-based admin interface
 - CRUD operations for products
-- No live wilco preview
+- Live preview via ASGI middleware script injection
 
 **API Endpoints:**
 
@@ -142,13 +169,35 @@ Starlette Example
 - Native Starlette admin package
 - SQLAlchemy integration
 - Modern UI with CRUD operations
-- Wilco live preview integration (like Django's ``LivePreviewAdminMixin``)
+- Live preview via ASGI middleware script injection
 
 **Wilco Components:** Uses shared components from ``examples/common/components/store/``
 
 - ``store:product`` - Single product (list/detail modes)
 - ``store:product_list`` - Product grid using ``useComponent``
 - ``store:product_preview`` - Admin preview component
+
+ASGI Minimal Example
+~~~~~~~~~~~~~~~~~~~~
+
+**Frontend Approach:** Server-rendered templates with Jinja2
+
+- Pure ASGI application (``async def app(scope, receive, send)``)
+- No web framework, direct protocol handling
+- Educational/low-dependency use
+
+**Admin:** None (no admin interface)
+
+WSGI Minimal Example
+~~~~~~~~~~~~~~~~~~~~
+
+**Frontend Approach:** Server-rendered templates with Jinja2
+
+- Pure WSGI application (``def app(environ, start_response)``)
+- No web framework, direct protocol handling
+- Educational/low-dependency use
+
+**Admin:** None (no admin interface)
 
 Shared Resources
 ----------------
@@ -158,7 +207,7 @@ Shared Resources
 Components
 ~~~~~~~~~~
 
-Shared wilco components used by Django and Starlette examples:
+Shared wilco components used by all full-framework examples:
 
 ``components/store/product/``
     Single product component with list/detail modes
@@ -206,9 +255,13 @@ additional ports increment from the base:
 
 **Default Ports:**
 
-- **Django:** ``HTTP_PORT`` (8000)
-- **FastAPI:** ``HTTP_PORT`` (8000) + ``FRONTEND_PORT`` (8001)
-- **Starlette:** ``HTTP_PORT`` (8000)
+- **Django Unfold:** 8000
+- **Django Vanilla:** 8100
+- **Flask:** 8200
+- **FastAPI:** 8300 (frontend) + 8301 (API)
+- **Starlette:** 8400
+- **ASGI Minimal:** 8500
+- **WSGI Minimal:** 8600
 
 Running All Examples
 ~~~~~~~~~~~~~~~~~~~~
@@ -219,9 +272,6 @@ From ``examples/`` directory:
 
     # Run all examples simultaneously (uses overmind)
     make start
-
-    # Or with custom base ports
-    make start DJANGO_PORT=8000 FASTAPI_PORT=8100 STARLETTE_PORT=8200
 
 Each example runs on its own port range to avoid conflicts.
 
@@ -263,40 +313,69 @@ Comparison Matrix
 
 .. list-table::
    :header-rows: 1
-   :widths: 25 25 25 25
+   :widths: 15 15 12 12 12 12 12 12
 
    * - Feature
-     - Django
+     - Django Unfold
+     - Django Vanilla
+     - Flask
      - FastAPI
      - Starlette
+     - ASGI Minimal
+     - WSGI Minimal
+   * - Protocol
+     - WSGI
+     - WSGI
+     - WSGI
+     - ASGI
+     - ASGI
+     - ASGI
+     - WSGI
    * - Frontend
-     - Jinja2 templates
+     - Jinja2
+     - Jinja2
+     - Jinja2
      - React SPA
-     - Jinja2 templates
+     - Jinja2
+     - Jinja2
+     - Jinja2
    * - Admin
      - Unfold
+     - Built-in
+     - Flask-Admin
      - SQLAdmin
      - Starlette-Admin
+     - None
+     - None
    * - Live Preview
      - Yes
-     - No
      - Yes
+     - Yes
+     - Yes
+     - Yes
+     - No
+     - No
    * - ORM
+     - Django ORM
      - Django ORM
      - SQLAlchemy
      - SQLAlchemy
-   * - Processes
-     - 1
-     - 2
-     - 1
+     - SQLAlchemy
+     - aiosqlite
+     - sqlite3
+   * - Port
+     - 8000
+     - 8100
+     - 8200
+     - 8300/8301
+     - 8400
+     - 8500
+     - 8600
    * - Components
-     - Local (apps/store/)
-     - Library examples
-     - Shared (common/)
-
-Migration Notes
----------------
-
-The Django example currently has its own components in ``apps/store/components/``.
-These are identical to the shared components in ``examples/common/components/store/``.
-A future refactoring should update Django to use the shared components.
+     - Shared
+     - Shared
+     - Shared
+     - Shared
+     - Shared
+     - Shared
+     - Shared

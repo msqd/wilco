@@ -11,8 +11,10 @@ wilco/
 ├── registry.py         # Component discovery and registration
 ├── bundler.py          # esbuild integration for bundling TypeScript
 ├── bridges/            # Framework-specific integrations
+│   ├── base.py         # Shared BridgeHandlers, STATIC_DIR export
 │   ├── fastapi/        # FastAPI router factory
 │   ├── django/         # Django app with views, widgets, templatetags
+│   ├── flask/          # Flask blueprint factory
 │   └── starlette/      # Starlette route factory
 └── examples/           # Example components for testing/demos
 ```
@@ -49,9 +51,10 @@ Components are auto-discovered and available at `/api/bundles/<name>.js`.
 
 Framework integrations are documented separately:
 
-- **FastAPI**: See `docs/fastapi.rst`
-- **Django**: See `docs/django.rst`
-- **Starlette**: See `docs/starlette.rst`
+- **FastAPI**: See `docs/how-to/fastapi.rst`
+- **Django**: See `docs/how-to/django.rst`
+- **Flask**: See `docs/how-to/flask.rst`
+- **Starlette**: See `docs/how-to/starlette.rst`
 
 ## Testing
 

@@ -47,7 +47,7 @@ Here's a minimal example that serves components from a directory:
 
     if __name__ == "__main__":
         import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=8000)
+        uvicorn.run(app, host="0.0.0.0", port=8301)
 
 This creates three endpoints:
 
@@ -111,6 +111,7 @@ The response contains the bundled ESM JavaScript with inline source maps.
 **Errors:**
 
 - ``404``: Component not found
+- ``422``: Invalid component name
 - ``500``: Bundle generation failed
 
 GET /bundles/{name}/metadata
@@ -142,6 +143,7 @@ The ``hash`` field can be used for cache busting on the frontend.
 **Errors:**
 
 - ``404``: Component not found
+- ``422``: Invalid component name
 
 Component registry
 ==================
@@ -218,7 +220,7 @@ Here's a complete example with CORS and development server:
 
     if __name__ == "__main__":
         import uvicorn
-        uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+        uvicorn.run(app, host="0.0.0.0", port=8301, reload=True)
 
 Frontend integration
 ====================
@@ -250,9 +252,10 @@ A complete example application is available in the `examples/fastapi/
 It demonstrates:
 
 - A React SPA frontend (Vite + React 19)
-- SQLAdmin for product management
+- SQLAdmin for product management with live preview
 - REST API endpoints for products
 - Component bundles served via the FastAPI bridge
+- ASGI middleware for injecting preview scripts
 
 To run the example:
 
@@ -262,4 +265,105 @@ To run the example:
     make setup   # Install deps, create database, load fixtures
     make start   # Run backend + frontend (requires overmind)
 
-Visit http://localhost:8001 for the store, http://localhost:8000/admin for the admin.
+Visit http://localhost:8300 for the store, http://localhost:8301/admin for the admin.
+
+Live preview in SQLAdmin
+========================
+
+The FastAPI example includes live preview functionality that shows real-time
+component updates as admin users edit forms.
+
+Architecture
+------------
+
+The live preview system consists of four parts:
+
+1. **AdminPreviewMiddleware** - ASGI middleware that injects preview scripts into admin pages
+2. **admin-preview-inject.js** - Creates the two-column layout UI
+3. **live-loader-fastapi.js** - Handles form validation and preview updates
+4. **Validation endpoints** - FastAPI routes for form validation returning component props
+
+AdminPreviewMiddleware
+----------------------
+
+This ASGI middleware intercepts HTML responses for ``/admin`` routes and injects
+the necessary scripts before ``</body>``:
+
+.. code-block:: python
+
+    from starlette.types import ASGIApp, Message, Receive, Scope, Send
+
+    class AdminPreviewMiddleware:
+        """Middleware to inject live preview scripts into SQLAdmin pages."""
+
+        INJECT_SCRIPTS = """
+        <script src="/wilco-static/wilco/loader.js" defer></script>
+        <script src="/static/wilco/admin-preview-inject.js" defer></script>
+        <script src="/static/wilco/live-loader-fastapi.js" defer></script>
+        </body>"""
+
+        def __init__(self, app: ASGIApp) -> None:
+            self.app = app
+
+        async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+            if scope["type"] != "http":
+                await self.app(scope, receive, send)
+                return
+
+            path = scope.get("path", "")
+
+            # Only inject into admin pages
+            if not path.startswith("/admin"):
+                await self.app(scope, receive, send)
+                return
+
+            # Buffer response and inject scripts before </body>
+            # ... (full implementation in examples/fastapi/app/main.py)
+
+Wrap your application after mounting admin:
+
+.. code-block:: python
+
+    app = FastAPI()
+    admin = Admin(app, engine, title="Admin")
+    admin.add_view(ProductAdmin)
+
+    # Wrap with preview middleware
+    app = AdminPreviewMiddleware(app)
+
+Validation endpoint
+-------------------
+
+Create validation endpoints that receive form data and return component props:
+
+.. code-block:: python
+
+    from fastapi import APIRouter, Depends, Request
+    from starlette.responses import JSONResponse
+    from sqlalchemy.orm import Session
+
+    preview_router = APIRouter()
+
+    @preview_router.post("/admin/product/preview")
+    async def validate_preview_create(request: Request, db: Session = Depends(get_db)):
+        return await _validate_preview(request, db)
+
+    @preview_router.post("/admin/product/{product_id:int}/preview")
+    async def validate_preview_edit(request: Request, product_id: int, db: Session = Depends(get_db)):
+        return await _validate_preview(request, db, product_id=product_id)
+
+.. important::
+
+   Preview routes must be registered **before** SQLAdmin's mount to take priority
+   over SQLAdmin's ``/admin`` catch-all route.
+
+Static files setup
+------------------
+
+Serve the wilco loader script alongside your application's static files:
+
+.. code-block:: python
+
+    from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
+
+    app.mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="wilco_static")
