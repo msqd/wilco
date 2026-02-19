@@ -31,9 +31,7 @@ class ProductAdmin(LivePreviewAdminMixin, admin.ModelAdmin):
                 '<img src="{}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">',
                 obj.image.url,
             )
-        return format_html(
-            '<div style="width: 40px; height: 40px; background: #e0e0e0; border-radius: 4px;"></div>'
-        )
+        return format_html('<div style="width: 40px; height: 40px; background: #e0e0e0; border-radius: 4px;"></div>')
 
     search_fields = ["name", "description"]
     readonly_fields = ["preview"]
@@ -53,9 +51,7 @@ class ProductAdmin(LivePreviewAdminMixin, admin.ModelAdmin):
         ),
     )
 
-    def get_preview_props(
-        self, form_data: dict[str, Any], instance: Any = None
-    ) -> dict[str, Any]:
+    def get_preview_props(self, form_data: dict[str, Any], instance: Any = None) -> dict[str, Any]:
         """Convert form data to component props.
 
         Args:

@@ -101,9 +101,7 @@ def load_fixtures() -> None:
 def get_all_products() -> list[Product]:
     """Get all products from the database."""
     with get_connection() as conn:
-        cursor = conn.execute(
-            "SELECT id, name, description, price, image, created_at FROM products ORDER BY id"
-        )
+        cursor = conn.execute("SELECT id, name, description, price, image, created_at FROM products ORDER BY id")
         rows = cursor.fetchall()
         return [
             Product(
@@ -112,9 +110,7 @@ def get_all_products() -> list[Product]:
                 description=row["description"] or "",
                 price=row["price"],
                 image=row["image"] or "",
-                created_at=datetime.fromisoformat(row["created_at"])
-                if row["created_at"]
-                else datetime.now(),
+                created_at=datetime.fromisoformat(row["created_at"]) if row["created_at"] else datetime.now(),
             )
             for row in rows
         ]
@@ -136,9 +132,7 @@ def get_product_by_id(product_id: int) -> Product | None:
             description=row["description"] or "",
             price=row["price"],
             image=row["image"] or "",
-            created_at=datetime.fromisoformat(row["created_at"])
-            if row["created_at"]
-            else datetime.now(),
+            created_at=datetime.fromisoformat(row["created_at"]) if row["created_at"] else datetime.now(),
         )
 
 

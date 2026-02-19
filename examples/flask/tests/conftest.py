@@ -10,10 +10,12 @@ from app.models import Product
 @pytest.fixture
 def app():
     """Create a test Flask application with an in-memory database."""
-    app = create_app(test_config={
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-    })
+    app = create_app(
+        test_config={
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        }
+    )
 
     with app.app_context():
         _db.create_all()

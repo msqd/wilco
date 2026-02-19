@@ -187,9 +187,7 @@ def api_get_bundle(name: str) -> tuple[str, str, bytes, dict[str, str]]:
         error = {"detail": f"Bundle '{name}' not found"}
         return "404 Not Found", "application/json", json.dumps(error).encode("utf-8"), {}
 
-    return "200 OK", "application/javascript", result.code.encode("utf-8"), {
-        "Cache-Control": CACHE_CONTROL_IMMUTABLE
-    }
+    return "200 OK", "application/javascript", result.code.encode("utf-8"), {"Cache-Control": CACHE_CONTROL_IMMUTABLE}
 
 
 def api_get_metadata(name: str) -> tuple[str, str, bytes, dict[str, str]]:

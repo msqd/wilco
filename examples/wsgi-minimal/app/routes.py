@@ -31,9 +31,7 @@ class Router:
 
         return decorator
 
-    def dispatch(
-        self, method: str, path: str, environ: dict
-    ) -> tuple[str, str, bytes]:
+    def dispatch(self, method: str, path: str, environ: dict) -> tuple[str, str, bytes]:
         """Dispatch a request to the appropriate handler."""
         for route_method, pattern, handler in self.routes:
             if route_method != method.upper():

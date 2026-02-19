@@ -68,16 +68,12 @@ async def validate_preview_create(request: Request, db: Session = Depends(get_db
 
 
 @preview_router.post("/admin/product/{product_id:int}/preview")
-async def validate_preview_edit(
-    request: Request, product_id: int, db: Session = Depends(get_db)
-) -> JSONResponse:
+async def validate_preview_edit(request: Request, product_id: int, db: Session = Depends(get_db)) -> JSONResponse:
     """Validate form data and return props for live preview (edit mode)."""
     return await _validate_preview(request, db, product_id=product_id)
 
 
-async def _validate_preview(
-    request: Request, db: Session, product_id: int | None = None
-) -> JSONResponse:
+async def _validate_preview(request: Request, db: Session, product_id: int | None = None) -> JSONResponse:
     """Validate form data and return props for live preview."""
     product = None
 

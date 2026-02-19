@@ -128,11 +128,7 @@ def create_admin(app):
     # Inject preview scripts into admin pages
     @app.after_request
     def inject_preview_scripts(response):
-        if (
-            request.path.startswith("/admin")
-            and response.content_type
-            and "text/html" in response.content_type
-        ):
+        if request.path.startswith("/admin") and response.content_type and "text/html" in response.content_type:
             html = response.get_data(as_text=True)
             if "</body>" in html:
                 html = html.replace("</body>", INJECT_SCRIPTS)

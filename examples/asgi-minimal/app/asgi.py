@@ -92,9 +92,7 @@ async def product_list(scope: dict, params: dict[str, str]) -> tuple[int, str, b
 
 
 @router.get("/products/(?P<product_id>\\d+)")
-async def product_detail(
-    scope: dict, params: dict[str, str]
-) -> tuple[int, str, bytes]:
+async def product_detail(scope: dict, params: dict[str, str]) -> tuple[int, str, bytes]:
     """Product detail page."""
     product_id = int(params["product_id"])
     product = await get_product_by_id(product_id)
@@ -189,9 +187,7 @@ async def api_get_bundle(name: str) -> tuple[int, str, bytes, dict[str, str]]:
         error = {"detail": f"Bundle '{name}' not found"}
         return 404, "application/json", json.dumps(error).encode("utf-8"), {}
 
-    return 200, "application/javascript", result.code.encode("utf-8"), {
-        "Cache-Control": CACHE_CONTROL_IMMUTABLE
-    }
+    return 200, "application/javascript", result.code.encode("utf-8"), {"Cache-Control": CACHE_CONTROL_IMMUTABLE}
 
 
 async def api_get_metadata(name: str) -> tuple[int, str, bytes, dict[str, str]]:
