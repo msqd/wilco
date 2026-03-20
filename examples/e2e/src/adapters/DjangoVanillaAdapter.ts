@@ -1,9 +1,7 @@
 import path from "node:path";
 import type { FrameworkAdapter, PageSelectors } from "./FrameworkAdapter.js";
-import type { ServerConfig } from "../server/types.js";
+import type { ServerConfig, BundleMode } from "../server/types.js";
 import { getExamplesDir } from "../server/ServerManager.js";
-
-const DJANGO_VANILLA_PORT = 8100;
 
 /**
  * Adapter for Django Vanilla example.
@@ -14,31 +12,52 @@ export class DjangoVanillaAdapter implements FrameworkAdapter {
   readonly name = "Django Vanilla";
   readonly hasLivePreview = true;
   readonly isSPA = false;
+  readonly mode: BundleMode;
 
-  readonly baseUrl = `http://localhost:${DJANGO_VANILLA_PORT}`;
-  readonly adminUrl = `http://localhost:${DJANGO_VANILLA_PORT}/admin/`;
+  private readonly port: number;
 
   readonly adminCredentials = {
     username: "admin",
     password: "admin",
   };
 
+  constructor(port = 8100, mode: BundleMode = "dev") {
+    this.port = port;
+    this.mode = mode;
+  }
+
+  get baseUrl(): string {
+    return `http://localhost:${this.port}`;
+  }
+
+  get adminUrl(): string {
+    return `http://localhost:${this.port}/admin/`;
+  }
+
   getServerConfigs(): ServerConfig[] {
+    const exampleDir = path.join(getExamplesDir(), "django-vanilla");
+    const env: Record<string, string> = {};
+
+    if (this.mode === "prod") {
+      env.WILCO_BUILD_DIR = path.join(exampleDir, "staticfiles", "wilco", "bundles");
+    }
+
     return [
       {
-        name: "django-vanilla",
+        name: `django-vanilla-${this.mode}`,
         command: "uv",
         args: [
           "run",
           "python",
           "manage.py",
           "runserver",
-          String(DJANGO_VANILLA_PORT),
+          String(this.port),
         ],
-        cwd: path.join(getExamplesDir(), "django-vanilla"),
-        port: DJANGO_VANILLA_PORT,
+        cwd: exampleDir,
+        port: this.port,
         healthCheckPath: "/",
         healthCheckTimeout: 30000,
+        ...(Object.keys(env).length > 0 ? { env } : {}),
       },
     ];
   }

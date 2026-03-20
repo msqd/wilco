@@ -6,4 +6,5 @@ export type {
   HealthCheckResult,
   GlobalServerState,
   FrameworkType,
+  BundleMode,
 } from "./types.js";

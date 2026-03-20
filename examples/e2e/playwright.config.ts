@@ -1,23 +1,47 @@
 import { defineConfig, devices } from "@playwright/test";
+import type { BundleMode } from "./src/server/types.js";
 
 /**
  * Playwright configuration for wilco E2E tests.
  *
- * Seven projects for Django Unfold, Django Vanilla, Flask, FastAPI, Starlette, ASGI Minimal, and WSGI Minimal.
+ * 14 projects: 7 frameworks x 2 modes (dev + prod).
+ * Dev projects use ports 8000-8600, prod projects use ports 9000-9600.
  *
  * Each project can be run independently. The globalSetup/globalTeardown
  * handles starting and stopping the appropriate servers based on
- * the WILCO_E2E_FRAMEWORK environment variable.
+ * the WILCO_E2E_FRAMEWORK and WILCO_E2E_MODE environment variables.
  *
  * Usage:
- *   pnpm test                                   # Run all tests (starts all servers)
- *   pnpm test:django-unfold                     # Run Django Unfold tests only
- *   pnpm test:django-vanilla                    # Run Django Vanilla tests only
- *   pnpm test:flask                             # Run Flask tests only
- *   pnpm test:asgi-minimal                      # Run ASGI Minimal tests only
- *   pnpm test:wsgi-minimal                      # Run WSGI Minimal tests only
- *   WILCO_E2E_FRAMEWORK=django-unfold pnpm test # Same as above
+ *   pnpm test                                   # Run all tests (all modes)
+ *   pnpm test:dev                               # Run all tests in dev mode
+ *   pnpm test:prod                              # Run all tests in prod mode
+ *   pnpm test:django-unfold                     # Run Django Unfold tests (both modes)
+ *   pnpm test:django-unfold:dev                 # Run Django Unfold tests (dev only)
+ *   pnpm test:django-unfold:prod                # Run Django Unfold tests (prod only)
  */
+
+const FRAMEWORKS = [
+  { name: "django-unfold", devPort: 8000, prodPort: 9000 },
+  { name: "django-vanilla", devPort: 8100, prodPort: 9100 },
+  { name: "flask", devPort: 8200, prodPort: 9200 },
+  { name: "fastapi", devPort: 8300, prodPort: 9300 },
+  { name: "starlette", devPort: 8400, prodPort: 9400 },
+  { name: "asgi-minimal", devPort: 8500, prodPort: 9500 },
+  { name: "wsgi-minimal", devPort: 8600, prodPort: 9600 },
+] as const;
+
+function makeProject(fw: (typeof FRAMEWORKS)[number], mode: BundleMode) {
+  const port = mode === "dev" ? fw.devPort : fw.prodPort;
+  return {
+    name: `${fw.name}-${mode}`,
+    testDir: `./tests/${fw.name}`,
+    use: {
+      ...devices["Desktop Chrome"],
+      baseURL: `http://localhost:${port}`,
+    },
+  };
+}
+
 export default defineConfig({
   // Test directory
   testDir: "./tests",
@@ -70,63 +94,9 @@ export default defineConfig({
     timeout: 10000,
   },
 
-  // Projects for each framework (ports in 100 increments)
-  projects: [
-    {
-      name: "django-unfold",
-      testDir: "./tests/django-unfold",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:8000",
-      },
-    },
-    {
-      name: "django-vanilla",
-      testDir: "./tests/django-vanilla",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:8100",
-      },
-    },
-    {
-      name: "flask",
-      testDir: "./tests/flask",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:8200",
-      },
-    },
-    {
-      name: "fastapi",
-      testDir: "./tests/fastapi",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:8300",
-      },
-    },
-    {
-      name: "starlette",
-      testDir: "./tests/starlette",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:8400",
-      },
-    },
-    {
-      name: "asgi-minimal",
-      testDir: "./tests/asgi-minimal",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:8500",
-      },
-    },
-    {
-      name: "wsgi-minimal",
-      testDir: "./tests/wsgi-minimal",
-      use: {
-        ...devices["Desktop Chrome"],
-        baseURL: "http://localhost:8600",
-      },
-    },
-  ],
+  // Projects: 7 frameworks x 2 modes (dev + prod)
+  projects: FRAMEWORKS.flatMap((fw) => [
+    makeProject(fw, "dev"),
+    makeProject(fw, "prod"),
+  ]),
 });

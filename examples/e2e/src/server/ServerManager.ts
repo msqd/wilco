@@ -60,18 +60,29 @@ export class ServerManager {
       detached: false,
     });
 
-    // Log output for debugging
+    // Buffer output for error reporting; only log if WILCO_E2E_VERBOSE=1
+    const verbose = process.env.WILCO_E2E_VERBOSE === "1";
+    const outputBuffer: string[] = [];
+
     proc.stdout?.on("data", (data: Buffer) => {
       const lines = data.toString().trim().split("\n");
       for (const line of lines) {
-        console.log(`  [${config.name}] ${line}`);
+        outputBuffer.push(`[${config.name}] ${line}`);
+        if (outputBuffer.length > 50) outputBuffer.shift();
+        if (verbose) {
+          console.log(`  [${config.name}] ${line}`);
+        }
       }
     });
 
     proc.stderr?.on("data", (data: Buffer) => {
       const lines = data.toString().trim().split("\n");
       for (const line of lines) {
-        console.log(`  [${config.name}:err] ${line}`);
+        outputBuffer.push(`[${config.name}:err] ${line}`);
+        if (outputBuffer.length > 50) outputBuffer.shift();
+        if (verbose) {
+          console.log(`  [${config.name}:err] ${line}`);
+        }
       }
     });
 
@@ -103,6 +114,12 @@ export class ServerManager {
 
     if (!result.healthy) {
       console.error(`  Failed to start ${config.name}: ${result.error}`);
+      if (outputBuffer.length > 0) {
+        console.error(`  Last output from ${config.name}:`);
+        for (const line of outputBuffer) {
+          console.error(`    ${line}`);
+        }
+      }
       await this.stop(config.name);
       throw new Error(`Server ${config.name} failed to start: ${result.error}`);
     }

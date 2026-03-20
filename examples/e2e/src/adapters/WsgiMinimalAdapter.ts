@@ -1,5 +1,5 @@
 import type { FrameworkAdapter, PageSelectors } from "./FrameworkAdapter.js";
-import type { ServerConfig } from "../server/types.js";
+import type { ServerConfig, BundleMode } from "../server/types.js";
 
 /**
  * Adapter for the WSGI Minimal example.
@@ -10,14 +10,16 @@ export class WsgiMinimalAdapter implements FrameworkAdapter {
   readonly name = "WSGI Minimal";
   readonly hasLivePreview = false;
   readonly isSPA = false;
+  readonly mode: BundleMode;
 
   // WSGI Minimal has no admin interface
   readonly adminCredentials = undefined;
 
   private readonly port: number;
 
-  constructor(port = 8600) {
+  constructor(port = 8600, mode: BundleMode = "dev") {
     this.port = port;
+    this.mode = mode;
   }
 
   get baseUrl(): string {
@@ -30,14 +32,21 @@ export class WsgiMinimalAdapter implements FrameworkAdapter {
   }
 
   getServerConfigs(): ServerConfig[] {
+    const env: Record<string, string> = {};
+
+    if (this.mode === "prod") {
+      env.WILCO_BUILD_DIR = "dist/wilco";
+    }
+
     return [
       {
-        name: "wsgi-minimal",
+        name: `wsgi-minimal-${this.mode}`,
         command: "make",
         args: ["start", `HTTP_PORT=${this.port}`],
         cwd: "../wsgi-minimal",
         port: this.port,
         healthCheckPath: "/",
+        ...(Object.keys(env).length > 0 ? { env } : {}),
       },
     ];
   }

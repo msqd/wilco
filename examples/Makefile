@@ -64,28 +64,34 @@ clean:  ## Clean all examples
 # E2E Tests
 ########################################################################################################################
 
-test-e2e:  ## Run all E2E tests (Django Unfold, Django Vanilla, Flask, FastAPI, Starlette)
-	cd e2e && pnpm test
+test-e2e:  ## Run all E2E tests (dev + prod modes)
+	cd e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test
 
-test-e2e-django-unfold:  ## Run Django Unfold E2E tests only
+test-e2e-dev:  ## Run all E2E tests in dev mode only
+	cd e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test:dev
+
+test-e2e-prod:  ## Run all E2E tests in prod mode only
+	cd e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test:prod
+
+test-e2e-django-unfold:  ## Run Django Unfold E2E tests only (dev + prod)
 	cd e2e && pnpm test:django-unfold
 
-test-e2e-django-vanilla:  ## Run Django Vanilla E2E tests only
+test-e2e-django-vanilla:  ## Run Django Vanilla E2E tests only (dev + prod)
 	cd e2e && pnpm test:django-vanilla
 
-test-e2e-flask:  ## Run Flask E2E tests only
+test-e2e-flask:  ## Run Flask E2E tests only (dev + prod)
 	cd e2e && pnpm test:flask
 
-test-e2e-fastapi:  ## Run FastAPI E2E tests only
+test-e2e-fastapi:  ## Run FastAPI E2E tests only (dev + prod)
 	cd e2e && pnpm test:fastapi
 
-test-e2e-starlette:  ## Run Starlette E2E tests only
+test-e2e-starlette:  ## Run Starlette E2E tests only (dev + prod)
 	cd e2e && pnpm test:starlette
 
-test-e2e-asgi-minimal:  ## Run ASGI Minimal E2E tests only
+test-e2e-asgi-minimal:  ## Run ASGI Minimal E2E tests only (dev + prod)
 	cd e2e && pnpm test:asgi-minimal
 
-test-e2e-wsgi-minimal:  ## Run WSGI Minimal E2E tests only
+test-e2e-wsgi-minimal:  ## Run WSGI Minimal E2E tests only (dev + prod)
 	cd e2e && pnpm test:wsgi-minimal
 
 ########################################################################################################################

@@ -59,8 +59,14 @@ test-backend: install-dev  ## Run backend tests (Python/pytest)
 test-frontend:  ## Run frontend tests (TypeScript typecheck + Vitest)
 	$(call execute,cd src/wilcojs/react && pnpm typecheck && pnpm test:run)
 
-test-e2e:  ## Run E2E tests for all examples (requires setup)
-	$(call execute,cd examples/e2e && pnpm test)
+test-e2e:  ## Run E2E tests for all examples in dev + prod modes
+	$(call execute,cd examples/e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test)
+
+test-e2e-dev:  ## Run E2E tests in dev mode only (live esbuild)
+	$(call execute,cd examples/e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test:dev)
+
+test-e2e-prod:  ## Run E2E tests in prod mode only (pre-built assets)
+	$(call execute,cd examples/e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test:prod)
 
 ########################################################################################################################
 # Documentation
@@ -112,7 +118,7 @@ help:  ## Show available commands
 	@grep -E '^(publish|publish-test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mTesting\033[0m"
-	@grep -E '^(test|test-backend|test-frontend|test-e2e):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(test|test-backend|test-frontend|test-e2e|test-e2e-dev|test-e2e-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mDocumentation\033[0m"
 	@grep -E '^(docs|docs-watch):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

@@ -1,9 +1,7 @@
 import path from "node:path";
 import type { FrameworkAdapter, PageSelectors } from "./FrameworkAdapter.js";
-import type { ServerConfig } from "../server/types.js";
+import type { ServerConfig, BundleMode } from "../server/types.js";
 import { getExamplesDir } from "../server/ServerManager.js";
-
-const FLASK_PORT = 8200;
 
 /**
  * Adapter for Flask example.
@@ -14,17 +12,37 @@ export class FlaskAdapter implements FrameworkAdapter {
   readonly name = "Flask";
   readonly hasLivePreview = true;
   readonly isSPA = false;
+  readonly mode: BundleMode;
 
-  readonly baseUrl = `http://localhost:${FLASK_PORT}`;
-  readonly adminUrl = `http://localhost:${FLASK_PORT}/admin/`;
+  private readonly port: number;
 
   // Flask-Admin doesn't use standard login credentials
   readonly adminCredentials = undefined;
 
+  constructor(port = 8200, mode: BundleMode = "dev") {
+    this.port = port;
+    this.mode = mode;
+  }
+
+  get baseUrl(): string {
+    return `http://localhost:${this.port}`;
+  }
+
+  get adminUrl(): string {
+    return `http://localhost:${this.port}/admin/`;
+  }
+
   getServerConfigs(): ServerConfig[] {
+    const exampleDir = path.join(getExamplesDir(), "flask");
+    const env: Record<string, string> = {};
+
+    if (this.mode === "prod") {
+      env.WILCO_BUILD_DIR = path.join(exampleDir, "dist", "wilco");
+    }
+
     return [
       {
-        name: "flask",
+        name: `flask-${this.mode}`,
         command: "uv",
         args: [
           "run",
@@ -33,12 +51,13 @@ export class FlaskAdapter implements FrameworkAdapter {
           "app.main:create_app",
           "run",
           "--port",
-          String(FLASK_PORT),
+          String(this.port),
         ],
-        cwd: path.join(getExamplesDir(), "flask"),
-        port: FLASK_PORT,
+        cwd: exampleDir,
+        port: this.port,
         healthCheckPath: "/",
         healthCheckTimeout: 30000,
+        ...(Object.keys(env).length > 0 ? { env } : {}),
       },
     ];
   }
