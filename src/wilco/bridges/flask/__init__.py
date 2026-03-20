@@ -19,13 +19,15 @@ import importlib.util
 if importlib.util.find_spec("flask") is None:
     raise ImportError("Flask is required for the Flask bridge. Install it with: pip install wilco[flask]")
 
+from pathlib import Path
+
 from flask import Blueprint, Response, jsonify
 
 from wilco import ComponentRegistry
 from wilco.bridges.base import CACHE_CONTROL_IMMUTABLE, BridgeHandlers
 
 
-def create_blueprint(registry: ComponentRegistry) -> Blueprint:
+def create_blueprint(registry: ComponentRegistry, build_dir: Path | None = None) -> Blueprint:
     """Create a Flask Blueprint with component serving endpoints.
 
     Args:
@@ -45,7 +47,7 @@ def create_blueprint(registry: ComponentRegistry) -> Blueprint:
         app.register_blueprint(create_blueprint(registry), url_prefix="/api")
         ```
     """
-    handlers = BridgeHandlers(registry)
+    handlers = BridgeHandlers(registry, build_dir=build_dir)
     bp = Blueprint("wilco", __name__)
 
     @bp.route("/bundles")

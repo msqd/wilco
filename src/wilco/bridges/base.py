@@ -12,6 +12,7 @@ from typing import Optional
 
 from wilco import BundleResult, ComponentRegistry
 from wilco.bundler import bundle_component
+from wilco.manifest import Manifest, load_manifest
 
 # Path to wilco's static files (loader.js, live-loader.js)
 STATIC_DIR = Path(__file__).parent / "django" / "static"
@@ -103,14 +104,18 @@ class BridgeHandlers:
         ```
     """
 
-    def __init__(self, registry: ComponentRegistry) -> None:
+    def __init__(self, registry: ComponentRegistry, build_dir: Path | None = None) -> None:
         """Initialize handlers with a component registry.
 
         Args:
             registry: The component registry to serve components from.
+            build_dir: Optional path to pre-built bundles directory.
+                When provided, serves pre-built bundles from manifest
+                and falls back to live bundling for missing components.
         """
         self.registry = registry
         self._cache = BundleCache()
+        self._manifest: Manifest | None = load_manifest(build_dir) if build_dir else None
 
     def list_bundles(self) -> list[dict]:
         """List all available bundles.
@@ -123,7 +128,8 @@ class BridgeHandlers:
     def get_bundle(self, name: str) -> Optional[BundleResult]:
         """Get the bundled JavaScript for a component.
 
-        Uses mtime-based caching for development hot-reload support.
+        Checks pre-built manifest first, then falls back to live bundling
+        with mtime-based caching for development hot-reload support.
 
         Args:
             name: Component name.
@@ -131,6 +137,13 @@ class BridgeHandlers:
         Returns:
             BundleResult with code and hash, or None if not found.
         """
+        # Try pre-built bundle first
+        if self._manifest is not None and self._manifest.has(name):
+            result = self._manifest.get_bundle(name)
+            if result is not None:
+                code, hash_value = result
+                return BundleResult(code=code, hash=hash_value)
+
         component = self.registry.get(name)
         if component is None:
             return None
@@ -172,7 +185,15 @@ class BridgeHandlers:
 
         metadata = dict(component.metadata)
 
-        # Include bundle hash for cache busting
+        # Try hash from manifest first (avoids live bundling)
+        if self._manifest is not None and self._manifest.has(name):
+            bundle = self._manifest.get_bundle(name)
+            if bundle is not None:
+                _, hash_value = bundle
+                metadata["hash"] = hash_value
+                return metadata
+
+        # Fall back to live bundling for hash
         result = self.get_bundle(name)
         if result:
             metadata["hash"] = result.hash

@@ -52,7 +52,9 @@ def get_registry() -> ComponentRegistry:
 @lru_cache(maxsize=1)
 def _get_handlers() -> BridgeHandlers:
     """Get or create the BridgeHandlers instance."""
-    return BridgeHandlers(get_registry())
+    build_dir = getattr(settings, "WILCO_BUILD_DIR", None)
+    build_path = Path(build_dir) if build_dir else None
+    return BridgeHandlers(get_registry(), build_dir=build_path)
 
 
 def get_bundle_result(name: str) -> BundleResult | None:

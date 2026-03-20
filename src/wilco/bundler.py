@@ -261,6 +261,9 @@ def bundle_component(
     ts_path: Path,
     component_name: str | None = None,
     external_deps: list[str] | None = None,
+    *,
+    minify: bool = False,
+    sourcemap: bool = True,
 ) -> BundleResult:
     """Bundle a TypeScript component to JavaScript with source maps.
 
@@ -268,6 +271,8 @@ def bundle_component(
         ts_path: Path to the .tsx or .ts file
         component_name: Name of the component (for source map URLs)
         external_deps: Dependencies to mark as external (e.g., ['react', 'react-dom'])
+        minify: Whether to minify the output (default: False for dev)
+        sourcemap: Whether to include inline source maps (default: True for dev)
 
     Returns:
         BundleResult with bundled JavaScript code and content hash
@@ -294,10 +299,14 @@ def bundle_component(
         "--format=esm",
         "--target=es2020",
         "--jsx=automatic",
-        "--sourcemap=inline",
-        "--sources-content=true",
         f"--outfile={out_path}",
     ]
+
+    if sourcemap:
+        cmd.extend(["--sourcemap=inline", "--sources-content=true"])
+
+    if minify:
+        cmd.append("--minify")
 
     for dep in external_deps:
         cmd.append(f"--external:{dep}")
