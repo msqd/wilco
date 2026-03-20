@@ -10,6 +10,7 @@ This module implements a raw WSGI application with:
 import html as html_escape
 import json
 import mimetypes
+import os
 import re
 import uuid
 from pathlib import Path
@@ -34,8 +35,16 @@ STORE_COMPONENTS_DIR = BASE_DIR.parent / "common" / "components" / "store"
 registry = ComponentRegistry()
 registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
+# Pre-built bundles (set by `make build`, auto-detected otherwise)
+_build_dir_env = os.environ.get("WILCO_BUILD_DIR")
+if _build_dir_env:
+    BUILD_DIR: Path | None = Path(_build_dir_env)
+else:
+    _default_build = BASE_DIR / "dist" / "wilco"
+    BUILD_DIR = _default_build if (_default_build / "manifest.json").exists() else None
+
 # Bundle handlers for serving component JavaScript
-bundle_handlers = BridgeHandlers(registry)
+bundle_handlers = BridgeHandlers(registry, build_dir=BUILD_DIR)
 
 
 def render_component(name: str, props: dict[str, Any], api_base: str = "/api") -> str:

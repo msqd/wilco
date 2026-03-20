@@ -1,4 +1,4 @@
-.PHONY: install setup start backend frontend test clean help
+.PHONY: install setup start backend frontend test build clean help
 
 # Default target
 .DEFAULT_GOAL := start
@@ -51,12 +51,21 @@ setup: install  ## Full setup: install deps, create tables, load fixtures
 	@echo "Setup complete!"
 
 ########################################################################################################################
+# Build
+########################################################################################################################
+
+build:  ## Build for production (pre-compile components + frontend)
+	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store
+	cd frontend && pnpm build
+
+########################################################################################################################
 # Cleanup
 ########################################################################################################################
 
 clean:  ## Clean database and cache
 	rm -rf .venv
 	rm -f db.sqlite3
+	rm -rf dist
 	rm -rf resources/media
 	rm -rf frontend/node_modules
 	rm -rf frontend/dist
@@ -78,6 +87,9 @@ help:  ## Show available commands
 	@echo
 	@echo "\033[1mDevelopment\033[0m"
 	@grep -E '^(start|backend|frontend|test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mBuild\033[0m"
+	@grep -E '^(build):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mCleanup\033[0m"
 	@grep -E '^(clean):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

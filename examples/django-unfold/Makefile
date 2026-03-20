@@ -1,4 +1,4 @@
-.PHONY: install setup start test clean help
+.PHONY: install setup start test build clean help
 
 # Default target
 .DEFAULT_GOAL := start
@@ -41,6 +41,14 @@ setup: install  ## Full setup: install deps, migrate, load fixtures, create user
 	@echo "Setup complete!"
 
 ########################################################################################################################
+# Build
+########################################################################################################################
+
+build:  ## Build for production (pre-compile components + collect static)
+	uv run python manage.py wilco_build
+	uv run python manage.py collectstatic --noinput
+
+########################################################################################################################
 # Cleanup
 ########################################################################################################################
 
@@ -67,6 +75,9 @@ help:  ## Show available commands
 	@echo
 	@echo "\033[1mDevelopment\033[0m"
 	@grep -E '^(start|test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mBuild\033[0m"
+	@grep -E '^(build):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mCleanup\033[0m"
 	@grep -E '^(clean):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

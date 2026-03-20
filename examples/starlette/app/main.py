@@ -1,5 +1,6 @@
 """Main Starlette application for the wilco example."""
 
+import os
 from pathlib import Path
 
 from starlette.applications import Starlette
@@ -114,6 +115,14 @@ STORE_COMPONENTS_DIR = BASE_DIR.parent / "common" / "components" / "store"
 registry = ComponentRegistry()
 registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
+# Pre-built bundles (set by `make build`, auto-detected otherwise)
+_build_dir_env = os.environ.get("WILCO_BUILD_DIR")
+if _build_dir_env:
+    BUILD_DIR: Path | None = Path(_build_dir_env)
+else:
+    _default_build = BASE_DIR / "dist" / "wilco"
+    BUILD_DIR = _default_build if (_default_build / "manifest.json").exists() else None
+
 # Templates
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
@@ -192,7 +201,7 @@ async def product_detail(request):
 routes = [
     Route("/", product_list, name="product_list"),
     Route("/product/{id:int}", product_detail, name="product_detail"),
-    Mount("/api", routes=create_routes(registry), name="api"),
+    Mount("/api", routes=create_routes(registry, build_dir=BUILD_DIR), name="api"),
     Mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static"),
     Mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="wilco_static"),
     Mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media"),

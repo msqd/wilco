@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, Depends
@@ -131,8 +132,16 @@ STORE_COMPONENTS_DIR = BASE_DIR.parent / "common" / "components" / "store"
 registry = ComponentRegistry()
 registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
+# Pre-built bundles (set by `make build`, auto-detected otherwise)
+_build_dir_env = os.environ.get("WILCO_BUILD_DIR")
+if _build_dir_env:
+    BUILD_DIR: Path | None = Path(_build_dir_env)
+else:
+    _default_build = BASE_DIR / "dist" / "wilco"
+    BUILD_DIR = _default_build if (_default_build / "manifest.json").exists() else None
+
 # Mount wilco API router
-app.include_router(create_router(registry), prefix="/api")
+app.include_router(create_router(registry, build_dir=BUILD_DIR), prefix="/api")
 
 
 # API endpoints for products

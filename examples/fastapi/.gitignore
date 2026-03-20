@@ -10,6 +10,9 @@ db.sqlite3
 # Media (populated at setup time from common/fixtures)
 resources/media/
 
+# Build output
+dist/
+
 # Frontend build
 frontend/dist/
 frontend/node_modules/

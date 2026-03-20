@@ -1,7 +1,7 @@
 # Minimal WSGI Example Makefile
 # Demonstrates wilco integration with raw WSGI (no framework)
 
-.PHONY: help install setup test start clean
+.PHONY: help install setup test build start clean
 
 # Environment
 export VIRTUAL_ENV := $(CURDIR)/.venv
@@ -16,6 +16,7 @@ help:
 	@echo "  make setup    - Set up database and fixtures"
 	@echo "  make start    - Start the development server"
 	@echo "  make test     - Run tests"
+	@echo "  make build    - Build for production (pre-compile components)"
 	@echo "  make clean    - Clean up generated files"
 
 install:
@@ -27,10 +28,13 @@ setup: install
 test:
 	uv run pytest tests/ -v
 
+build:  ## Build for production (pre-compile components)
+	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store
+
 start: setup
 	uv run gunicorn app.wsgi:app --bind 0.0.0.0:$(HTTP_PORT) --reload
 
 clean:
-	rm -rf .venv __pycache__ .pytest_cache
+	rm -rf .venv __pycache__ .pytest_cache dist
 	rm -f resources/media/*.jpg resources/media/*.png
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

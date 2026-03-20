@@ -1,5 +1,6 @@
 """Main Flask application for the wilco example."""
 
+import os
 from pathlib import Path
 
 from flask import Flask, abort, render_template, send_from_directory
@@ -46,8 +47,16 @@ def create_app(test_config=None):
     registry = ComponentRegistry()
     registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
+    # Pre-built bundles (set by `make build`, auto-detected otherwise)
+    _build_dir_env = os.environ.get("WILCO_BUILD_DIR")
+    if _build_dir_env:
+        build_dir: Path | None = Path(_build_dir_env)
+    else:
+        _default_build = BASE_DIR / "dist" / "wilco"
+        build_dir = _default_build if (_default_build / "manifest.json").exists() else None
+
     # Register wilco API blueprint
-    app.register_blueprint(create_blueprint(registry), url_prefix="/api")
+    app.register_blueprint(create_blueprint(registry, build_dir=build_dir), url_prefix="/api")
 
     # Register admin
     create_admin(app)

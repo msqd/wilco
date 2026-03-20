@@ -153,3 +153,7 @@ WILCO_COMPONENT_SOURCES = [
     (BASE_DIR.parent.parent / "src" / "wilco" / "examples", ""),
 ]
 WILCO_AUTODISCOVER = False
+
+# Pre-built bundles: auto-detect from STATIC_ROOT if available
+_wilco_build_dir = STATIC_ROOT / "wilco" / "bundles"
+WILCO_BUILD_DIR = str(_wilco_build_dir) if (_wilco_build_dir / "manifest.json").exists() else None
