@@ -1,4 +1,4 @@
-.PHONY: start test test-backend test-frontend test-e2e install install-dev clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
+.PHONY: start test test-all test-backend test-frontend test-e2e test-e2e-dev test-e2e-prod install install-dev clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
 
 # Default target
 .DEFAULT_GOAL := start
@@ -51,7 +51,9 @@ publish-test: wheel  ## Publish to TestPyPI (for testing)
 # Testing
 ########################################################################################################################
 
-test: test-backend test-frontend  ## Run all tests
+test: test-backend test-frontend  ## Run core tests (backend + frontend)
+
+test-all: test test-e2e  ## Run everything: core tests + E2E (dev + prod)
 
 test-backend: install-dev  ## Run backend tests (Python/pytest)
 	$(call execute,uv run pytest)
@@ -118,7 +120,7 @@ help:  ## Show available commands
 	@grep -E '^(publish|publish-test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mTesting\033[0m"
-	@grep -E '^(test|test-backend|test-frontend|test-e2e|test-e2e-dev|test-e2e-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(test-all|test|test-backend|test-frontend|test-e2e|test-e2e-dev|test-e2e-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mDocumentation\033[0m"
 	@grep -E '^(docs|docs-watch):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
