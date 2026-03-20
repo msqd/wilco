@@ -31,6 +31,9 @@ install-dev:  ## Install dependencies with dev tools (Python + JavaScript)
 build-loader:  ## Build the standalone loader (TypeScript -> JavaScript)
 	$(call execute,cd src/wilcojs/react && pnpm build:loader)
 
+build:  ## Pre-compile component bundles for production
+	$(call execute,uv run python -m wilco build --output dist/wilco/)
+
 wheel: build-loader  ## Build Python wheel (includes pre-built JS assets)
 	$(call execute,uv build)
 
@@ -103,7 +106,7 @@ help:  ## Show available commands
 	@grep -E '^(start|install|install-dev):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mBuild\033[0m"
-	@grep -E '^(build-loader|wheel):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(build|build-loader|wheel):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mPublishing\033[0m"
 	@grep -E '^(publish|publish-test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

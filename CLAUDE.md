@@ -15,6 +15,8 @@ wilco/
 │   ├── wilco/                  # Python package (see src/wilco/CLAUDE.md)
 │   │   ├── registry.py         # Component discovery
 │   │   ├── bundler.py          # esbuild integration
+│   │   ├── build.py            # Pre-compilation for production
+│   │   ├── manifest.py         # Pre-built bundle manifest reader
 │   │   ├── bridges/            # Framework integrations (Django, FastAPI, Flask, Starlette)
 │   │   └── examples/           # Example components
 │   └── wilcojs/                # JavaScript packages (see src/wilcojs/CLAUDE.md)
@@ -31,6 +33,7 @@ wilco/
 ```bash
 make start    # Start both backend + frontend via overmind
 make install  # Install all dependencies (Python + JavaScript)
+make build    # Pre-compile component bundles for production
 make test     # Run all tests (backend + frontend)
 make help     # Show all available commands
 ```
