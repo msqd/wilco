@@ -1,6 +1,5 @@
 """FastAPI application entry point."""
 
-import os
 from pathlib import Path
 
 from fastapi import FastAPI, Depends
@@ -13,6 +12,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from wilco import ComponentRegistry
 from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 from wilco.bridges.fastapi import create_router
+from wilco.manifest import resolve_build_dir
 
 from .database import engine, get_db
 from .models import Product
@@ -132,15 +132,8 @@ STORE_COMPONENTS_DIR = BASE_DIR.parent / "common" / "components" / "store"
 registry = ComponentRegistry()
 registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
-# Pre-built bundles (set by `make build`, auto-detected otherwise)
-_build_dir_env = os.environ.get("WILCO_BUILD_DIR")
-if _build_dir_env:
-    BUILD_DIR: Path | None = Path(_build_dir_env)
-else:
-    _default_build = BASE_DIR / "dist" / "wilco"
-    BUILD_DIR = _default_build if (_default_build / "manifest.json").exists() else None
-
-# Mount wilco API router
+# Mount wilco API router (serves pre-built bundles in prod, live bundles in dev)
+BUILD_DIR = resolve_build_dir(BASE_DIR / "dist" / "wilco")
 app.include_router(create_router(registry, build_dir=BUILD_DIR), prefix="/api")
 
 

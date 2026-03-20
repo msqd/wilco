@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from wilco.manifest import Manifest, load_manifest
+from wilco.manifest import Manifest, load_manifest, resolve_build_dir
 
 
 class TestManifest:
@@ -22,8 +22,10 @@ class TestManifest:
         manifest = Manifest(temp_dir)
         assert manifest is not None
 
-    def test_get_bundle_returns_code_and_hash(self, temp_dir: Path) -> None:
-        """get_bundle should return a tuple of (code, hash)."""
+    def test_get_bundle_returns_bundle_result(self, temp_dir: Path) -> None:
+        """get_bundle should return a BundleResult with code and hash."""
+        from wilco.bundler import BundleResult
+
         manifest_data = {
             "counter": {"file": "counter.abc123def456.js", "hash": "abc123def456"},
         }
@@ -33,10 +35,39 @@ class TestManifest:
         manifest = Manifest(temp_dir)
         result = manifest.get_bundle("counter")
 
-        assert result is not None
-        code, hash_value = result
-        assert code == "console.log('counter');"
-        assert hash_value == "abc123def456"
+        assert isinstance(result, BundleResult)
+        assert result.code == "console.log('counter');"
+        assert result.hash == "abc123def456"
+
+    def test_get_bundle_caches_after_first_read(self, temp_dir: Path) -> None:
+        """get_bundle should cache file content and not re-read from disk."""
+        manifest_data = {
+            "counter": {"file": "counter.abc123def456.js", "hash": "abc123def456"},
+        }
+        (temp_dir / "manifest.json").write_text(json.dumps(manifest_data))
+        (temp_dir / "counter.abc123def456.js").write_text("original();")
+
+        manifest = Manifest(temp_dir)
+        result1 = manifest.get_bundle("counter")
+
+        # Modify the file after first read
+        (temp_dir / "counter.abc123def456.js").write_text("modified();")
+
+        result2 = manifest.get_bundle("counter")
+        assert result1 is result2  # Same cached object
+        assert result2.code == "original();"
+
+    def test_get_hash_returns_hash_without_reading_file(self, temp_dir: Path) -> None:
+        """get_hash should return hash from manifest data without reading JS file."""
+        manifest_data = {
+            "counter": {"file": "counter.abc123def456.js", "hash": "abc123def456"},
+        }
+        (temp_dir / "manifest.json").write_text(json.dumps(manifest_data))
+        # Intentionally don't create the JS file
+
+        manifest = Manifest(temp_dir)
+        assert manifest.get_hash("counter") == "abc123def456"
+        assert manifest.get_hash("nonexistent") is None
 
     def test_get_bundle_returns_none_for_missing_component(self, temp_dir: Path) -> None:
         """get_bundle should return None for unknown component."""
@@ -101,3 +132,37 @@ class TestLoadManifest:
     def test_returns_none_for_nonexistent_directory(self) -> None:
         """load_manifest should return None for a path that doesn't exist."""
         assert load_manifest(Path("/nonexistent/path")) is None
+
+
+class TestResolveBuildDir:
+    """Tests for the resolve_build_dir utility function."""
+
+    def test_returns_path_from_env_var(self, temp_dir: Path, monkeypatch) -> None:
+        """Should return path from WILCO_BUILD_DIR env var."""
+        monkeypatch.setenv("WILCO_BUILD_DIR", str(temp_dir / "custom"))
+        result = resolve_build_dir(temp_dir / "default")
+        assert result == temp_dir / "custom"
+
+    def test_returns_default_when_manifest_exists(self, temp_dir: Path, monkeypatch) -> None:
+        """Should return default path when manifest.json exists there."""
+        monkeypatch.delenv("WILCO_BUILD_DIR", raising=False)
+        default = temp_dir / "dist" / "wilco"
+        default.mkdir(parents=True)
+        (default / "manifest.json").write_text("{}")
+        result = resolve_build_dir(default)
+        assert result == default
+
+    def test_returns_none_when_no_manifest(self, temp_dir: Path, monkeypatch) -> None:
+        """Should return None when no env var and no manifest at default path."""
+        monkeypatch.delenv("WILCO_BUILD_DIR", raising=False)
+        result = resolve_build_dir(temp_dir / "nonexistent")
+        assert result is None
+
+    def test_env_var_takes_precedence(self, temp_dir: Path, monkeypatch) -> None:
+        """Env var should take precedence over default path."""
+        monkeypatch.setenv("WILCO_BUILD_DIR", str(temp_dir / "from-env"))
+        default = temp_dir / "default"
+        default.mkdir(parents=True)
+        (default / "manifest.json").write_text("{}")
+        result = resolve_build_dir(default)
+        assert result == temp_dir / "from-env"

@@ -1,7 +1,10 @@
 """Manifest reader for pre-built component bundles."""
 
 import json
+import os
 from pathlib import Path
+
+from .bundler import BundleResult
 
 
 class Manifest:
@@ -9,6 +12,9 @@ class Manifest:
 
     The manifest.json file maps component names to their pre-built
     JavaScript files with content hashes for cache busting.
+
+    Bundle file contents are cached in memory after first read since
+    pre-built files are immutable between deployments.
     """
 
     def __init__(self, build_dir: Path) -> None:
@@ -22,20 +28,34 @@ class Manifest:
             raise ValueError(f"Invalid manifest JSON: {e}") from e
 
         self._build_dir = build_dir
+        self._bundle_cache: dict[str, BundleResult] = {}
 
-    def get_bundle(self, name: str) -> tuple[str, str] | None:
-        """Get the pre-built bundle code and hash for a component.
+    def get_bundle(self, name: str) -> BundleResult | None:
+        """Get the pre-built bundle as a BundleResult.
+
+        File contents are cached after first read.
 
         Returns:
-            Tuple of (code, hash) or None if component not in manifest.
+            BundleResult or None if component not in manifest.
         """
+        cached = self._bundle_cache.get(name)
+        if cached is not None:
+            return cached
+
         entry = self._data.get(name)
         if entry is None:
             return None
 
         file_path = self._build_dir / entry["file"]
         code = file_path.read_text()
-        return code, entry["hash"]
+        result = BundleResult(code=code, hash=entry["hash"])
+        self._bundle_cache[name] = result
+        return result
+
+    def get_hash(self, name: str) -> str | None:
+        """Get the content hash for a component without reading the bundle file."""
+        entry = self._data.get(name)
+        return entry["hash"] if entry else None
 
     def has(self, name: str) -> bool:
         """Check if a component exists in the manifest."""
@@ -48,16 +68,30 @@ class Manifest:
 
 
 def load_manifest(build_dir: Path) -> Manifest | None:
-    """Load a manifest from a directory, returning None if not found.
+    """Load a manifest from a directory, returning None if not found."""
+    try:
+        return Manifest(build_dir)
+    except (FileNotFoundError, ValueError):
+        return None
 
-    This is a convenience function for bridges that need to optionally
-    load pre-built bundles.
+
+def resolve_build_dir(default_path: Path) -> Path | None:
+    """Resolve the pre-built bundles directory from env var or default path.
+
+    Checks WILCO_BUILD_DIR env var first, then falls back to default_path
+    if it contains a manifest.json.
+
+    Args:
+        default_path: Default directory to check (e.g., BASE_DIR / "dist" / "wilco").
+
+    Returns:
+        Path to the build directory, or None if no pre-built bundles found.
     """
-    if not build_dir.exists():
-        return None
+    env_dir = os.environ.get("WILCO_BUILD_DIR")
+    if env_dir:
+        return Path(env_dir)
 
-    manifest_path = build_dir / "manifest.json"
-    if not manifest_path.exists():
-        return None
+    if (default_path / "manifest.json").exists():
+        return default_path
 
-    return Manifest(build_dir)
+    return None

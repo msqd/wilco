@@ -137,12 +137,9 @@ class BridgeHandlers:
         Returns:
             BundleResult with code and hash, or None if not found.
         """
-        # Try pre-built bundle first
+        # Try pre-built bundle first (returns cached BundleResult)
         if self._manifest is not None and self._manifest.has(name):
-            result = self._manifest.get_bundle(name)
-            if result is not None:
-                code, hash_value = result
-                return BundleResult(code=code, hash=hash_value)
+            return self._manifest.get_bundle(name)
 
         component = self.registry.get(name)
         if component is None:
@@ -185,11 +182,10 @@ class BridgeHandlers:
 
         metadata = dict(component.metadata)
 
-        # Try hash from manifest first (avoids live bundling)
-        if self._manifest is not None and self._manifest.has(name):
-            bundle = self._manifest.get_bundle(name)
-            if bundle is not None:
-                _, hash_value = bundle
+        # Try hash from manifest first (avoids reading the bundle file)
+        if self._manifest is not None:
+            hash_value = self._manifest.get_hash(name)
+            if hash_value is not None:
                 metadata["hash"] = hash_value
                 return metadata
 

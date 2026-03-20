@@ -1,6 +1,5 @@
 """Main Flask application for the wilco example."""
 
-import os
 from pathlib import Path
 
 from flask import Flask, abort, render_template, send_from_directory
@@ -8,6 +7,7 @@ from flask import Flask, abort, render_template, send_from_directory
 from wilco import ComponentRegistry
 from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 from wilco.bridges.flask import create_blueprint
+from wilco.manifest import resolve_build_dir
 
 from .admin import create_admin
 from .database import db
@@ -47,15 +47,8 @@ def create_app(test_config=None):
     registry = ComponentRegistry()
     registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
-    # Pre-built bundles (set by `make build`, auto-detected otherwise)
-    _build_dir_env = os.environ.get("WILCO_BUILD_DIR")
-    if _build_dir_env:
-        build_dir: Path | None = Path(_build_dir_env)
-    else:
-        _default_build = BASE_DIR / "dist" / "wilco"
-        build_dir = _default_build if (_default_build / "manifest.json").exists() else None
-
-    # Register wilco API blueprint
+    # Register wilco API blueprint (serves pre-built bundles in prod, live bundles in dev)
+    build_dir = resolve_build_dir(BASE_DIR / "dist" / "wilco")
     app.register_blueprint(create_blueprint(registry, build_dir=build_dir), url_prefix="/api")
 
     # Register admin

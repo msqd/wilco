@@ -1,6 +1,5 @@
 """Main Starlette application for the wilco example."""
 
-import os
 from pathlib import Path
 
 from starlette.applications import Starlette
@@ -14,6 +13,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from wilco import ComponentRegistry
 from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 from wilco.bridges.starlette import create_routes
+from wilco.manifest import resolve_build_dir
 
 from .admin import create_admin, get_preview_routes
 from .database import SessionLocal
@@ -115,13 +115,8 @@ STORE_COMPONENTS_DIR = BASE_DIR.parent / "common" / "components" / "store"
 registry = ComponentRegistry()
 registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
-# Pre-built bundles (set by `make build`, auto-detected otherwise)
-_build_dir_env = os.environ.get("WILCO_BUILD_DIR")
-if _build_dir_env:
-    BUILD_DIR: Path | None = Path(_build_dir_env)
-else:
-    _default_build = BASE_DIR / "dist" / "wilco"
-    BUILD_DIR = _default_build if (_default_build / "manifest.json").exists() else None
+# Pre-built bundles (auto-detected, or set via WILCO_BUILD_DIR env var)
+BUILD_DIR = resolve_build_dir(BASE_DIR / "dist" / "wilco")
 
 # Templates
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
