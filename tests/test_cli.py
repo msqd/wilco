@@ -79,6 +79,7 @@ class TestBuildCommand:
             mock_build.return_value = MagicMock(component_count=2, output_dir=output_dir)
             run_build(
                 components_dir=str(sample_component_dir),
+                prefix="",
                 output=str(output_dir),
                 minify=True,
                 sourcemap=False,
@@ -99,6 +100,7 @@ class TestBuildCommand:
             mock_build.return_value = MagicMock(component_count=0, output_dir=output_dir)
             run_build(
                 components_dir=None,
+                prefix="",
                 output=str(output_dir),
                 minify=True,
                 sourcemap=False,

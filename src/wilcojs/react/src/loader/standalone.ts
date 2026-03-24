@@ -131,8 +131,14 @@ interface ManifestEntry {
   file: string
   hash: string
 }
-let staticManifest: Record<string, ManifestEntry> | null = null
-let staticManifestBaseUrl: string | null = null
+// Use window to persist manifest across multiple script executions
+// (browsers execute deferred scripts twice if two <script> tags reference the same src)
+const _w = window as unknown as {
+  __wilcoManifest?: Record<string, ManifestEntry> | null
+  __wilcoManifestBaseUrl?: string | null
+}
+if (_w.__wilcoManifest === undefined) _w.__wilcoManifest = null
+if (_w.__wilcoManifestBaseUrl === undefined) _w.__wilcoManifestBaseUrl = null
 
 /**
  * Transform ESM code to work with our runtime module registry.
@@ -235,13 +241,13 @@ async function loadComponent(name: string, apiBase: string = "/api", hash?: stri
   const fetchPromise = (async () => {
     let url: string
 
-    if (staticManifest && staticManifestBaseUrl) {
+    if (_w.__wilcoManifest && _w.__wilcoManifestBaseUrl) {
       // Static mode: load from pre-built static files
-      const entry = staticManifest[name]
+      const entry = _w.__wilcoManifest[name]
       if (!entry) {
         throw new Error(`Component not found in manifest: ${name}`)
       }
-      url = `${staticManifestBaseUrl}/${entry.file}`
+      url = `${_w.__wilcoManifestBaseUrl}/${entry.file}`
     } else {
       // API mode: load from wilco API
       url = hash ? `${apiBase}/bundles/${name}.js?${hash}` : `${apiBase}/bundles/${name}.js`
@@ -392,9 +398,9 @@ async function detectAndLoadManifest(): Promise<void> {
     const response = await fetch(manifestUrl)
     if (!response.ok) return
 
-    staticManifest = await response.json()
+    _w.__wilcoManifest = await response.json()
     // Derive the base URL from the manifest URL: "/static/wilco/manifest.json" → "/static/wilco"
-    staticManifestBaseUrl = manifestUrl.replace(/\/manifest\.json$/, "")
+    _w.__wilcoManifestBaseUrl = manifestUrl.replace(/\/manifest\.json$/, "")
   } catch {
     // Manifest fetch failed, stay in API mode
     console.warn("wilco: failed to load manifest, falling back to API mode")

@@ -36,8 +36,8 @@ Every example Makefile follows the same target interface:
 | `make test` | Run test suite |
 | `make clean` | Remove generated files |
 
-- **Dev mode** (`start-dev`): components are bundled on-the-fly by esbuild on each request. Servers run with auto-reload.
-- **Prod mode** (`start-prod`): depends on `build`, which pre-compiles components into hashed JS files with a manifest. Servers run without reload. esbuild is not needed at runtime.
+- **Dev mode** (`start-dev`): components are bundled on-the-fly by esbuild on each request. Servers run with auto-reload. Django examples set `DJANGO_DEBUG=True`.
+- **Prod mode** (`start-prod`): depends on `build`, which pre-compiles components into hashed JS files with a manifest. Servers run without reload. esbuild is not needed at runtime. Django examples use gunicorn with `DEBUG=False` and WhiteNoise for static files.
 - All targets support `HTTP_PORT` override: `make start-dev HTTP_PORT=9000`
 
 ## Example Applications
@@ -55,6 +55,7 @@ Server-rendered templates with Django Unfold admin and live preview.
 - **Frontend**: Jinja2 templates with `WilcoComponentWidget`
 - **Protocol**: WSGI
 - **Port**: 8000
+- **Prod server**: gunicorn + WhiteNoise (static files)
 
 #### Django Vanilla (`django-vanilla/`)
 
@@ -64,6 +65,7 @@ Server-rendered templates with standard Django admin and live preview.
 - **Frontend**: Jinja2 templates with `WilcoComponentWidget`
 - **Protocol**: WSGI
 - **Port**: 8100
+- **Prod server**: gunicorn + WhiteNoise (static files)
 
 #### Flask (`flask/`)
 
