@@ -35,7 +35,7 @@ build:  ## Build for production (pre-compile components)
 start-dev: setup  ## Start development server
 	uv run gunicorn app.wsgi:app --bind 0.0.0.0:$(HTTP_PORT) --reload
 
-start-prod: setup  ## Start production server (pre-built components)
+start-prod: setup build  ## Start production server (pre-built components)
 	uv run gunicorn app.wsgi:app --bind 0.0.0.0:$(HTTP_PORT)
 
 clean:

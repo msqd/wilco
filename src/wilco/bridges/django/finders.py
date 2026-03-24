@@ -53,7 +53,11 @@ class WilcoBundleFinder(BaseFinder):
 
         # Strip the wilco/ prefix to get the path relative to build dir
         relative = path[len("wilco/"):]
-        full_path = self._build_path / relative
+        full_path = (self._build_path / relative).resolve()
+
+        # Prevent path traversal outside the build directory
+        if not full_path.is_relative_to(self._build_path.resolve()):
+            return [] if all else ""
 
         if full_path.is_file():
             matched = str(full_path)

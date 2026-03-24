@@ -24,7 +24,7 @@ start-dev:  ## Start development server (backend + frontend)
 		$(MAKE) backend; \
 	fi
 
-start-prod:  ## Start production server (serves API + built frontend on single port)
+start-prod: build  ## Start production server (serves API + built frontend on single port)
 	uv run uvicorn app.main:app --port $(FRONTEND_PORT)
 
 backend:  ## Start backend development server only

@@ -53,23 +53,18 @@ def get_registry() -> ComponentRegistry:
 def _get_handlers() -> BridgeHandlers:
     """Get or create the BridgeHandlers instance.
 
-    Checks WILCO_BUILD_DIR env var first (empty string = disabled),
-    then falls back to Django settings. Only activates static mode
-    if the build directory contains a manifest.
-    """
-    import os
+    Uses resolve_django_build_dir() for consistent build-dir resolution
+    across all Django bridge consumers. Only activates static mode if
+    the build directory contains a manifest.
 
+    Note: lru_cache means this is computed once per process. Call
+    _get_handlers.cache_clear() in tests that modify WILCO_BUILD_DIR.
+    """
     from wilco.manifest import load_manifest
 
-    # Env var takes precedence (empty string = explicitly disabled)
-    env_dir = os.environ.get("WILCO_BUILD_DIR")
-    if env_dir is not None:
-        build_path = Path(env_dir) if env_dir else None
-    else:
-        build_dir = getattr(settings, "WILCO_BUILD_DIR", None)
-        build_path = Path(build_dir) if build_dir else None
+    from .utils import resolve_django_build_dir
 
-    # Only pass build_dir if a manifest actually exists there
+    build_path = resolve_django_build_dir()
     effective_build_dir = build_path if (build_path and load_manifest(build_path)) else None
     return BridgeHandlers(get_registry(), build_dir=effective_build_dir)
 

@@ -46,8 +46,17 @@ class Manifest:
         if entry is None:
             return None
 
-        file_path = self._build_dir / entry["file"]
-        code = file_path.read_text()
+        file_path = (self._build_dir / entry["file"]).resolve()
+
+        # Prevent path traversal outside the build directory
+        if not file_path.is_relative_to(self._build_dir.resolve()):
+            return None
+
+        try:
+            code = file_path.read_text()
+        except (FileNotFoundError, PermissionError):
+            return None
+
         result = BundleResult(code=code, hash=entry["hash"])
         self._bundle_cache[name] = result
         return result

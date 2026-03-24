@@ -487,8 +487,16 @@ WilcoBundleFinder
 -----------------
 
 The ``WilcoBundleFinder`` is a Django static files finder that discovers
-pre-built bundles from ``WILCO_BUILD_DIR``. It is automatically registered
-when ``wilco.bridges.django`` is in ``INSTALLED_APPS``.
+pre-built bundles from ``WILCO_BUILD_DIR``. It must be added explicitly
+to ``STATICFILES_FINDERS`` in your settings:
+
+.. code-block:: python
+
+    STATICFILES_FINDERS = [
+        "django.contrib.staticfiles.finders.FileSystemFinder",
+        "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+        "wilco.bridges.django.finders.WilcoBundleFinder",
+    ]
 
 During ``collectstatic``, it copies:
 

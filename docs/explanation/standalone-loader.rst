@@ -63,6 +63,15 @@ Initialization flow
 5. **Compile**: Executes transformed code via ``new Function()``
 6. **Render**: Creates React root and renders component
 
+.. warning::
+
+   **Content Security Policy (CSP)**: The loader uses ``new Function()`` to compile
+   component bundles, which is functionally equivalent to ``eval()``. If your application
+   sets a Content Security Policy, you must include ``'unsafe-eval'`` in the ``script-src``
+   directive. Applications using ``django-csp`` or similar CSP middleware should add this
+   to their CSP configuration. Always serve bundles over HTTPS to prevent code injection
+   via man-in-the-middle attacks.
+
 Module registry
 ===============
 

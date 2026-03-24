@@ -35,7 +35,7 @@ build:  ## Build for production (pre-compile components)
 start-dev: setup  ## Start development server
 	uv run uvicorn app.asgi:app --host 0.0.0.0 --port $(HTTP_PORT) --reload
 
-start-prod: setup  ## Start production server (pre-built components)
+start-prod: setup build  ## Start production server (pre-built components)
 	uv run uvicorn app.asgi:app --host 0.0.0.0 --port $(HTTP_PORT)
 
 clean:

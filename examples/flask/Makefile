@@ -16,7 +16,7 @@ HTTP_PORT ?= 8200
 start-dev:  ## Start development server
 	uv run flask --app app.main:create_app run --port $(HTTP_PORT) --debug
 
-start-prod:  ## Start production server (pre-built components)
+start-prod: build  ## Start production server (pre-built components)
 	uv run flask --app app.main:create_app run --port $(HTTP_PORT)
 
 test:  ## Run test suite

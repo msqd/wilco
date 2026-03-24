@@ -16,7 +16,7 @@ HTTP_PORT ?= 8400
 start-dev:  ## Start development server
 	uv run uvicorn app.main:app --reload --port $(HTTP_PORT)
 
-start-prod:  ## Start production server (pre-built components)
+start-prod: build  ## Start production server (pre-built components)
 	uv run uvicorn app.main:app --port $(HTTP_PORT)
 
 test:  ## Run test suite

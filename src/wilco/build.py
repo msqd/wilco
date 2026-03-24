@@ -50,14 +50,19 @@ def build_components(
     bundles_dir.mkdir(parents=True, exist_ok=True)
 
     manifest: dict[str, dict[str, str]] = {}
+    errors: list[tuple[str, str]] = []
 
     for name, component in registry.components.items():
-        result = bundle_component(
-            component.ts_path,
-            component_name=name,
-            minify=minify,
-            sourcemap=sourcemap,
-        )
+        try:
+            result = bundle_component(
+                component.ts_path,
+                component_name=name,
+                minify=minify,
+                sourcemap=sourcemap,
+            )
+        except (RuntimeError, Exception) as e:
+            errors.append((name, str(e)))
+            continue
 
         safe_name = _sanitize_filename(name)
         filename = f"{safe_name}.{result.hash}.js"
@@ -69,8 +74,15 @@ def build_components(
             "hash": result.hash,
         }
 
-    # Write manifest at build root (collected as wilco/manifest.json)
+    # Write manifest for all successful components
     (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+
+    if errors:
+        error_summary = "; ".join(f"{name}: {msg}" for name, msg in errors)
+        raise RuntimeError(
+            f"Failed to build {len(errors)} component(s): {error_summary}. "
+            f"{len(manifest)} component(s) built successfully."
+        )
 
     return BuildResult(
         component_count=len(manifest),
