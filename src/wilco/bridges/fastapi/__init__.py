@@ -48,6 +48,9 @@ def create_router(registry: ComponentRegistry, build_dir: Path | None = None) ->
     @router.get("/bundles/{name}.js")
     def get_bundle(name: str) -> Response:
         """Get the bundled JavaScript for a component."""
+        if handlers.static_mode:
+            raise HTTPException(status_code=404, detail="Bundles are served as static files")
+
         try:
             result = handlers.get_bundle(name)
         except ValueError as e:

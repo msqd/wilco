@@ -91,7 +91,8 @@ class TestWilcoComponentWidget:
         widget = WilcoComponentWidget("counter")
         html = widget.render()
 
-        assert '<script src="/static/wilco/loader.js"' in html
+        assert "wilco/loader.js" in html
+        assert "<script" in html
 
     def test_unique_container_ids(self) -> None:
         """Each widget instance should have a unique container ID."""

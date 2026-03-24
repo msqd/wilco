@@ -196,6 +196,15 @@ class BridgeHandlers:
 
         return metadata
 
+    @property
+    def static_mode(self) -> bool:
+        """Whether pre-built bundles are available via static files.
+
+        When True, the API bundle endpoint should return 404 and clients
+        should load bundles from static file URLs instead.
+        """
+        return self._manifest is not None
+
     def clear_cache(self, name: Optional[str] = None) -> None:
         """Clear the bundle cache.
 

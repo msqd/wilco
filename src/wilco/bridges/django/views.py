@@ -99,8 +99,11 @@ def get_bundle(request, name: str) -> HttpResponse:
         The client should include a hash query parameter for cache busting.
 
     Raises:
-        Http404: If component not found or bundling fails.
+        Http404: If component not found, static mode active, or bundling fails.
     """
+    if _get_handlers().static_mode:
+        raise Http404("Bundles are served as static files")
+
     result = get_bundle_result(name)
 
     if result is None:

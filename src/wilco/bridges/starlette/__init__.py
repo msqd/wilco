@@ -66,6 +66,12 @@ def create_routes(registry: ComponentRegistry, build_dir: Path | None = None) ->
 
     async def get_bundle(request: Request) -> Response:
         """Get the bundled JavaScript for a component."""
+        if handlers.static_mode:
+            return JSONResponse(
+                {"detail": "Bundles are served as static files"},
+                status_code=404,
+            )
+
         name = request.path_params["name"]
 
         try:

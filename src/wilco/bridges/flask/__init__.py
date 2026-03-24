@@ -59,6 +59,9 @@ def create_blueprint(registry: ComponentRegistry, build_dir: Path | None = None)
     @bp.route("/bundles/<name>.js")
     def get_bundle(name: str):
         """Get the bundled JavaScript for a component."""
+        if handlers.static_mode:
+            return jsonify({"detail": "Bundles are served as static files"}), 404
+
         try:
             result = handlers.get_bundle(name)
         except ValueError:

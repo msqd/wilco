@@ -108,8 +108,8 @@ class TestFastAPIPrebuilt:
         router = create_router(registry, build_dir=build_dir)
         assert router is not None
 
-    def test_serves_prebuilt_via_endpoint(self, sample_component_dir: Path, temp_dir: Path) -> None:
-        """FastAPI endpoint should serve pre-built bundle."""
+    def test_api_returns_404_in_static_mode(self, sample_component_dir: Path, temp_dir: Path) -> None:
+        """API bundle endpoint should return 404 when static mode is active."""
         registry = ComponentRegistry(sample_component_dir)
         build_dir = _setup_prebuilt(temp_dir, {"widgets.counter": "prebuilt_code();"})
 
@@ -118,9 +118,6 @@ class TestFastAPIPrebuilt:
         app.include_router(router, prefix="/api")
 
         with TestClient(app) as client:
-            with patch("wilco.bridges.base.bundle_component") as mock_bundle:
-                response = client.get("/api/bundles/widgets.counter.js")
-
-                assert response.status_code == 200
-                assert response.text == "prebuilt_code();"
-                mock_bundle.assert_not_called()
+            response = client.get("/api/bundles/widgets.counter.js")
+            assert response.status_code == 404
+            assert "static files" in response.json()["detail"]

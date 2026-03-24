@@ -115,8 +115,7 @@ class WilcoComponentWidget:
         # Note: In Django admin, each readonly field is rendered independently,
         # so we include the script with each widget. The browser will only
         # load it once due to caching.
-        output += """
-<script src="/static/wilco/loader.js" defer></script>"""
+        output += self._loader_script_tag()
 
         # Include live loader script if in live mode
         if self.live:
@@ -124,6 +123,25 @@ class WilcoComponentWidget:
 <script src="/static/wilco/live-loader.js" defer></script>"""
 
         return mark_safe(output)
+
+    def _loader_script_tag(self) -> str:
+        """Generate the loader script tag with the correct mode.
+
+        In static mode (WILCO_BUILD_DIR with manifest), emits data-wilco-manifest
+        so the loader fetches bundles from static files. Otherwise, the loader
+        uses data-wilco-api from the container elements.
+        """
+        from pathlib import Path
+
+        from django.conf import settings
+        from django.templatetags.static import static
+
+        build_dir = getattr(settings, "WILCO_BUILD_DIR", None)
+        if build_dir and (Path(build_dir) / "manifest.json").exists():
+            manifest_url = static("wilco/manifest.json")
+            return f'\n<script src="{static("wilco/loader.js")}" data-wilco-manifest="{manifest_url}" defer></script>'
+
+        return f'\n<script src="{static("wilco/loader.js")}" defer></script>'
 
     def __str__(self) -> str:
         """Allow widget to be used directly in templates."""
