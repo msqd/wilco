@@ -105,7 +105,7 @@ def create_admin(app):
     """Create and configure Flask-Admin instance."""
     admin = Admin(
         app,
-        name="Wilco Shop Admin",
+        name="Shop Admin",
         url="/admin",
     )
 

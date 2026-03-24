@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI, Depends
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -19,6 +20,7 @@ from .models import Product
 from .admin import ProductAdmin, preview_router
 
 BASE_DIR = Path(__file__).parent.parent
+FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
 
 
 class AdminPreviewMiddleware:
@@ -124,7 +126,7 @@ app.mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="w
 app.include_router(preview_router)
 
 # SQLAdmin for admin panel
-admin = Admin(app, engine, title="Wilco Shop Admin")
+admin = Admin(app, engine, title="Shop Admin")
 admin.add_view(ProductAdmin)
 
 # Wilco component registry - use shared components from examples/common
@@ -170,6 +172,18 @@ def get_product(product_id: int, db: Session = Depends(get_db)) -> dict:
         "description": product.description or "",
         "imageUrl": f"/media/{product.image}" if product.image else f"https://picsum.photos/seed/{product.id}/600/400",
     }
+
+
+# In production, serve the built React SPA from frontend/dist/
+# This enables `make build && make start-prod` to serve everything from a single process.
+if FRONTEND_DIST.exists() and (FRONTEND_DIST / "index.html").exists():
+    # Serve Vite build assets (JS, CSS, images with hashed filenames)
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend_assets")
+
+    # SPA catch-all: serve index.html for any unmatched route
+    @app.get("/{path:path}")
+    async def spa_catch_all(path: str):
+        return FileResponse(FRONTEND_DIST / "index.html")
 
 
 # Wrap with preview middleware to inject scripts into admin pages

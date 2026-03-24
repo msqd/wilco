@@ -7,6 +7,8 @@
 export VIRTUAL_ENV := $(CURDIR)/.venv
 
 # Port configuration
+# Dev mode: backend on HTTP_PORT (8301), frontend on FRONTEND_PORT (8300)
+# Prod mode: single server on FRONTEND_PORT (8300)
 HTTP_PORT ?= 8301
 FRONTEND_PORT ?= $(shell echo $$(($(HTTP_PORT) - 1)))
 
@@ -22,8 +24,8 @@ start-dev:  ## Start development server (backend + frontend)
 		$(MAKE) backend; \
 	fi
 
-start-prod:  ## Start production server (pre-built frontend + backend)
-	uv run uvicorn app.main:app --port $(HTTP_PORT)
+start-prod:  ## Start production server (serves API + built frontend on single port)
+	uv run uvicorn app.main:app --port $(FRONTEND_PORT)
 
 backend:  ## Start backend development server only
 	uv run uvicorn app.main:app --reload --port $(HTTP_PORT)
@@ -82,8 +84,9 @@ help:  ## Show available commands
 	@echo "FastAPI Example"
 	@echo "==============="
 	@echo
-	@echo "Ports: HTTP_PORT (default: 8301), FRONTEND_PORT (default: HTTP_PORT-1)"
-	@echo "  make start-dev HTTP_PORT=9000"
+	@echo "Dev:  backend on HTTP_PORT (8301), frontend on FRONTEND_PORT (8300)"
+	@echo "Prod: single server on FRONTEND_PORT (8300)"
+	@echo "  make start-dev HTTP_PORT=9001   # backend:9001, frontend:9000"
 	@echo
 	@echo "\033[1mStart\033[0m"
 	@grep -E '^(start-dev|start-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

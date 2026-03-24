@@ -10,7 +10,7 @@ test.describe("Flask Admin", () => {
     await page.goto(adapter.adminUrl);
 
     // Should see admin content
-    await expect(page.locator("body")).toContainText("Wilco Shop Admin");
+    await expect(page.locator("body")).toContainText("Shop Admin");
   });
 
   test("product list is visible in admin", async ({ page }) => {

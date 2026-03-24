@@ -45,13 +45,27 @@ export class FastAPIAdapter implements FrameworkAdapter {
   getServerConfigs(): ServerConfig[] {
     const exampleDir = path.join(getExamplesDir(), "fastapi");
 
-    const backendCommand = this.mode === "prod" ? "start-prod" : "backend";
+    if (this.mode === "prod") {
+      // Prod: single FastAPI process serves API + built frontend on frontendPort
+      return [
+        {
+          name: `fastapi-${this.mode}`,
+          command: "make",
+          args: ["start-prod", `HTTP_PORT=${this.backendPort}`],
+          cwd: exampleDir,
+          port: this.frontendPort,
+          healthCheckPath: "/api/products",
+          healthCheckTimeout: 30000,
+        },
+      ];
+    }
 
+    // Dev: backend API + Vite frontend dev server (two processes)
     return [
       {
         name: `fastapi-backend-${this.mode}`,
         command: "make",
-        args: [backendCommand, `HTTP_PORT=${this.backendPort}`],
+        args: ["backend", `HTTP_PORT=${this.backendPort}`],
         cwd: exampleDir,
         port: this.backendPort,
         healthCheckPath: "/api/products",
@@ -68,7 +82,7 @@ export class FastAPIAdapter implements FrameworkAdapter {
           VITE_API_PORT: String(this.backendPort),
         },
         healthCheckPath: "/",
-        healthCheckTimeout: 60000, // Vite can be slow to start
+        healthCheckTimeout: 60000,
       },
     ];
   }

@@ -14,10 +14,10 @@ HTTP_PORT ?= 8100
 ########################################################################################################################
 
 start-dev:  ## Start development server
-	uv run python manage.py runserver $(HTTP_PORT)
+	DJANGO_DEBUG=True uv run python manage.py runserver $(HTTP_PORT)
 
-start-prod:  ## Start production server (pre-built components)
-	uv run python manage.py runserver $(HTTP_PORT) --noreload
+start-prod: build  ## Start production server with gunicorn (pre-built components)
+	uv run gunicorn config.wsgi:application -b 0.0.0.0:$(HTTP_PORT)
 
 test:  ## Run test suite
 	uv run pytest
