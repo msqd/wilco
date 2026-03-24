@@ -24,7 +24,7 @@
     </footer>
 
     <!-- wilco component loader -->
-    <script src="/wilco-static/wilco/loader.js" defer></script>
+    <script src="/wilco-static/wilco/loader.js"{% if wilco_manifest_url %} data-wilco-manifest="{{ wilco_manifest_url }}"{% endif %} defer></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

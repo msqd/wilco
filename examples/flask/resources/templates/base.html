@@ -20,6 +20,6 @@
     <main>
         {% block content %}{% endblock %}
     </main>
-    <script src="/wilco-static/wilco/loader.js" defer></script>
+    <script src="/wilco-static/wilco/loader.js"{% if wilco_manifest_url %} data-wilco-manifest="{{ wilco_manifest_url }}"{% endif %} defer></script>
 </body>
 </html>

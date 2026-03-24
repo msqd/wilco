@@ -47,6 +47,8 @@ export class DjangoUnfoldAdapter implements FrameworkAdapter {
         port: this.port,
         healthCheckPath: "/",
         healthCheckTimeout: 30000,
+        // In dev mode, disable static bundle serving even if build artifacts exist
+        ...(this.mode === "dev" ? { env: { WILCO_BUILD_DIR: "" } } : {}),
       },
     ];
   }

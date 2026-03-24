@@ -51,6 +51,10 @@ def create_app(test_config=None):
     build_dir = resolve_build_dir(BASE_DIR / "dist" / "wilco")
     app.register_blueprint(create_blueprint(registry, build_dir=build_dir), url_prefix="/api")
 
+    # Expose manifest URL to templates for static mode
+    wilco_manifest_url = "/wilco-static/wilco/manifest.json" if build_dir else None
+    app.jinja_env.globals["wilco_manifest_url"] = wilco_manifest_url
+
     # Register admin
     create_admin(app)
 

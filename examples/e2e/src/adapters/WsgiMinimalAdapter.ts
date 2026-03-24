@@ -42,6 +42,7 @@ export class WsgiMinimalAdapter implements FrameworkAdapter {
         cwd: "../wsgi-minimal",
         port: this.port,
         healthCheckPath: "/",
+        ...(this.mode === "dev" ? { env: { WILCO_BUILD_DIR: "" } } : {}),
       },
     ];
   }

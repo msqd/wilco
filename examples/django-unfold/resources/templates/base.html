@@ -1,4 +1,4 @@
-{% load static %}
+{% load static wilco_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +22,6 @@
     <main>
         {% block content %}{% endblock %}
     </main>
-    <script src="/static/wilco/loader.js" defer></script>
+    {% wilco_loader_script %}</script>
 </body>
 </html>

@@ -120,6 +120,7 @@ BUILD_DIR = resolve_build_dir(BASE_DIR / "dist" / "wilco")
 
 # Templates
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates.env.globals["wilco_manifest_url"] = "/wilco-static/wilco/manifest.json" if BUILD_DIR else None
 
 
 async def product_list(request):

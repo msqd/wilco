@@ -42,6 +42,7 @@ export class AsgiMinimalAdapter implements FrameworkAdapter {
         cwd: "../asgi-minimal",
         port: this.port,
         healthCheckPath: "/",
+        ...(this.mode === "dev" ? { env: { WILCO_BUILD_DIR: "" } } : {}),
       },
     ];
   }

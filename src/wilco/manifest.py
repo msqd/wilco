@@ -88,8 +88,9 @@ def resolve_build_dir(default_path: Path) -> Path | None:
         Path to the build directory, or None if no pre-built bundles found.
     """
     env_dir = os.environ.get("WILCO_BUILD_DIR")
-    if env_dir:
-        return Path(env_dir)
+    if env_dir is not None:
+        # Explicitly set: non-empty = use that path, empty = disabled
+        return Path(env_dir) if env_dir else None
 
     if (default_path / "manifest.json").exists():
         return default_path

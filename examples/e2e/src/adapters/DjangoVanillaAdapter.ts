@@ -47,6 +47,7 @@ export class DjangoVanillaAdapter implements FrameworkAdapter {
         port: this.port,
         healthCheckPath: "/",
         healthCheckTimeout: 30000,
+        ...(this.mode === "dev" ? { env: { WILCO_BUILD_DIR: "" } } : {}),
       },
     ];
   }

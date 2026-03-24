@@ -70,6 +70,7 @@ export class FastAPIAdapter implements FrameworkAdapter {
         port: this.backendPort,
         healthCheckPath: "/api/products",
         healthCheckTimeout: 30000,
+        env: { WILCO_BUILD_DIR: "" },
       },
       {
         name: `fastapi-frontend-${this.mode}`,

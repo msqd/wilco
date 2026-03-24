@@ -21,7 +21,7 @@ from wilco.manifest import resolve_build_dir
 
 from .database import get_all_products, get_product_by_id
 from .routes import router
-from .templates import render_template
+from .templates import render_template, set_global
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent
@@ -38,6 +38,9 @@ registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 # Bundle handlers (serves pre-built bundles in prod, live bundles in dev)
 BUILD_DIR = resolve_build_dir(BASE_DIR / "dist" / "wilco")
 bundle_handlers = BridgeHandlers(registry, build_dir=BUILD_DIR)
+
+# Expose manifest URL to templates for static mode
+set_global("wilco_manifest_url", "/wilco-static/wilco/manifest.json" if BUILD_DIR else None)
 
 
 def render_component(name: str, props: dict[str, Any], api_base: str = "/api") -> str:
