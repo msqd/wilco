@@ -38,6 +38,7 @@ def create_parser() -> argparse.ArgumentParser:
     build_parser = subparsers.add_parser("build", help="Pre-compile component bundles")
     build_parser.add_argument("--output", required=True, help="Output directory for pre-built bundles")
     build_parser.add_argument("--components-dir", help="Path to components directory")
+    build_parser.add_argument("--prefix", default="", help="Prefix for component names (e.g., 'store')")
     build_parser.add_argument("--no-minify", action="store_false", dest="minify", help="Disable minification")
     build_parser.add_argument("--sourcemap", action="store_true", default=False, help="Include source maps")
 
@@ -47,6 +48,7 @@ def create_parser() -> argparse.ArgumentParser:
 def run_build(
     *,
     components_dir: str | None,
+    prefix: str,
     output: str,
     minify: bool,
     sourcemap: bool,
@@ -56,7 +58,8 @@ def run_build(
     from .registry import ComponentRegistry
 
     resolved_dir = _resolve_components_dir(components_dir)
-    registry = ComponentRegistry(resolved_dir)
+    registry = ComponentRegistry()
+    registry.add_source(resolved_dir, prefix=prefix)
     output_dir = Path(output)
 
     result = build_components(registry, output_dir, minify=minify, sourcemap=sourcemap)
@@ -121,6 +124,7 @@ def main() -> None:
     if args.command == "build":
         run_build(
             components_dir=getattr(args, "components_dir", None),
+            prefix=args.prefix,
             output=args.output,
             minify=args.minify,
             sourcemap=args.sourcemap,

@@ -44,7 +44,7 @@ setup: install  ## Full setup: install deps, create database, load fixtures
 ########################################################################################################################
 
 build:  ## Build for production (pre-compile components)
-	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store
+	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store --prefix store
 
 ########################################################################################################################
 # Cleanup

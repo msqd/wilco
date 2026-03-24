@@ -40,7 +40,7 @@ BUILD_DIR = resolve_build_dir(BASE_DIR / "dist" / "wilco")
 bundle_handlers = BridgeHandlers(registry, build_dir=BUILD_DIR)
 
 # Expose manifest URL to templates for static mode
-set_global("wilco_manifest_url", "/wilco-static/wilco/manifest.json" if BUILD_DIR else None)
+set_global("wilco_manifest_url", "/static/wilco/manifest.json" if BUILD_DIR else None)
 
 
 def render_component(name: str, props: dict[str, Any], api_base: str = "/api") -> str:
@@ -143,6 +143,10 @@ def serve_static(path: str) -> tuple[str, str, bytes, dict[str, str]]:
         file_path = MEDIA_DIR / path[7:]  # Remove /media/
         base_dir = MEDIA_DIR
         extra_headers["Cache-Control"] = "public, max-age=86400"
+    elif path.startswith("/static/wilco/") and BUILD_DIR:
+        file_path = BUILD_DIR / path[14:]  # Remove /static/wilco/
+        base_dir = BUILD_DIR
+        extra_headers["Cache-Control"] = CACHE_CONTROL_IMMUTABLE
     elif path.startswith("/wilco-static/"):
         file_path = WILCO_STATIC_DIR / path[14:]  # Remove /wilco-static/
         base_dir = WILCO_STATIC_DIR

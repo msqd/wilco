@@ -60,7 +60,7 @@ setup: install  ## Full setup: install deps, create tables, load fixtures
 ########################################################################################################################
 
 build:  ## Build for production (pre-compile components + frontend)
-	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store
+	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store --prefix store
 	cd frontend && pnpm build
 
 ########################################################################################################################

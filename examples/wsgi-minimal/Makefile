@@ -30,7 +30,7 @@ test:
 	uv run pytest tests/ -v
 
 build:  ## Build for production (pre-compile components)
-	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store
+	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store --prefix store
 
 start-dev: setup  ## Start development server
 	uv run gunicorn app.wsgi:app --bind 0.0.0.0:$(HTTP_PORT) --reload
