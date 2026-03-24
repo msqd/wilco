@@ -7,6 +7,7 @@ Usage:
 
 import json
 import uuid
+from pathlib import Path
 from typing import Any
 
 from django import template
@@ -54,6 +55,10 @@ def wilco_loader_script() -> SafeString:
     Call this once at the end of your template to load the wilco runtime.
     The loader will automatically initialize all wilco components on the page.
 
+    When WILCO_BUILD_DIR is configured and contains a manifest, the loader
+    is configured in static mode: bundles are loaded directly from static files
+    instead of the API. Otherwise, the loader uses API mode.
+
     Example:
         {% load wilco_tags %}
         <body>
@@ -62,4 +67,17 @@ def wilco_loader_script() -> SafeString:
             {% wilco_loader_script %}
         </body>
     """
-    return mark_safe('<script src="/static/wilco/loader.js" defer></script>')
+    from django.conf import settings
+    from django.templatetags.static import static
+
+    build_dir = getattr(settings, "WILCO_BUILD_DIR", None)
+
+    if build_dir and (Path(build_dir) / "manifest.json").exists():
+        # Static mode: bundles served via collectstatic
+        manifest_url = static("wilco/manifest.json")
+        return mark_safe(
+            f'<script src="{static("wilco/loader.js")}" data-wilco-manifest="{manifest_url}" defer></script>'
+        )
+
+    # API mode: bundles served via wilco API
+    return mark_safe(f'<script src="{static("wilco/loader.js")}" defer></script>')

@@ -17,7 +17,7 @@ class Command(BaseCommand):
             "--output",
             type=str,
             default=None,
-            help="Output directory (default: STATIC_ROOT/wilco/bundles/)",
+            help="Output directory (default: WILCO_BUILD_DIR or BASE_DIR/dist/wilco/)",
         )
         parser.add_argument(
             "--no-minify",
@@ -38,11 +38,12 @@ class Command(BaseCommand):
         if options["output"]:
             output_dir = Path(options["output"])
         else:
-            static_root = getattr(settings, "STATIC_ROOT", None)
-            if static_root is None:
-                self.stderr.write(self.style.ERROR("STATIC_ROOT is not configured. Use --output to specify."))
-                return
-            output_dir = Path(static_root) / "wilco" / "bundles"
+            # Use WILCO_BUILD_DIR if configured, otherwise BASE_DIR/dist/wilco/
+            build_dir = getattr(settings, "WILCO_BUILD_DIR", None)
+            if build_dir:
+                output_dir = Path(build_dir)
+            else:
+                output_dir = Path(settings.BASE_DIR) / "dist" / "wilco"
 
         minify = not options["no_minify"]
         sourcemap = options["sourcemap"]
@@ -50,3 +51,4 @@ class Command(BaseCommand):
         result = build_components(registry, output_dir, minify=minify, sourcemap=sourcemap)
 
         self.stdout.write(self.style.SUCCESS(f"Built {result.component_count} components to {result.output_dir}"))
+        self.stdout.write(self.style.NOTICE("Run 'manage.py collectstatic' to copy bundles to STATIC_ROOT."))

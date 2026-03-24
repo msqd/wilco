@@ -125,6 +125,15 @@ window.__MODULES__ = moduleRegistry
 // Caching the promise (not the result) prevents duplicate fetches for concurrent requests
 const componentCache = new Map<string, Promise<LoadedComponent>>()
 
+// Manifest for static mode: maps component names to static file paths
+// Set during initialization if the loader script has data-wilco-manifest
+interface ManifestEntry {
+  file: string
+  hash: string
+}
+let staticManifest: Record<string, ManifestEntry> | null = null
+let staticManifestBaseUrl: string | null = null
+
 /**
  * Transform ESM code to work with our runtime module registry.
  * @internal This function is exported for testing purposes only.
@@ -202,7 +211,10 @@ function compileComponent(code: string, componentName: string): LoadedComponent 
 }
 
 /**
- * Load a component by name from the API.
+ * Load a component by name.
+ *
+ * In static mode (manifest loaded), fetches from static file URLs.
+ * In API mode (default), fetches from the wilco API.
  *
  * Uses a promise-based cache to prevent duplicate fetches when multiple
  * containers request the same component simultaneously.
@@ -220,10 +232,20 @@ async function loadComponent(name: string, apiBase: string = "/api", hash?: stri
   if (cached) return cached
 
   // Create the fetch promise and cache it immediately
-  // This prevents race conditions where multiple concurrent calls start separate fetches
   const fetchPromise = (async () => {
-    // Build URL with optional hash query parameter
-    const url = hash ? `${apiBase}/bundles/${name}.js?${hash}` : `${apiBase}/bundles/${name}.js`
+    let url: string
+
+    if (staticManifest && staticManifestBaseUrl) {
+      // Static mode: load from pre-built static files
+      const entry = staticManifest[name]
+      if (!entry) {
+        throw new Error(`Component not found in manifest: ${name}`)
+      }
+      url = `${staticManifestBaseUrl}/${entry.file}`
+    } else {
+      // API mode: load from wilco API
+      url = hash ? `${apiBase}/bundles/${name}.js?${hash}` : `${apiBase}/bundles/${name}.js`
+    }
 
     const response = await fetch(url)
     if (!response.ok) {
@@ -239,7 +261,6 @@ async function loadComponent(name: string, apiBase: string = "/api", hash?: stri
   try {
     return await fetchPromise
   } catch (err) {
-    // Remove from cache on error so retries can work
     componentCache.delete(cacheKey)
     throw err
   }
@@ -355,6 +376,39 @@ function initializeComponents(): void {
   })
 }
 
+/**
+ * Detect static mode from the loader script's data-wilco-manifest attribute.
+ * If present, fetches the manifest and configures static loading.
+ */
+async function detectAndLoadManifest(): Promise<void> {
+  // Find our own script tag by looking for data-wilco-manifest
+  const scriptTag = document.querySelector<HTMLScriptElement>("script[data-wilco-manifest]")
+  if (!scriptTag) return
+
+  const manifestUrl = scriptTag.dataset.wilcoManifest
+  if (!manifestUrl) return
+
+  try {
+    const response = await fetch(manifestUrl)
+    if (!response.ok) return
+
+    staticManifest = await response.json()
+    // Derive the base URL from the manifest URL: "/static/wilco/manifest.json" → "/static/wilco"
+    staticManifestBaseUrl = manifestUrl.replace(/\/manifest\.json$/, "")
+  } catch {
+    // Manifest fetch failed, stay in API mode
+    console.warn("wilco: failed to load manifest, falling back to API mode")
+  }
+}
+
+/**
+ * Main initialization: detect mode, then render components.
+ */
+async function initialize(): Promise<void> {
+  await detectAndLoadManifest()
+  initializeComponents()
+}
+
 // Expose API globally (only once)
 if (!window.wilco) {
   window.wilco = {
@@ -366,9 +420,9 @@ if (!window.wilco) {
 
   // Auto-initialize on DOM ready (only once)
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initializeComponents)
+    document.addEventListener("DOMContentLoaded", initialize)
   } else {
-    initializeComponents()
+    initialize()
   }
 }
 

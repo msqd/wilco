@@ -46,7 +46,8 @@ def build_components(
     # Clean and create output directory
     if output_dir.exists():
         shutil.rmtree(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    bundles_dir = output_dir / "bundles"
+    bundles_dir.mkdir(parents=True, exist_ok=True)
 
     manifest: dict[str, dict[str, str]] = {}
 
@@ -61,14 +62,14 @@ def build_components(
         safe_name = _sanitize_filename(name)
         filename = f"{safe_name}.{result.hash}.js"
 
-        (output_dir / filename).write_text(result.code)
+        (bundles_dir / filename).write_text(result.code)
 
         manifest[name] = {
-            "file": filename,
+            "file": f"bundles/{filename}",
             "hash": result.hash,
         }
 
-    # Write manifest
+    # Write manifest at build root (collected as wilco/manifest.json)
     (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
     return BuildResult(

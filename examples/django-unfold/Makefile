@@ -59,6 +59,7 @@ clean:  ## Clean database and cache
 	rm -rf .venv
 	rm -f db.sqlite3
 	rm -rf staticfiles
+	rm -rf dist
 	rm -rf resources/media
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 

@@ -156,6 +156,15 @@ WILCO_COMPONENT_SOURCES = [
 ]
 WILCO_AUTODISCOVER = False
 
-# Pre-built bundles: auto-detect from STATIC_ROOT if available
-_wilco_build_dir = STATIC_ROOT / "wilco" / "bundles"
+# Pre-built bundles: source directory for wilco build output.
+# The WilcoBundleFinder discovers files here and collectstatic copies them
+# to STATIC_ROOT/wilco/. Set to None to disable (dev mode uses API).
+_wilco_build_dir = BASE_DIR / "dist" / "wilco"
 WILCO_BUILD_DIR = str(_wilco_build_dir) if (_wilco_build_dir / "manifest.json").exists() else None
+
+# Static files finders (includes WilcoBundleFinder for pre-built bundles)
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    "wilco.bridges.django.finders.WilcoBundleFinder",
+]
