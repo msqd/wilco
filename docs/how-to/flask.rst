@@ -60,11 +60,17 @@ create_blueprint
 
     from wilco.bridges.flask import create_blueprint
 
-    def create_blueprint(registry: ComponentRegistry) -> Blueprint:
+    def create_blueprint(
+        registry: ComponentRegistry,
+        build_dir: Path | None = None,
+    ) -> Blueprint:
         """Create a Flask Blueprint with component serving endpoints.
 
         Args:
             registry: The component registry to serve components from.
+            build_dir: Optional path to pre-built bundles directory.
+                When provided, serves pre-built bundles from the manifest
+                and falls back to live bundling for missing components.
 
         Returns:
             A Flask Blueprint that can be registered on any app.
@@ -348,6 +354,56 @@ Create a validation endpoint that receives form data and returns component props
                      validate_preview, methods=["POST"])
     app.add_url_rule("/admin/product/<int:product_id>/preview", "product_preview_edit",
                      validate_preview, methods=["POST"])
+
+Production deployment
+=====================
+
+For production, you can pre-compile component bundles to avoid runtime esbuild
+dependency and serve them as static files.
+
+Pre-building bundles
+--------------------
+
+Use the ``wilco build`` CLI to pre-compile components:
+
+.. code-block:: bash
+
+    wilco build --output dist/wilco/ --components-dir ./components --prefix store
+
+This generates:
+
+- ``dist/wilco/bundles/{name}.{hash}.js`` — hashed bundle files
+- ``dist/wilco/manifest.json`` — component-to-file mapping
+
+Using pre-built bundles
+-----------------------
+
+Pass the ``build_dir`` parameter to ``create_blueprint``:
+
+.. code-block:: python
+
+    from pathlib import Path
+    from wilco.bridges.flask import create_blueprint
+
+    build_dir = Path("./dist/wilco")
+
+    # Serves pre-built bundles when available, falls back to live bundling
+    app.register_blueprint(
+        create_blueprint(registry, build_dir=build_dir),
+        url_prefix="/api",
+    )
+
+You can also set the ``WILCO_BUILD_DIR`` environment variable and resolve it
+programmatically:
+
+.. code-block:: python
+
+    from wilco.manifest import resolve_build_dir
+
+    build_dir = resolve_build_dir(Path("./dist/wilco"))
+
+In static mode, the API bundle endpoint returns 404 and clients load bundles
+from static file URLs instead.
 
 Example application
 ===================

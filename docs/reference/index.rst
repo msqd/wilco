@@ -11,5 +11,6 @@ component format, and JavaScript architecture.
    :maxdepth: 2
    :caption: Contents:
 
+   cli
    components
    javascript

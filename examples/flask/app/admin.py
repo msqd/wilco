@@ -10,8 +10,10 @@ from .database import db
 from .models import Product
 
 
-INJECT_SCRIPTS = """
-    <script src="/wilco-static/wilco/loader.js" defer></script>
+def _make_inject_scripts(manifest_url: str | None = None) -> str:
+    manifest_attr = f' data-wilco-manifest="{manifest_url}"' if manifest_url else ""
+    return f"""
+    <script src="/wilco-static/wilco/loader.js"{manifest_attr} defer></script>
     <script src="/static/wilco/admin-preview-inject.js" defer></script>
     <script src="/static/wilco/live-loader-flask.js" defer></script>
     </body>"""
@@ -101,8 +103,9 @@ def validate_preview(product_id=None):
     return jsonify({"success": True, "props": props})
 
 
-def create_admin(app):
+def create_admin(app, manifest_url: str | None = None):
     """Create and configure Flask-Admin instance."""
+    inject_scripts = _make_inject_scripts(manifest_url)
     admin = Admin(
         app,
         name="Shop Admin",
@@ -131,7 +134,7 @@ def create_admin(app):
         if request.path.startswith("/admin") and response.content_type and "text/html" in response.content_type:
             html = response.get_data(as_text=True)
             if "</body>" in html:
-                html = html.replace("</body>", INJECT_SCRIPTS)
+                html = html.replace("</body>", inject_scripts)
                 response.set_data(html)
         return response
 

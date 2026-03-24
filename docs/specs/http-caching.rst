@@ -111,6 +111,35 @@ Summary Table
    * - API metadata
      - no long ``max-age``
      - **should not** cache long
+   * - Pre-built bundles (static)
+     - ``public, max-age=31536000, immutable``
+     - **must**
+   * - Build manifest (``manifest.json``)
+     - no long ``max-age``
+     - **should not** cache long
+
+Static Mode (Pre-built Bundles)
+-------------------------------
+
+When components are pre-compiled with ``wilco build``, bundles are served as
+static files instead of through the API. This changes the URL pattern but not
+the caching requirements:
+
+**URL pattern**: ``/static/wilco/bundles/{name}.{hash}.js``
+
+Pre-built bundles **must** be served with::
+
+    Cache-Control: public, max-age=31536000, immutable
+
+This is safe because filenames include a content hash. When a component changes,
+the build produces a new filename, effectively busting the cache.
+
+Static file servers (WhiteNoise, nginx, CDN) **should** be configured to serve
+these files with immutable caching. WhiteNoise does this automatically for
+hashed filenames.
+
+The ``manifest.json`` file **should not** be cached with long ``max-age``
+values, as it changes with each build.
 
 Implementation Notes
 --------------------

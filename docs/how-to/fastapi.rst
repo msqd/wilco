@@ -65,11 +65,17 @@ create_router
 
     from wilco.bridges.fastapi import create_router
 
-    def create_router(registry: ComponentRegistry) -> APIRouter:
+    def create_router(
+        registry: ComponentRegistry,
+        build_dir: Path | None = None,
+    ) -> APIRouter:
         """Create an APIRouter with component serving endpoints.
 
         Args:
             registry: The component registry to serve components from.
+            build_dir: Optional path to pre-built bundles directory.
+                When provided, serves pre-built bundles from the manifest
+                and falls back to live bundling for missing components.
 
         Returns:
             A FastAPI APIRouter that can be mounted on any app.
@@ -367,3 +373,60 @@ Serve the wilco loader script alongside your application's static files:
     from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 
     app.mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="wilco_static")
+
+Production deployment
+=====================
+
+For production, you can pre-compile component bundles to avoid runtime esbuild
+dependency and serve them as static files.
+
+Pre-building bundles
+--------------------
+
+Use the ``wilco build`` CLI to pre-compile components:
+
+.. code-block:: bash
+
+    wilco build --output dist/wilco/ --components-dir ./components --prefix store
+
+This generates:
+
+- ``dist/wilco/bundles/{name}.{hash}.js`` — hashed bundle files
+- ``dist/wilco/manifest.json`` — component-to-file mapping
+
+Using pre-built bundles
+-----------------------
+
+Pass the ``build_dir`` parameter to ``create_router``:
+
+.. code-block:: python
+
+    from pathlib import Path
+    from wilco.bridges.fastapi import create_router
+
+    build_dir = Path("./dist/wilco")
+
+    # Serves pre-built bundles when available, falls back to live bundling
+    app.include_router(create_router(registry, build_dir=build_dir), prefix="/api")
+
+You can also set the ``WILCO_BUILD_DIR`` environment variable and resolve it
+programmatically:
+
+.. code-block:: python
+
+    from wilco.manifest import resolve_build_dir
+
+    build_dir = resolve_build_dir(Path("./dist/wilco"))
+    app.include_router(create_router(registry, build_dir=build_dir), prefix="/api")
+
+Serving static bundles
+----------------------
+
+In static mode, the API bundle endpoint returns 404 and clients load bundles
+from static file URLs instead. Mount the build output as a static directory:
+
+.. code-block:: python
+
+    from starlette.staticfiles import StaticFiles
+
+    app.mount("/static/wilco", StaticFiles(directory="dist/wilco"), name="wilco_bundles")

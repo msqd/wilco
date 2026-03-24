@@ -90,6 +90,20 @@ Settings
 ``WILCO_AUTODISCOVER``
     Whether to auto-discover components from Django apps (default: ``True``).
 
+``WILCO_BUILD_DIR``
+    Path to the directory containing pre-built bundles and ``manifest.json``.
+    When set, the bridge serves pre-built bundles instead of bundling at
+    runtime. Used by ``WilcoBundleFinder`` for ``collectstatic``, the
+    ``wilco_build`` management command, and the template tags for static mode
+    detection.
+
+    .. code-block:: python
+
+        WILCO_BUILD_DIR = BASE_DIR / "dist" / "wilco"
+
+    Can also be set via the ``WILCO_BUILD_DIR`` environment variable (takes
+    precedence over the setting).
+
 Template tags
 =============
 
@@ -468,6 +482,35 @@ This runs:
 1. ``wilco_build`` — pre-compiles all components into hashed JS files
 2. ``collectstatic`` — copies static files (including bundles) to ``STATIC_ROOT``
 3. ``gunicorn config.wsgi:application`` — serves the app on the configured port
+
+WilcoBundleFinder
+-----------------
+
+The ``WilcoBundleFinder`` is a Django static files finder that discovers
+pre-built bundles from ``WILCO_BUILD_DIR``. It is automatically registered
+when ``wilco.bridges.django`` is in ``INSTALLED_APPS``.
+
+During ``collectstatic``, it copies:
+
+- ``bundles/*.js`` files to ``STATIC_ROOT/wilco/bundles/``
+- ``manifest.json`` to ``STATIC_ROOT/wilco/manifest.json``
+
+This allows WhiteNoise (or nginx, or any static file server) to serve the
+pre-built bundles at ``/static/wilco/bundles/{name}.{hash}.js``.
+
+wilco_build management command
+------------------------------
+
+The Django bridge provides a ``wilco_build`` management command as an
+alternative to the ``wilco build`` CLI:
+
+.. code-block:: bash
+
+    python manage.py wilco_build [--output DIR]
+
+When ``--output`` is not specified, it uses the ``WILCO_BUILD_DIR`` setting.
+The command discovers components using Django's autodiscovery and configured
+component sources.
 
 Dependencies
 ------------

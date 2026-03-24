@@ -62,7 +62,7 @@ def create_app(test_config=None):
     app.jinja_env.globals["wilco_manifest_url"] = wilco_manifest_url
 
     # Register admin
-    create_admin(app)
+    create_admin(app, manifest_url=wilco_manifest_url)
 
     # Routes
     @app.route("/")

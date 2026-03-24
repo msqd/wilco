@@ -14,6 +14,7 @@
 
 - **Co-locate components with backend logic** — Keep UI components next to the Python code that powers them
 - **No frontend build pipeline** — Components bundled on-the-fly with esbuild when requested
+- **Production-ready** — Pre-compile bundles with `wilco build` for static file serving
 - **Full source map support** — Debug TypeScript directly in browser devtools
 - **Component composition** — Components can dynamically load other components
 - **Framework agnostic** — Works with FastAPI, Django, Flask, Starlette, or any ASGI/WSGI-compatible framework
@@ -85,7 +86,17 @@ For component schemas, composition patterns, and framework-specific guides, see 
 
 - Python 3.10+
 - Node.js (for esbuild bundling)
-- React 18+ on the frontend
+- React 19 on the frontend (bundled in the standalone loader)
+
+## CLI
+
+```bash
+wilco serve                        # Start development server (default)
+wilco build --output dist/wilco/   # Pre-compile bundles for production
+wilco build --output dist/wilco/ --prefix store --no-minify --sourcemap
+```
+
+See the [CLI reference](https://python-wilco.readthedocs.io/en/latest/reference/cli.html) for all options.
 
 ## Development
 

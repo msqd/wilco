@@ -108,6 +108,35 @@ with React Suspense:
 The hook integrates with React Suspense, so components automatically show
 a loading fallback while child components load.
 
+Static mode
+-----------
+
+When pre-built bundles are available, the loader can serve bundles from static
+file URLs instead of the API. This is controlled via two global variables set
+on the ``window`` object:
+
+.. code-block:: javascript
+
+    window.staticManifest = {
+        "store:product": {
+            "file": "bundles/store--product.a1b2c3d4.js",
+            "hash": "a1b2c3d4"
+        }
+    };
+    window.staticManifestBaseUrl = "/static/wilco/";
+
+When ``staticManifest`` is set, the loader:
+
+1. Looks up the component in the manifest
+2. Loads the bundle from ``{staticManifestBaseUrl}{file}`` instead of the API
+3. Falls back to API loading if the component is not in the manifest
+
+The Django template tag ``{% wilco_loader_script %}`` automatically sets these
+variables when ``WILCO_BUILD_DIR`` is configured and contains a valid manifest.
+
+These variables are stored on ``window`` (not as module-level variables) to
+survive duplicate ``<script>`` includes of ``loader.js``.
+
 Global API
 ----------
 
@@ -242,5 +271,6 @@ See also
 ========
 
 - :doc:`/explanation/standalone-loader` - Detailed loader internals
+- :doc:`/reference/cli` - CLI reference for ``wilco build``
 - :doc:`/how-to/django` - Django integration guide
 - :doc:`/how-to/fastapi` - FastAPI integration guide

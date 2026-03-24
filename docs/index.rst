@@ -51,9 +51,11 @@ Features
 
 - **Co-located components** — Keep UI components next to the Python code that powers them
 - **No frontend build pipeline** — Components bundled on-the-fly with esbuild when requested
+- **Production-ready** — Pre-compile bundles with ``wilco build`` for static file serving
 - **Full source map support** — Debug TypeScript directly in browser devtools
 - **Component composition** — Components can dynamically load other components via ``useComponent``
 - **Framework agnostic** — Works with FastAPI, Django, Flask, Starlette, or any ASGI/WSGI-compatible framework
+- **CLI tooling** — ``wilco serve`` for development, ``wilco build`` for production
 
 Quick example
 -------------
@@ -88,13 +90,14 @@ Mount the API in your Python application:
 .. code-block:: python
 
    # FastAPI example
+   from pathlib import Path
    from fastapi import FastAPI
-   from wilco.bridges.fastapi import create_api_router
    from wilco import ComponentRegistry
+   from wilco.bridges.fastapi import create_router
 
    app = FastAPI()
-   registry = ComponentRegistry("my_components")
-   app.include_router(create_api_router(registry), prefix="/api")
+   registry = ComponentRegistry(Path("./my_components"))
+   app.include_router(create_router(registry), prefix="/api")
 
 Load components in the frontend:
 
