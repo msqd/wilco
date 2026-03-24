@@ -195,6 +195,8 @@ class TestBuildComponents:
 
         output_dir = temp_dir / "output"
         output_dir.mkdir()
+        # Mark as a previous build output so the safety check allows deletion
+        (output_dir / "manifest.json").write_text("{}")
         stale_file = output_dir / "old_component.abc123.js"
         stale_file.write_text("stale content")
 

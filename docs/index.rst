@@ -37,6 +37,7 @@ then dynamically bundled with esbuild and loaded by the frontend at runtime.
    :maxdepth: 1
    :caption: Reference
 
+   reference/cli
    reference/components
    reference/javascript
 
@@ -44,7 +45,11 @@ then dynamically bundled with esbuild and loaded by the frontend at runtime.
    :maxdepth: 1
    :caption: Explanation
 
+   explanation/architecture
+   explanation/bundling
    explanation/standalone-loader
+   explanation/request-lifecycle
+   explanation/live-preview
 
 Features
 --------

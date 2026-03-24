@@ -297,7 +297,7 @@ def bundle_component(
         str(ts_path),
         "--bundle",
         "--format=esm",
-        "--target=es2020",
+        "--target=es2022",
         "--jsx=automatic",
         f"--outfile={out_path}",
     ]

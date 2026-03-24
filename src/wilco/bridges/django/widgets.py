@@ -42,9 +42,6 @@ class WilcoComponentWidget:
         validate_url: URL for validation endpoint (required if live=True)
     """
 
-    # Track if loader script has been included on the page
-    _loader_included = False
-
     def __init__(
         self,
         component_name: str,

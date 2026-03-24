@@ -17,7 +17,7 @@ An example ecommerce application built with FastAPI, SQLAlchemy, and a React/Typ
 make setup
 
 # Start development servers (backend + frontend)
-make start
+make start-dev
 ```
 
 Open http://localhost:5173 to view the application.
@@ -26,7 +26,9 @@ Open http://localhost:5173 to view the application.
 
 Run `make help` to see all available commands:
 
-- `make start` - Start both backend and frontend servers
+- `make start-dev` - Start both backend and frontend servers (dev mode, dual ports: 8300 frontend + 8301 API)
+- `make start-prod` - Build assets then start in production mode (single port: 8301)
+- `make build` - Pre-compile wilco component bundles for production
 - `make backend` - Start backend server only
 - `make frontend` - Start frontend server only
 - `make install` - Install all dependencies
@@ -64,7 +66,7 @@ fastapi/
 The frontend proxies API requests to the backend, so both need to be running. The easiest way is with overmind:
 
 ```bash
-make start
+make start-dev
 ```
 
 Or run them separately:

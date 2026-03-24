@@ -101,19 +101,12 @@ def create_app(components_dir: Path | None = None):
 
 
 def _get_app():
-    """Lazy app factory for uvicorn reload mode.
+    """App factory for uvicorn.
 
-    uvicorn references ``wilco.__main__:app`` which triggers this on first access.
-    This avoids importing FastAPI at module level so that ``wilco build`` works
+    Avoids importing FastAPI at module level so that ``wilco build`` works
     in environments without FastAPI installed.
     """
-    global app
-    app = create_app()
-    return app
-
-
-# Lazy app instance: created on first attribute access by uvicorn, not at import time
-app = None
+    return create_app()
 
 
 def main() -> None:

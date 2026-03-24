@@ -43,8 +43,13 @@ def build_components(
     Returns:
         BuildResult with component count and output path.
     """
-    # Clean and create output directory
+    # Clean and create output directory (safety: only delete if it looks like a previous build)
     if output_dir.exists():
+        if not (output_dir / "manifest.json").exists() and any(output_dir.iterdir()):
+            raise ValueError(
+                f"Refusing to delete {output_dir}: directory exists but contains no "
+                f"manifest.json. Use an empty directory or a previous build output."
+            )
         shutil.rmtree(output_dir)
     bundles_dir = output_dir / "bundles"
     bundles_dir.mkdir(parents=True, exist_ok=True)

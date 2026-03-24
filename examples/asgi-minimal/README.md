@@ -35,14 +35,17 @@ make install
 # Set up database with fixtures
 make setup
 
-# Start the server (default port 8300)
-make start
+# Start the server in development mode (default port 8500)
+make start-dev
+
+# Or start in production mode (pre-compiles bundles)
+make start-prod
 
 # Or use a custom port
-HTTP_PORT=9000 make start
+HTTP_PORT=9000 make start-dev
 ```
 
-Visit http://localhost:8300 to see the product list.
+Visit http://localhost:8500 to see the product list.
 
 ## Project Structure
 

@@ -8,7 +8,6 @@ This module provides common functionality used by all framework-specific bridges
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
-from typing import Optional
 
 from wilco import BundleResult, ComponentRegistry
 from wilco.bundler import bundle_component
@@ -42,7 +41,7 @@ class BundleCache:
         self._cache: dict[str, CachedBundle] = {}
         self._lock = Lock()
 
-    def get(self, name: str, *, mtime: float) -> Optional[BundleResult]:
+    def get(self, name: str, *, mtime: float) -> BundleResult | None:
         """Get cached bundle if mtime matches.
 
         Args:
@@ -69,7 +68,7 @@ class BundleCache:
         with self._lock:
             self._cache[name] = CachedBundle(result=result, mtime=mtime)
 
-    def clear(self, name: Optional[str] = None) -> None:
+    def clear(self, name: str | None = None) -> None:
         """Clear cache entries.
 
         Args:
@@ -125,7 +124,7 @@ class BridgeHandlers:
         """
         return [{"name": name} for name in self.registry.components.keys()]
 
-    def get_bundle(self, name: str) -> Optional[BundleResult]:
+    def get_bundle(self, name: str) -> BundleResult | None:
         """Get the bundled JavaScript for a component.
 
         Checks pre-built manifest first, then falls back to live bundling
@@ -164,7 +163,7 @@ class BridgeHandlers:
 
         return result
 
-    def get_metadata(self, name: str) -> Optional[dict]:
+    def get_metadata(self, name: str) -> dict | None:
         """Get metadata for a component.
 
         Includes the bundle hash for cache busting.
@@ -205,7 +204,7 @@ class BridgeHandlers:
         """
         return self._manifest is not None
 
-    def clear_cache(self, name: Optional[str] = None) -> None:
+    def clear_cache(self, name: str | None = None) -> None:
         """Clear the bundle cache.
 
         Args:
