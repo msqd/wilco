@@ -39,49 +39,48 @@ function getModesToRun(): BundleMode[] {
 /**
  * Run setup for an example (install dependencies, migrate, load fixtures).
  */
-async function runSetup(framework: FrameworkType): Promise<void> {
+interface StepResult {
+  framework: string;
+  ok: boolean;
+  error?: string;
+}
+
+async function runSetup(framework: FrameworkType): Promise<StepResult | null> {
   const exampleDir = path.join(EXAMPLES_DIR, framework);
 
   if (!fs.existsSync(exampleDir)) {
-    console.log(`  Skipping setup for ${framework} (directory not found)`);
-    return;
+    return null;
   }
-
-  console.log(`  Setting up ${framework}...`);
 
   try {
     await execAsync("make setup", {
       cwd: exampleDir,
       timeout: 120000, // 2 minutes
     });
-    console.log(`  ${framework} setup complete`);
+    return { framework, ok: true };
   } catch (error) {
-    // Log but don't fail - the server might still work if already set up
-    console.log(`  ${framework} setup warning: ${(error as Error).message}`);
+    return { framework, ok: false, error: (error as Error).message };
   }
 }
 
 /**
  * Run build for an example (pre-build assets for prod mode).
  */
-async function runBuild(framework: FrameworkType): Promise<void> {
+async function runBuild(framework: FrameworkType): Promise<StepResult | null> {
   const exampleDir = path.join(EXAMPLES_DIR, framework);
 
   if (!fs.existsSync(exampleDir)) {
-    console.log(`  Skipping build for ${framework} (directory not found)`);
-    return;
+    return null;
   }
-
-  console.log(`  Building ${framework}...`);
 
   try {
     await execAsync("make build", {
       cwd: exampleDir,
       timeout: 120000, // 2 minutes
     });
-    console.log(`  ${framework} build complete`);
+    return { framework, ok: true };
   } catch (error) {
-    console.log(`  ${framework} build warning: ${(error as Error).message}`);
+    return { framework, ok: false, error: (error as Error).message };
   }
 }
 
@@ -105,18 +104,27 @@ async function globalSetup(): Promise<void> {
   console.log(`Modes: ${modes.join(", ")}\n`);
 
   // Run setup for each example in parallel
-  console.log("Running setup for examples...\n");
-  await Promise.all(frameworks.map((fw) => runSetup(fw)));
-  console.log("");
+  console.log("Setup:");
+  const setupResults = await Promise.all(frameworks.map((fw) => runSetup(fw)));
+  for (const r of setupResults) {
+    if (!r) continue;
+    const icon = r.ok ? "\x1b[32m✓\x1b[0m" : `\x1b[33m⚠\x1b[0m`;
+    console.log(`  ${r.framework} ${icon}${r.ok ? "" : ` ${r.error}`}`);
+  }
 
   // Run build for prod mode in parallel
   if (modes.includes("prod")) {
-    console.log("Running build for prod mode...\n");
-    await Promise.all(frameworks.map((fw) => runBuild(fw)));
-    console.log("");
+    console.log("Build:");
+    const buildResults = await Promise.all(frameworks.map((fw) => runBuild(fw)));
+    for (const r of buildResults) {
+      if (!r) continue;
+      const icon = r.ok ? "\x1b[32m✓\x1b[0m" : `\x1b[33m⚠\x1b[0m`;
+      console.log(`  ${r.framework} ${icon}${r.ok ? "" : ` ${r.error}`}`);
+    }
   }
 
   // Start servers for all framework + mode combinations
+  console.log("Servers:");
   const manager = getServerManager();
   const serverNames: string[] = [];
 
