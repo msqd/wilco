@@ -31,43 +31,32 @@ export class DjangoVanillaAdapter implements FrameworkAdapter {
   }
 
   get adminUrl(): string {
-    return `http://localhost:${this.port}/admin/`;
+    return "/admin/";
   }
 
   getServerConfigs(): ServerConfig[] {
     const exampleDir = path.join(getExamplesDir(), "django-vanilla");
-    const env: Record<string, string> = {};
-
-    if (this.mode === "prod") {
-      env.WILCO_BUILD_DIR = path.join(exampleDir, "staticfiles", "wilco", "bundles");
-    }
+    const target = this.mode === "prod" ? "start-prod" : "start-dev";
 
     return [
       {
         name: `django-vanilla-${this.mode}`,
-        command: "uv",
-        args: [
-          "run",
-          "python",
-          "manage.py",
-          "runserver",
-          String(this.port),
-        ],
+        command: "make",
+        args: [target, `HTTP_PORT=${this.port}`],
         cwd: exampleDir,
         port: this.port,
         healthCheckPath: "/",
         healthCheckTimeout: 30000,
-        ...(Object.keys(env).length > 0 ? { env } : {}),
       },
     ];
   }
 
   productListUrl(): string {
-    return `${this.baseUrl}/`;
+    return "/";
   }
 
   productDetailUrl(id: number): string {
-    return `${this.baseUrl}/product/${id}/`;
+    return `/product/${id}/`;
   }
 
   getSelectors(): PageSelectors {

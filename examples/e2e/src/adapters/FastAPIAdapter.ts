@@ -39,27 +39,23 @@ export class FastAPIAdapter implements FrameworkAdapter {
 
   // Admin is served by the backend but proxied through frontend
   get adminUrl(): string {
-    return `http://localhost:${this.frontendPort}/admin/`;
+    return "/admin/";
   }
 
   getServerConfigs(): ServerConfig[] {
     const exampleDir = path.join(getExamplesDir(), "fastapi");
-    const backendEnv: Record<string, string> = {};
 
-    if (this.mode === "prod") {
-      backendEnv.WILCO_BUILD_DIR = path.join(exampleDir, "dist", "wilco");
-    }
+    const backendCommand = this.mode === "prod" ? "start-prod" : "backend";
 
     return [
       {
         name: `fastapi-backend-${this.mode}`,
-        command: "uv",
-        args: ["run", "uvicorn", "app.main:app", "--reload", "--port", String(this.backendPort)],
+        command: "make",
+        args: [backendCommand, `HTTP_PORT=${this.backendPort}`],
         cwd: exampleDir,
         port: this.backendPort,
         healthCheckPath: "/api/products",
         healthCheckTimeout: 30000,
-        ...(Object.keys(backendEnv).length > 0 ? { env: backendEnv } : {}),
       },
       {
         name: `fastapi-frontend-${this.mode}`,
@@ -78,11 +74,11 @@ export class FastAPIAdapter implements FrameworkAdapter {
   }
 
   productListUrl(): string {
-    return `${this.baseUrl}/`;
+    return "/";
   }
 
   productDetailUrl(id: number): string {
-    return `${this.baseUrl}/product/${id}`;
+    return `/product/${id}`;
   }
 
   getSelectors(): PageSelectors {

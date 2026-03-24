@@ -28,35 +28,30 @@ export class AsgiMinimalAdapter implements FrameworkAdapter {
 
   get adminUrl(): string {
     // No admin in minimal example
-    return this.baseUrl;
+    return "/";
   }
 
   getServerConfigs(): ServerConfig[] {
-    const env: Record<string, string> = {};
-
-    if (this.mode === "prod") {
-      env.WILCO_BUILD_DIR = "dist/wilco";
-    }
+    const target = this.mode === "prod" ? "start-prod" : "start-dev";
 
     return [
       {
         name: `asgi-minimal-${this.mode}`,
         command: "make",
-        args: ["start", `HTTP_PORT=${this.port}`],
+        args: [target, `HTTP_PORT=${this.port}`],
         cwd: "../asgi-minimal",
         port: this.port,
         healthCheckPath: "/",
-        ...(Object.keys(env).length > 0 ? { env } : {}),
       },
     ];
   }
 
   productListUrl(): string {
-    return `${this.baseUrl}/`;
+    return "/";
   }
 
   productDetailUrl(id: number): string {
-    return `${this.baseUrl}/products/${id}`;
+    return `/products/${id}`;
   }
 
   getSelectors(): PageSelectors {

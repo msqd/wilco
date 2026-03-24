@@ -1,7 +1,7 @@
-.PHONY: install setup start test build clean help
+.PHONY: install setup start-dev start-prod test build clean help
 
 # Default target
-.DEFAULT_GOAL := start
+.DEFAULT_GOAL := help
 
 # Environment
 export VIRTUAL_ENV := $(CURDIR)/.venv
@@ -13,8 +13,11 @@ HTTP_PORT ?= 8200
 # Development
 ########################################################################################################################
 
-start:  ## Start development server
+start-dev:  ## Start development server
 	uv run flask --app app.main:create_app run --port $(HTTP_PORT) --debug
+
+start-prod:  ## Start production server (pre-built components)
+	uv run flask --app app.main:create_app run --port $(HTTP_PORT)
 
 test:  ## Run test suite
 	uv run pytest
@@ -63,13 +66,16 @@ help:  ## Show available commands
 	@echo "============="
 	@echo
 	@echo "Port: HTTP_PORT (default: 8200)"
-	@echo "  make start HTTP_PORT=9000"
+	@echo "  make start-dev HTTP_PORT=9000"
+	@echo
+	@echo "\033[1mStart\033[0m"
+	@grep -E '^(start-dev|start-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mSetup\033[0m"
 	@grep -E '^(install|setup):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mDevelopment\033[0m"
-	@grep -E '^(start|test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mBuild\033[0m"
 	@grep -E '^(build):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

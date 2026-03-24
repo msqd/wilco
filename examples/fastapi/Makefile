@@ -1,7 +1,7 @@
-.PHONY: install setup start backend frontend test build clean help
+.PHONY: install setup start-dev start-prod backend frontend test build clean help
 
 # Default target
-.DEFAULT_GOAL := start
+.DEFAULT_GOAL := help
 
 # Environment
 export VIRTUAL_ENV := $(CURDIR)/.venv
@@ -14,13 +14,16 @@ FRONTEND_PORT ?= $(shell echo $$(($(HTTP_PORT) - 1)))
 # Development
 ########################################################################################################################
 
-start:  ## Start development server (backend + frontend)
+start-dev:  ## Start development server (backend + frontend)
 	@if command -v overmind >/dev/null 2>&1; then \
 		HTTP_PORT=$(HTTP_PORT) FRONTEND_PORT=$(FRONTEND_PORT) overmind start; \
 	else \
 		echo "overmind not found, starting backend only (install overmind to run both)"; \
 		$(MAKE) backend; \
 	fi
+
+start-prod:  ## Start production server (pre-built frontend + backend)
+	uv run uvicorn app.main:app --port $(HTTP_PORT)
 
 backend:  ## Start backend development server only
 	uv run uvicorn app.main:app --reload --port $(HTTP_PORT)
@@ -80,13 +83,16 @@ help:  ## Show available commands
 	@echo "==============="
 	@echo
 	@echo "Ports: HTTP_PORT (default: 8301), FRONTEND_PORT (default: HTTP_PORT-1)"
-	@echo "  make start HTTP_PORT=9000"
+	@echo "  make start-dev HTTP_PORT=9000"
+	@echo
+	@echo "\033[1mStart\033[0m"
+	@grep -E '^(start-dev|start-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mSetup\033[0m"
 	@grep -E '^(install|setup):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mDevelopment\033[0m"
-	@grep -E '^(start|backend|frontend|test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(backend|frontend|test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mBuild\033[0m"
 	@grep -E '^(build):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

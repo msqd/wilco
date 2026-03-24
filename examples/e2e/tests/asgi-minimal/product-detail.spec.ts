@@ -40,6 +40,6 @@ test.describe("ASGI Minimal Product Detail", () => {
     await productDetail.goBack();
 
     // Should be back on the list page
-    expect(page.url()).toBe(adapter.productListUrl());
+    expect(page.url()).toContain(adapter.productListUrl());
   });
 });

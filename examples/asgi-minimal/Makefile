@@ -1,7 +1,7 @@
 # Minimal ASGI Example Makefile
 # Demonstrates wilco integration with raw ASGI (no framework)
 
-.PHONY: help install setup test build start clean
+.PHONY: help install setup test build start-dev start-prod clean
 
 # Environment
 export VIRTUAL_ENV := $(CURDIR)/.venv
@@ -12,12 +12,13 @@ help:
 	@echo "Minimal ASGI Example"
 	@echo ""
 	@echo "Commands:"
-	@echo "  make install  - Install Python dependencies"
-	@echo "  make setup    - Set up database and fixtures"
-	@echo "  make start    - Start the development server"
-	@echo "  make test     - Run tests"
-	@echo "  make build    - Build for production (pre-compile components)"
-	@echo "  make clean    - Clean up generated files"
+	@echo "  make start-dev   - Start the development server"
+	@echo "  make start-prod  - Start production server (pre-built components)"
+	@echo "  make install     - Install Python dependencies"
+	@echo "  make setup       - Set up database and fixtures"
+	@echo "  make test        - Run tests"
+	@echo "  make build       - Build for production (pre-compile components)"
+	@echo "  make clean       - Clean up generated files"
 
 install:
 	uv sync
@@ -31,8 +32,11 @@ test:
 build:  ## Build for production (pre-compile components)
 	uv run python -m wilco build --output dist/wilco/ --components-dir ../common/components/store
 
-start: setup
+start-dev: setup  ## Start development server
 	uv run uvicorn app.asgi:app --host 0.0.0.0 --port $(HTTP_PORT) --reload
+
+start-prod: setup  ## Start production server (pre-built components)
+	uv run uvicorn app.asgi:app --host 0.0.0.0 --port $(HTTP_PORT)
 
 clean:
 	rm -rf .venv __pycache__ .pytest_cache dist

@@ -7,11 +7,11 @@
 # ASGI Minimal: ASGI_MINIMAL_PORT (default 8500)
 # WSGI Minimal: WSGI_MINIMAL_PORT (default 8600)
 
-django-unfold: make -C django-unfold start HTTP_PORT=${DJANGO_UNFOLD_PORT:-8000}
-django-vanilla: make -C django-vanilla start HTTP_PORT=${DJANGO_VANILLA_PORT:-8100}
-flask: make -C flask start HTTP_PORT=${FLASK_PORT:-8200}
-fastapi-backend: cd fastapi && uv run uvicorn app.main:app --reload --port $((${FASTAPI_PORT:-8300} + 1))
+django-unfold: make -C django-unfold start-dev HTTP_PORT=${DJANGO_UNFOLD_PORT:-8000}
+django-vanilla: make -C django-vanilla start-dev HTTP_PORT=${DJANGO_VANILLA_PORT:-8100}
+flask: make -C flask start-dev HTTP_PORT=${FLASK_PORT:-8200}
+fastapi-backend: make -C fastapi backend HTTP_PORT=$((${FASTAPI_PORT:-8300} + 1))
 fastapi-frontend: cd fastapi/frontend && VITE_PORT=${FASTAPI_PORT:-8300} VITE_API_PORT=$((${FASTAPI_PORT:-8300} + 1)) pnpm dev
-starlette: make -C starlette start HTTP_PORT=${STARLETTE_PORT:-8400}
-asgi-minimal: make -C asgi-minimal start HTTP_PORT=${ASGI_MINIMAL_PORT:-8500}
-wsgi-minimal: make -C wsgi-minimal start HTTP_PORT=${WSGI_MINIMAL_PORT:-8600}
+starlette: make -C starlette start-dev HTTP_PORT=${STARLETTE_PORT:-8400}
+asgi-minimal: make -C asgi-minimal start-dev HTTP_PORT=${ASGI_MINIMAL_PORT:-8500}
+wsgi-minimal: make -C wsgi-minimal start-dev HTTP_PORT=${WSGI_MINIMAL_PORT:-8600}

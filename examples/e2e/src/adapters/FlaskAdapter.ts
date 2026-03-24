@@ -29,45 +29,32 @@ export class FlaskAdapter implements FrameworkAdapter {
   }
 
   get adminUrl(): string {
-    return `http://localhost:${this.port}/admin/`;
+    return "/admin/";
   }
 
   getServerConfigs(): ServerConfig[] {
     const exampleDir = path.join(getExamplesDir(), "flask");
-    const env: Record<string, string> = {};
-
-    if (this.mode === "prod") {
-      env.WILCO_BUILD_DIR = path.join(exampleDir, "dist", "wilco");
-    }
+    const target = this.mode === "prod" ? "start-prod" : "start-dev";
 
     return [
       {
         name: `flask-${this.mode}`,
-        command: "uv",
-        args: [
-          "run",
-          "flask",
-          "--app",
-          "app.main:create_app",
-          "run",
-          "--port",
-          String(this.port),
-        ],
+        command: "make",
+        args: [target, `HTTP_PORT=${this.port}`],
         cwd: exampleDir,
         port: this.port,
         healthCheckPath: "/",
         healthCheckTimeout: 30000,
-        ...(Object.keys(env).length > 0 ? { env } : {}),
       },
     ];
   }
 
   productListUrl(): string {
-    return `${this.baseUrl}/`;
+    return "/";
   }
 
   productDetailUrl(id: number): string {
-    return `${this.baseUrl}/product/${id}/`;
+    return `/product/${id}/`;
   }
 
   getSelectors(): PageSelectors {

@@ -17,8 +17,28 @@ See `common/specifications.rst` for the complete specification of features all e
 - 6 Space Quest-themed sample products
 - Product listing and detail pages
 - Admin interface for CRUD operations (full frameworks only)
-- Makefile with `install`, `setup`, `test`, and `start` targets
+- Makefile with `install`, `setup`, `build`, `start-dev`, `start-prod`, `test`, and `clean` targets
+- Default Makefile target is `help` (not start)
 - HTTP_PORT environment variable support
+
+## Makefile conventions
+
+Every example Makefile follows the same target interface:
+
+| Target | Description |
+|--------|-------------|
+| `make help` | Show available commands (default target) |
+| `make start-dev` | Start in development mode (live esbuild bundling, auto-reload) |
+| `make start-prod` | Build pre-compiled assets then start in production mode (no reload) |
+| `make install` | Install dependencies |
+| `make setup` | Full setup (install + database + fixtures) |
+| `make build` | Pre-compile wilco component bundles for production |
+| `make test` | Run test suite |
+| `make clean` | Remove generated files |
+
+- **Dev mode** (`start-dev`): components are bundled on-the-fly by esbuild on each request. Servers run with auto-reload.
+- **Prod mode** (`start-prod`): depends on `build`, which pre-compiles components into hashed JS files with a manifest. Servers run without reload. esbuild is not needed at runtime.
+- All targets support `HTTP_PORT` override: `make start-dev HTTP_PORT=9000`
 
 ## Example Applications
 
@@ -122,11 +142,17 @@ Pure WSGI application demonstrating sync protocol integration.
 ## Running Examples
 
 ```bash
-# Single example
-cd examples/django-unfold && make setup && make start
+# Single example (dev mode)
+cd examples/django-unfold && make setup && make start-dev
 
-# All examples simultaneously (requires overmind)
-cd examples && make setup && make start
+# Single example (prod mode: builds then starts)
+cd examples/django-unfold && make setup && make start-prod
+
+# All examples simultaneously in dev mode (requires overmind)
+cd examples && make setup && make start-dev
+
+# All examples in prod mode
+cd examples && make setup && make start-prod
 ```
 
 ## Port Configuration
