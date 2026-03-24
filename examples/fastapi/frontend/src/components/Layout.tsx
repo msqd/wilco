@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 interface LayoutProps {
@@ -11,7 +11,7 @@ function Layout({ children }: LayoutProps) {
       <header className="bg-slate-700 text-white px-8 py-4 flex justify-between items-center">
         <h1 className="text-xl font-semibold">
           <Link to="/" className="text-white no-underline hover:opacity-80">
-            Wilco Shop
+            Wilco Shop | FastAPI
           </Link>
         </h1>
         <nav>
