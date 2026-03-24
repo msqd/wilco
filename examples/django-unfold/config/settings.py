@@ -158,9 +158,9 @@ WILCO_AUTODISCOVER = False
 
 # Pre-built bundles: source directory for wilco build output.
 # The WilcoBundleFinder discovers files here and collectstatic copies them
-# to STATIC_ROOT/wilco/. Set to None to disable (dev mode uses API).
-_wilco_build_dir = BASE_DIR / "dist" / "wilco"
-WILCO_BUILD_DIR = str(_wilco_build_dir) if (_wilco_build_dir / "manifest.json").exists() else None
+# to STATIC_ROOT/wilco/. Always set so collectstatic can discover bundles
+# after they are built; the finder handles the "not built yet" case.
+WILCO_BUILD_DIR = str(BASE_DIR / "dist" / "wilco")
 
 # Static files finders (includes WilcoBundleFinder for pre-built bundles)
 STATICFILES_FINDERS = [

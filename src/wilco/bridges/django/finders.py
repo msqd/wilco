@@ -5,7 +5,7 @@ to Django's collectstatic under the ``wilco/`` prefix.
 
 Usage in settings.py:
 
-    WILCO_BUILD_DIR = BASE_DIR / "dist" / "wilco"
+    WILCO_BUILD_DIR = str(BASE_DIR / "dist" / "wilco")
 
     STATICFILES_FINDERS = [
         "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -40,7 +40,11 @@ class WilcoBundleFinder(BaseFinder):
         self._storage: FileSystemStorage | None = None
 
         if self._build_path and self._build_path.exists():
-            self._storage = FileSystemStorage(location=str(self._build_path))
+            self._storage = FileSystemStorage(
+                location=str(self._build_path),
+                base_url=f"{settings.STATIC_URL}wilco/",
+            )
+            self._storage.prefix = "wilco"
 
     def find(self, path, all=False):
         """Find a file matching the given relative path."""
@@ -66,8 +70,7 @@ class WilcoBundleFinder(BaseFinder):
             if not file_path.is_file():
                 continue
 
-            # Relative path within the build directory
-            relative = file_path.relative_to(self._build_path)
+            # Path relative to the build directory (= relative to storage root)
+            relative = str(file_path.relative_to(self._build_path))
 
-            # Prefix with wilco/ for the static files namespace
-            yield f"wilco/{relative}", self._storage
+            yield relative, self._storage
