@@ -57,7 +57,7 @@ Required files
 --------------
 
 __init__.py (optional)
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 An optional marker file. The ``__init__.py`` file is **not required** for
 component discovery. Components only need an ``index.tsx`` (or ``index.ts``)

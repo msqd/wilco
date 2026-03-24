@@ -124,7 +124,7 @@ Documentation
    * - :doc:`reference/index`
      - Technical reference for APIs and specifications
    * - :doc:`explanation/index`
-     - Background and architectural explanations
+     - Architecture overview, request lifecycle, bundling internals, live preview
 
 API endpoints
 -------------

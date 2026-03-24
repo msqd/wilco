@@ -55,8 +55,12 @@ def create_app(test_config=None):
     if build_dir:
         @app.route("/static/wilco/<path:filename>")
         def wilco_bundles(filename):
-            """Serve pre-built wilco bundles."""
-            return send_from_directory(str(build_dir), filename)
+            """Serve pre-built wilco bundles, fall back to app static for other wilco files."""
+            file_path = Path(build_dir) / filename
+            if file_path.exists():
+                return send_from_directory(str(build_dir), filename)
+            # Fall back to app's static/wilco/ for admin scripts etc.
+            return send_from_directory(str(STATIC_DIR / "wilco"), filename)
 
     wilco_manifest_url = "/static/wilco/manifest.json" if build_dir else None
     app.jinja_env.globals["wilco_manifest_url"] = wilco_manifest_url
