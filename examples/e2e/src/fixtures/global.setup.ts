@@ -45,28 +45,13 @@ interface StepResult {
   error?: string;
 }
 
-async function runSetup(framework: FrameworkType): Promise<StepResult | null> {
-  const exampleDir = path.join(EXAMPLES_DIR, framework);
-
-  if (!fs.existsSync(exampleDir)) {
-    return null;
-  }
-
-  try {
-    await execAsync("make setup", {
-      cwd: exampleDir,
-      timeout: 120000, // 2 minutes
-    });
-    return { framework, ok: true };
-  } catch (error) {
-    return { framework, ok: false, error: (error as Error).message };
-  }
-}
-
 /**
- * Run build for an example (pre-build assets for prod mode).
+ * Run a Make target for an example and return the result.
  */
-async function runBuild(framework: FrameworkType): Promise<StepResult | null> {
+async function runMakeTarget(
+  framework: FrameworkType,
+  target: string,
+): Promise<StepResult | null> {
   const exampleDir = path.join(EXAMPLES_DIR, framework);
 
   if (!fs.existsSync(exampleDir)) {
@@ -74,9 +59,9 @@ async function runBuild(framework: FrameworkType): Promise<StepResult | null> {
   }
 
   try {
-    await execAsync("make build", {
+    await execAsync(`make ${target}`, {
       cwd: exampleDir,
-      timeout: 120000, // 2 minutes
+      timeout: 120000,
     });
     return { framework, ok: true };
   } catch (error) {
@@ -103,24 +88,22 @@ async function globalSetup(): Promise<void> {
   console.log(`Frameworks: ${frameworks.join(", ")}`);
   console.log(`Modes: ${modes.join(", ")}\n`);
 
-  // Run setup for each example in parallel
-  console.log("Setup:");
-  const setupResults = await Promise.all(frameworks.map((fw) => runSetup(fw)));
-  for (const r of setupResults) {
-    if (!r) continue;
-    const icon = r.ok ? "\x1b[32m✓\x1b[0m" : `\x1b[33m⚠\x1b[0m`;
-    console.log(`  ${r.framework} ${icon}${r.ok ? "" : ` ${r.error}`}`);
-  }
-
-  // Run build for prod mode in parallel
-  if (modes.includes("prod")) {
-    console.log("Build:");
-    const buildResults = await Promise.all(frameworks.map((fw) => runBuild(fw)));
-    for (const r of buildResults) {
+  async function runStep(label: string, target: string): Promise<void> {
+    console.log(`${label}:`);
+    const results = await Promise.all(
+      frameworks.map((fw) => runMakeTarget(fw, target)),
+    );
+    for (const r of results) {
       if (!r) continue;
-      const icon = r.ok ? "\x1b[32m✓\x1b[0m" : `\x1b[33m⚠\x1b[0m`;
+      const icon = r.ok ? "\x1b[32m✓\x1b[0m" : "\x1b[33m⚠\x1b[0m";
       console.log(`  ${r.framework} ${icon}${r.ok ? "" : ` ${r.error}`}`);
     }
+  }
+
+  await runStep("Setup", "setup");
+
+  if (modes.includes("prod")) {
+    await runStep("Build", "build");
   }
 
   // Start servers for all framework + mode combinations

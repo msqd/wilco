@@ -180,7 +180,9 @@ if FRONTEND_DIST.exists() and (FRONTEND_DIST / "index.html").exists():
     # Serve Vite build assets (JS, CSS, images with hashed filenames)
     app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend_assets")
 
-    # SPA catch-all: serve index.html for any unmatched route
+    # SPA catch-all: serve index.html for any unmatched route.
+    # IMPORTANT: this must be registered LAST. All API, admin, and static
+    # routes above take priority. New routes must be added BEFORE this block.
     @app.get("/{path:path}")
     async def spa_catch_all(path: str):
         return FileResponse(FRONTEND_DIST / "index.html")

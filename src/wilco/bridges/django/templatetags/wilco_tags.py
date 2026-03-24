@@ -7,7 +7,6 @@ Usage:
 
 import json
 import uuid
-from pathlib import Path
 from typing import Any
 
 from django import template
@@ -67,17 +66,6 @@ def wilco_loader_script() -> SafeString:
             {% wilco_loader_script %}
         </body>
     """
-    from django.conf import settings
-    from django.templatetags.static import static
+    from ..utils import get_loader_script_tag
 
-    build_dir = getattr(settings, "WILCO_BUILD_DIR", None)
-
-    if build_dir and (Path(build_dir) / "manifest.json").exists():
-        # Static mode: bundles served via collectstatic
-        manifest_url = static("wilco/manifest.json")
-        return mark_safe(
-            f'<script src="{static("wilco/loader.js")}" data-wilco-manifest="{manifest_url}" defer></script>'
-        )
-
-    # API mode: bundles served via wilco API
-    return mark_safe(f'<script src="{static("wilco/loader.js")}" defer></script>')
+    return mark_safe(get_loader_script_tag())

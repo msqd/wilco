@@ -198,7 +198,11 @@ routes = [
     Route("/", product_list, name="product_list"),
     Route("/product/{id:int}", product_detail, name="product_detail"),
     Mount("/api", routes=create_routes(registry, build_dir=BUILD_DIR), name="api"),
-    Mount("/static/wilco", StaticFiles(directory=str(BUILD_DIR)), name="wilco_bundles") if BUILD_DIR else Route("/static/wilco/{path:path}", lambda r: JSONResponse({"detail": "not found"}, 404)),
+    *(
+        [Mount("/static/wilco", StaticFiles(directory=str(BUILD_DIR)), name="wilco_bundles")]
+        if BUILD_DIR
+        else []
+    ),
     Mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static"),
     Mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="wilco_static"),
     Mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media"),
