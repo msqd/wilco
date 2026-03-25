@@ -42,9 +42,8 @@ export class ServerManager {
       return existing;
     }
 
-    console.log(`Starting ${config.name}...`);
-    console.log(`  Command: ${config.command} ${config.args.join(" ")}`);
-    console.log(`  CWD: ${config.cwd}`);
+    const label = `  ${config.name} :${config.port}`;
+    process.stdout.write(`${label} ...`);
 
     // Merge environment variables
     const env = {
@@ -60,18 +59,29 @@ export class ServerManager {
       detached: false,
     });
 
-    // Log output for debugging
+    // Buffer output for error reporting; only log if WILCO_E2E_VERBOSE=1
+    const verbose = process.env.WILCO_E2E_VERBOSE === "1";
+    const outputBuffer: string[] = [];
+
     proc.stdout?.on("data", (data: Buffer) => {
       const lines = data.toString().trim().split("\n");
       for (const line of lines) {
-        console.log(`  [${config.name}] ${line}`);
+        outputBuffer.push(`[${config.name}] ${line}`);
+        if (outputBuffer.length > 50) outputBuffer.shift();
+        if (verbose) {
+          console.log(`  [${config.name}] ${line}`);
+        }
       }
     });
 
     proc.stderr?.on("data", (data: Buffer) => {
       const lines = data.toString().trim().split("\n");
       for (const line of lines) {
-        console.log(`  [${config.name}:err] ${line}`);
+        outputBuffer.push(`[${config.name}:err] ${line}`);
+        if (outputBuffer.length > 50) outputBuffer.shift();
+        if (verbose) {
+          console.log(`  [${config.name}:err] ${line}`);
+        }
       }
     });
 
@@ -87,7 +97,9 @@ export class ServerManager {
 
     // Handle process exit
     proc.on("exit", (code, signal) => {
-      console.log(`  [${config.name}] Process exited with code ${code}, signal ${signal}`);
+      if (verbose) {
+        console.log(`  [${config.name}] Process exited with code ${code}, signal ${signal}`);
+      }
       this.servers.delete(config.name);
     });
 
@@ -98,16 +110,22 @@ export class ServerManager {
       timeout: config.healthCheckTimeout ?? 30000,
     });
 
-    console.log(`  Waiting for ${config.name} at ${healthUrl}...`);
     const result = await checker.waitUntilHealthy();
 
     if (!result.healthy) {
-      console.error(`  Failed to start ${config.name}: ${result.error}`);
+      process.stdout.write(` \x1b[31m✗\x1b[0m\n`);
+      console.error(`    Failed: ${result.error}`);
+      if (outputBuffer.length > 0) {
+        console.error(`    Last output:`);
+        for (const line of outputBuffer.slice(-10)) {
+          console.error(`      ${line}`);
+        }
+      }
       await this.stop(config.name);
       throw new Error(`Server ${config.name} failed to start: ${result.error}`);
     }
 
-    console.log(`  ${config.name} is ready (${result.duration}ms)`);
+    process.stdout.write(` \x1b[32m✓\x1b[0m\n`);
     return server;
   }
 
@@ -132,10 +150,8 @@ export class ServerManager {
       return;
     }
 
-    console.log(`Stopping ${name}...`);
     await this.killProcess(server.process);
     this.servers.delete(name);
-    console.log(`  ${name} stopped`);
   }
 
   /**
@@ -143,10 +159,11 @@ export class ServerManager {
    */
   async stopAll(): Promise<void> {
     const names = Array.from(this.servers.keys());
-    console.log(`Stopping ${names.length} server(s): ${names.join(", ")}`);
+    process.stdout.write(`Stopping ${names.length} server(s)...`);
 
     // Stop in parallel
     await Promise.all(names.map((name) => this.stop(name)));
+    process.stdout.write(` \x1b[32mdone\x1b[0m\n`);
   }
 
   /**

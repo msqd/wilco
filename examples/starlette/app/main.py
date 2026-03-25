@@ -13,6 +13,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from wilco import ComponentRegistry
 from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 from wilco.bridges.starlette import create_routes
+from wilco.manifest import resolve_build_dir
 
 from .admin import create_admin, get_preview_routes
 from .database import SessionLocal
@@ -23,14 +24,14 @@ from .widgets import WilcoComponentWidget
 class AdminPreviewMiddleware:
     """Middleware to inject live preview scripts into Starlette-Admin pages."""
 
-    INJECT_SCRIPTS = """
-    <script src="/wilco-static/wilco/loader.js" defer></script>
+    def __init__(self, app: ASGIApp, manifest_url: str | None = None) -> None:
+        self.app = app
+        manifest_attr = f' data-wilco-manifest="{manifest_url}"' if manifest_url else ""
+        self.inject_scripts = f"""
+    <script src="/wilco-static/wilco/loader.js"{manifest_attr} defer></script>
     <script src="/static/wilco/admin-preview-inject.js" defer></script>
     <script src="/static/wilco/live-loader-starlette.js" defer></script>
     </body>"""
-
-    def __init__(self, app: ASGIApp) -> None:
-        self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -76,7 +77,7 @@ class AdminPreviewMiddleware:
                         try:
                             html = full_body.decode("utf-8")
                             if "</body>" in html:
-                                html = html.replace("</body>", self.INJECT_SCRIPTS)
+                                html = html.replace("</body>", self.inject_scripts)
                                 full_body = html.encode("utf-8")
                         except UnicodeDecodeError:
                             pass
@@ -114,8 +115,12 @@ STORE_COMPONENTS_DIR = BASE_DIR.parent / "common" / "components" / "store"
 registry = ComponentRegistry()
 registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
+# Pre-built bundles (auto-detected, or set via WILCO_BUILD_DIR env var)
+BUILD_DIR = resolve_build_dir(BASE_DIR / "dist" / "wilco")
+
 # Templates
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates.env.globals["wilco_manifest_url"] = "/wilco-builds/manifest.json" if BUILD_DIR else None
 
 
 async def product_list(request):
@@ -192,7 +197,8 @@ async def product_detail(request):
 routes = [
     Route("/", product_list, name="product_list"),
     Route("/product/{id:int}", product_detail, name="product_detail"),
-    Mount("/api", routes=create_routes(registry), name="api"),
+    Mount("/api", routes=create_routes(registry, build_dir=BUILD_DIR), name="api"),
+    *([Mount("/wilco-builds", StaticFiles(directory=str(BUILD_DIR)), name="wilco_bundles")] if BUILD_DIR else []),
     Mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static"),
     Mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="wilco_static"),
     Mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media"),
@@ -217,4 +223,5 @@ admin = create_admin()
 admin.mount_to(app)
 
 # Wrap with preview middleware to inject scripts into admin pages
-app = AdminPreviewMiddleware(app)
+MANIFEST_URL = "/wilco-builds/manifest.json" if BUILD_DIR else None
+app = AdminPreviewMiddleware(app, manifest_url=MANIFEST_URL)

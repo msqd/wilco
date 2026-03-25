@@ -388,6 +388,62 @@
   }
 
   /**
+   * Trigger initial validation to populate preview with real form data.
+   * Waits for the component to finish loading, then reads form values,
+   * POSTs to the validate endpoint, and updates the component props.
+   */
+  function triggerInitialValidation(container) {
+    var validateUrl = container.dataset.wilcoValidateUrl;
+    if (!validateUrl) return;
+
+    // Wait for the component to be loaded (renderComponent is async)
+    var attempts = 0;
+    var maxAttempts = 50; // 5 seconds max
+    var waitForComponent = function() {
+      attempts++;
+      if (container._wilcoComponent && container._wilcoRoot) {
+        doValidation(container, validateUrl);
+      } else if (attempts < maxAttempts) {
+        setTimeout(waitForComponent, 100);
+      }
+    };
+    waitForComponent();
+  }
+
+  /**
+   * Perform validation request and update component props.
+   */
+  function doValidation(container, validateUrl) {
+    var form = document.querySelector('form');
+    if (!form) return;
+
+    var formData = new FormData(form);
+    var data = {};
+    for (var pair of formData.entries()) {
+      if (!pair[0].startsWith('csrf') && !pair[0].startsWith('_')) {
+        data[pair[0]] = pair[1];
+      }
+    }
+
+    var body = new URLSearchParams(data).toString();
+
+    fetch(validateUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body,
+    })
+      .then(function(response) { return response.json(); })
+      .then(function(result) {
+        if (result.success && window.wilco && window.wilco.updateComponentProps) {
+          window.wilco.updateComponentProps(container, result.props);
+        }
+      })
+      .catch(function(err) {
+        console.warn('Wilco Admin Preview: Initial validation failed', err);
+      });
+  }
+
+  /**
    * Inject the preview panel into the page with two-column layout.
    */
   function injectPreviewPanel() {
@@ -474,6 +530,11 @@
 
             console.log('Wilco Admin Preview: Rendering component', componentName);
             window.wilco.renderComponent(container, componentName, props, apiBase, hash);
+
+            // Trigger initial validation to populate preview with real form data.
+            // This is essential on client-side navigation (e.g., Starlette-Admin)
+            // where the live-loader's DOMContentLoaded handler doesn't re-fire.
+            triggerInitialValidation(container);
           }
         });
       });

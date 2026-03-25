@@ -7,13 +7,18 @@ Instructions for working with the Python library (`src/wilco/`).
 ```
 wilco/
 ├── __init__.py         # Package exports, version
-├── __main__.py         # Development server entry point
+├── __main__.py         # CLI entry point (build/serve subcommands)
 ├── registry.py         # Component discovery and registration
 ├── bundler.py          # esbuild integration for bundling TypeScript
+├── build.py            # Pre-compilation orchestration for production
+├── manifest.py         # Manifest reader, resolve_build_dir utility
 ├── bridges/            # Framework-specific integrations
-│   ├── base.py         # Shared BridgeHandlers, STATIC_DIR export
+│   ├── base.py         # Shared BridgeHandlers, static_mode, STATIC_DIR
 │   ├── fastapi/        # FastAPI router factory
 │   ├── django/         # Django app with views, widgets, templatetags
+│   │   ├── finders.py  # WilcoBundleFinder for collectstatic
+│   │   ├── utils.py    # Shared resolve_django_build_dir, get_loader_script_tag
+│   │   └── management/ # wilco_build management command
 │   ├── flask/          # Flask blueprint factory
 │   └── starlette/      # Starlette route factory
 └── examples/           # Example components for testing/demos

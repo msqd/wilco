@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Pre-compile CLI**: `wilco build` command pre-compiles all registered components
+  into content-hashed static JS files with a manifest, eliminating the esbuild
+  dependency at runtime in production
+- **Django management command**: `manage.py wilco_build` wraps the generic build
+  command with Django auto-discovery and outputs to `STATIC_ROOT/wilco/bundles/`
+- **Django static finders**: `WilcoBundleFinder` and `WilcoStaticFinder` for serving
+  pre-built bundles and wilco static files (loader.js) via Django's staticfiles
+- **Manifest reader**: `wilco.manifest` module loads and caches manifest.json for
+  bridges to serve pre-built bundles
+- **Production mode for all examples**: `make start-prod` builds then serves
+  pre-compiled bundles without esbuild; `make start-dev` preserves live bundling
+- **Standalone loader static mode**: `loader.js` reads manifest attribute to resolve
+  pre-built bundle URLs instead of fetching from the API
+- **Admin live preview for FastAPI and Starlette**: inject-based preview with
+  automatic form data validation and component prop updates
+- **E2E bundle-mode tests**: Shared test verifying both dev and prod bundle serving
+  across all 7 example applications
+- **E2E admin preview tests**: Shared test verifying admin live preview loads
+  components without errors (no `$NaN`, valid price, no console errors)
+- **E2E admin link tests**: Shared test verifying the header admin link navigates
+  to the admin panel
+- **Architecture documentation**: Explanation docs covering architecture overview,
+  bundling lifecycle, request lifecycle, and live preview system
+
+### Fixed
+
+- **Admin link trailing slash**: FastAPI, Flask, Starlette examples now use `/admin/`
+  instead of `/admin`, preventing redirect failures in some admin frameworks
+- **Admin preview on client-side navigation**: FastAPI (SQLAdmin) and Starlette
+  (Starlette-Admin) use SPA-style navigation where DOMContentLoaded doesn't re-fire;
+  preview now polls until async bundle loading completes before updating props
+- **Static route ordering**: ASGI/WSGI minimal examples check `/static/wilco/`
+  before `/static/` so pre-built bundles are reachable in prod mode
+
 ## [0.4.0] - 2026-02-18
 
 ### Added

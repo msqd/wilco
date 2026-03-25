@@ -9,6 +9,9 @@ db.sqlite3
 staticfiles/
 media/
 
+# Build output
+dist/
+
 # IDE
 *.iml
 

@@ -6,7 +6,7 @@ A simple Flask store showcasing wilco integration with Flask-Admin.
 
 ```bash
 cd examples/flask
-make setup start
+make setup start-dev
 ```
 
 Open http://localhost:8002 to view the store.
@@ -15,7 +15,9 @@ Open http://localhost:8002 to view the store.
 
 | Target | Description |
 |--------|-------------|
-| `make start` | Start development server (default) |
+| `make start-dev` | Start development server (live bundling, auto-reload) |
+| `make start-prod` | Build assets then start in production mode |
+| `make build` | Pre-compile wilco component bundles for production |
 | `make install` | Install Python dependencies |
 | `make setup` | Full setup: install, create database, fixtures |
 | `make clean` | Remove database and cache files |

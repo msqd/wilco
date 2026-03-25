@@ -19,6 +19,18 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    // Suppress expected React error boundary messages in test output
+    onConsoleLog(log) {
+      if (
+        log.includes("The above error occurred") ||
+        log.includes("Error: Uncaught") ||
+        log.includes("ComponentNotFoundError") ||
+        log.includes("ExportNotFoundError") ||
+        log.includes("InvalidComponentNameError")
+      ) {
+        return false
+      }
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

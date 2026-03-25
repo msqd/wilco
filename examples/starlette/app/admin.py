@@ -127,7 +127,7 @@ def create_admin() -> Admin:
     """Create and configure the admin interface."""
     admin = Admin(
         engine,
-        title="Wilco Store Admin",
+        title="Shop Admin",
         base_url="/admin",
     )
 

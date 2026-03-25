@@ -17,10 +17,11 @@ from typing import Any, Callable, Iterable
 
 from wilco import ComponentRegistry
 from wilco.bridges.base import BridgeHandlers, CACHE_CONTROL_IMMUTABLE, STATIC_DIR as WILCO_STATIC_DIR
+from wilco.manifest import resolve_build_dir
 
 from .database import get_all_products, get_product_by_id
 from .routes import router
-from .templates import render_template
+from .templates import render_template, set_global
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent
@@ -34,8 +35,12 @@ STORE_COMPONENTS_DIR = BASE_DIR.parent / "common" / "components" / "store"
 registry = ComponentRegistry()
 registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
-# Bundle handlers for serving component JavaScript
-bundle_handlers = BridgeHandlers(registry)
+# Bundle handlers (serves pre-built bundles in prod, live bundles in dev)
+BUILD_DIR = resolve_build_dir(BASE_DIR / "dist" / "wilco")
+bundle_handlers = BridgeHandlers(registry, build_dir=BUILD_DIR)
+
+# Expose manifest URL to templates for static mode
+set_global("wilco_manifest_url", "/static/wilco/manifest.json" if BUILD_DIR else None)
 
 
 def render_component(name: str, props: dict[str, Any], api_base: str = "/api") -> str:
@@ -130,7 +135,12 @@ def serve_static(path: str) -> tuple[str, str, bytes, dict[str, str]]:
     extra_headers: dict[str, str] = {}
 
     # Determine file path, base directory, and cache headers based on URL prefix
-    if path.startswith("/static/"):
+    # Note: /static/wilco/ must be checked before /static/ (more specific prefix first)
+    if path.startswith("/static/wilco/") and BUILD_DIR:
+        file_path = BUILD_DIR / path[14:]  # Remove /static/wilco/
+        base_dir = BUILD_DIR
+        extra_headers["Cache-Control"] = CACHE_CONTROL_IMMUTABLE
+    elif path.startswith("/static/"):
         file_path = STATIC_DIR / path[8:]  # Remove /static/
         base_dir = STATIC_DIR
         extra_headers["Cache-Control"] = "public, max-age=3600"

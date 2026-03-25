@@ -5,6 +5,7 @@ Usage:
     {% wilco_component "product_card" name=product.name price=product.price %}
 """
 
+import html as html_module
 import json
 import uuid
 from typing import Any
@@ -36,15 +37,17 @@ def wilco_component(
         {% wilco_component "chart" api_base="/custom-api" data=chart_data %}
     """
     container_id = f"wilco-{uuid.uuid4().hex[:8]}"
-    props_json = json.dumps(props)
+    props_json = html_module.escape(json.dumps(props), quote=True)
+    safe_name = html_module.escape(str(component_name), quote=True)
+    safe_api = html_module.escape(str(api_base), quote=True)
 
-    html = f"""<div id="{container_id}"
-     data-wilco-component="{component_name}"
-     data-wilco-props='{props_json}'
-     data-wilco-api="{api_base}">
+    result = f"""<div id="{container_id}"
+     data-wilco-component="{safe_name}"
+     data-wilco-props="{props_json}"
+     data-wilco-api="{safe_api}">
 </div>"""
 
-    return mark_safe(html)
+    return mark_safe(result)
 
 
 @register.simple_tag
@@ -54,6 +57,10 @@ def wilco_loader_script() -> SafeString:
     Call this once at the end of your template to load the wilco runtime.
     The loader will automatically initialize all wilco components on the page.
 
+    When WILCO_BUILD_DIR is configured and contains a manifest, the loader
+    is configured in static mode: bundles are loaded directly from static files
+    instead of the API. Otherwise, the loader uses API mode.
+
     Example:
         {% load wilco_tags %}
         <body>
@@ -62,4 +69,6 @@ def wilco_loader_script() -> SafeString:
             {% wilco_loader_script %}
         </body>
     """
-    return mark_safe('<script src="/static/wilco/loader.js" defer></script>')
+    from ..utils import get_loader_script_tag
+
+    return mark_safe(get_loader_script_tag())

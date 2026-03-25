@@ -1,7 +1,7 @@
-.PHONY: install setup start test clean help
+.PHONY: install setup start-dev start-prod test build clean help
 
 # Default target
-.DEFAULT_GOAL := start
+.DEFAULT_GOAL := help
 
 # Environment
 export VIRTUAL_ENV := $(CURDIR)/.venv
@@ -13,8 +13,11 @@ HTTP_PORT ?= 8100
 # Development
 ########################################################################################################################
 
-start:  ## Start development server
-	uv run python manage.py runserver $(HTTP_PORT)
+start-dev:  ## Start development server
+	DJANGO_DEBUG=True uv run python manage.py runserver $(HTTP_PORT)
+
+start-prod: build  ## Start production server with gunicorn (pre-built components)
+	uv run gunicorn config.wsgi:application -b 0.0.0.0:$(HTTP_PORT)
 
 test:  ## Run test suite
 	uv run pytest
@@ -41,6 +44,14 @@ setup: install  ## Full setup: install deps, migrate, load fixtures, create user
 	@echo "Setup complete!"
 
 ########################################################################################################################
+# Build
+########################################################################################################################
+
+build:  ## Build for production (pre-compile components + collect static)
+	uv run python manage.py wilco_build
+	uv run python manage.py collectstatic --noinput
+
+########################################################################################################################
 # Cleanup
 ########################################################################################################################
 
@@ -48,6 +59,7 @@ clean:  ## Clean database and cache
 	rm -rf .venv
 	rm -f db.sqlite3
 	rm -rf staticfiles
+	rm -rf dist
 	rm -rf resources/media
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
@@ -60,13 +72,19 @@ help:  ## Show available commands
 	@echo "=============="
 	@echo
 	@echo "Port: HTTP_PORT (default: 8100)"
-	@echo "  make start HTTP_PORT=9000"
+	@echo "  make start-dev HTTP_PORT=9000"
+	@echo
+	@echo "\033[1mStart\033[0m"
+	@grep -E '^(start-dev|start-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mSetup\033[0m"
 	@grep -E '^(install|setup):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mDevelopment\033[0m"
-	@grep -E '^(start|test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "\033[1mBuild\033[0m"
+	@grep -E '^(build):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mCleanup\033[0m"
 	@grep -E '^(clean):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

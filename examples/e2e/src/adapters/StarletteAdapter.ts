@@ -1,9 +1,7 @@
 import path from "node:path";
 import type { FrameworkAdapter, PageSelectors } from "./FrameworkAdapter.js";
-import type { ServerConfig } from "../server/types.js";
+import type { ServerConfig, BundleMode } from "../server/types.js";
 import { getExamplesDir } from "../server/ServerManager.js";
-
-const STARLETTE_PORT = 8400;
 
 /**
  * Adapter for Starlette example.
@@ -14,9 +12,9 @@ export class StarletteAdapter implements FrameworkAdapter {
   readonly name = "Starlette";
   readonly hasLivePreview = true;
   readonly isSPA = false;
+  readonly mode: BundleMode;
 
-  readonly baseUrl = `http://localhost:${STARLETTE_PORT}`;
-  readonly adminUrl = `http://localhost:${STARLETTE_PORT}/admin/`;
+  private readonly port: number;
 
   readonly adminCredentials = {
     // Starlette-Admin doesn't require auth by default in this example
@@ -24,26 +22,43 @@ export class StarletteAdapter implements FrameworkAdapter {
     password: "",
   };
 
+  constructor(port = 8400, mode: BundleMode = "dev") {
+    this.port = port;
+    this.mode = mode;
+  }
+
+  get baseUrl(): string {
+    return `http://localhost:${this.port}`;
+  }
+
+  get adminUrl(): string {
+    return "/admin/";
+  }
+
   getServerConfigs(): ServerConfig[] {
+    const exampleDir = path.join(getExamplesDir(), "starlette");
+    const target = this.mode === "prod" ? "start-prod" : "start-dev";
+
     return [
       {
-        name: "starlette",
-        command: "uv",
-        args: ["run", "uvicorn", "app.main:app", "--reload", "--port", String(STARLETTE_PORT)],
-        cwd: path.join(getExamplesDir(), "starlette"),
-        port: STARLETTE_PORT,
+        name: `starlette-${this.mode}`,
+        command: "make",
+        args: [target, `HTTP_PORT=${this.port}`],
+        cwd: exampleDir,
+        port: this.port,
         healthCheckPath: "/",
         healthCheckTimeout: 30000,
+        ...(this.mode === "dev" ? { env: { WILCO_BUILD_DIR: "" } } : {}),
       },
     ];
   }
 
   productListUrl(): string {
-    return `${this.baseUrl}/`;
+    return "/";
   }
 
   productDetailUrl(id: number): string {
-    return `${this.baseUrl}/product/${id}`;
+    return `/product/${id}`;
   }
 
   getSelectors(): PageSelectors {

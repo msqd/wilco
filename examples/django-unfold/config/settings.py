@@ -8,6 +8,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -21,9 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-97-n4kmxy!w0ak)vtk(y98jz@!vftl59!0h(8^3i02k!9+qn7z"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1", "0.0.0.0"]
 
 
 # Application definition
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -134,8 +136,8 @@ def _static(path):
 
 
 UNFOLD = {
-    "SITE_TITLE": "Wilco Shop Administration",
-    "SITE_HEADER": "Wilco Shop",
+    "SITE_TITLE": "Shop Admin",
+    "SITE_HEADER": "Shop Admin",
     "SITE_ICON": _static("apple-touch-icon.png"),
     "SITE_FAVICONS": [
         {"rel": "apple-touch-icon", "sizes": "180x180", "href": _static("apple-touch-icon.png")},
@@ -153,3 +155,16 @@ WILCO_COMPONENT_SOURCES = [
     (BASE_DIR.parent.parent / "src" / "wilco" / "examples", ""),
 ]
 WILCO_AUTODISCOVER = False
+
+# Pre-built bundles: source directory for wilco build output.
+# The WilcoBundleFinder discovers files here and collectstatic copies them
+# to STATIC_ROOT/wilco/. Always set so collectstatic can discover bundles
+# after they are built; the finder handles the "not built yet" case.
+WILCO_BUILD_DIR = str(BASE_DIR / "dist" / "wilco")
+
+# Static files finders (includes WilcoBundleFinder for pre-built bundles)
+STATICFILES_FINDERS = [
+    "django.contrib.staticfiles.finders.FileSystemFinder",
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+    "wilco.bridges.django.finders.WilcoBundleFinder",
+]

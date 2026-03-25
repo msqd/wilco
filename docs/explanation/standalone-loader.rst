@@ -7,7 +7,8 @@ Overview
 
 The standalone loader is a self-contained JavaScript bundle that can render
 wilco components in any HTML page without requiring a full React application.
-It's used by the Django integration for server-side rendered pages.
+It's used by all template-based integrations (Django, Flask, Starlette) for
+server-side rendered pages.
 
 The loader:
 
@@ -61,6 +62,15 @@ Initialization flow
 4. **Transform**: Converts ESM imports to runtime registry lookups
 5. **Compile**: Executes transformed code via ``new Function()``
 6. **Render**: Creates React root and renders component
+
+.. warning::
+
+   **Content Security Policy (CSP)**: The loader uses ``new Function()`` to compile
+   component bundles, which is functionally equivalent to ``eval()``. If your application
+   sets a Content Security Policy, you must include ``'unsafe-eval'`` in the ``script-src``
+   directive. Applications using ``django-csp`` or similar CSP middleware should add this
+   to their CSP configuration. Always serve bundles over HTTPS to prevent code injection
+   via man-in-the-middle attacks.
 
 Module registry
 ===============
@@ -200,6 +210,52 @@ Update props on an already-rendered component.
     });
 
 Returns ``true`` if successful, ``false`` if component not yet loaded.
+
+Static mode (pre-built bundles)
+===============================
+
+When components are pre-compiled with ``wilco build``, the loader can fetch
+bundles from static file URLs instead of the API.
+
+How static mode activates
+-------------------------
+
+The loader checks for ``window.staticManifest`` at initialization. If present,
+it contains a mapping of component names to their hashed bundle files:
+
+.. code-block:: javascript
+
+    window.staticManifest = {
+        "store:product": {
+            "file": "bundles/store--product.a1b2c3.js",
+            "hash": "a1b2c3"
+        }
+    };
+    window.staticManifestBaseUrl = "/static/wilco/";
+
+These are typically set by the server-rendered HTML (e.g., Django's
+``{% wilco_loader_script %}`` tag).
+
+Bundle resolution in static mode
+---------------------------------
+
+When loading a component:
+
+1. Check ``window.staticManifest`` for the component name
+2. If found, fetch from ``{staticManifestBaseUrl}{file}``
+3. If not found, fall back to the API endpoint (``{apiBase}/bundles/{name}.js``)
+
+This fallback enables incremental adoption: pre-build some components while
+others are still bundled at runtime.
+
+Persistence across duplicate loads
+-----------------------------------
+
+Both ``staticManifest`` and ``staticManifestBaseUrl`` are stored on the
+``window`` object rather than as module-level variables. This ensures the
+manifest state survives when multiple ``<script>`` tags load the same
+``loader.js`` file (e.g., one from a widget, one from a template), since
+each IIFE execution would otherwise reset module-level variables.
 
 Live preview extension
 ======================

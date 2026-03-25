@@ -1,5 +1,5 @@
 import type { FrameworkAdapter, PageSelectors } from "./FrameworkAdapter.js";
-import type { ServerConfig } from "../server/types.js";
+import type { ServerConfig, BundleMode } from "../server/types.js";
 
 /**
  * Adapter for the WSGI Minimal example.
@@ -10,14 +10,16 @@ export class WsgiMinimalAdapter implements FrameworkAdapter {
   readonly name = "WSGI Minimal";
   readonly hasLivePreview = false;
   readonly isSPA = false;
+  readonly mode: BundleMode;
 
   // WSGI Minimal has no admin interface
   readonly adminCredentials = undefined;
 
   private readonly port: number;
 
-  constructor(port = 8600) {
+  constructor(port = 8600, mode: BundleMode = "dev") {
     this.port = port;
+    this.mode = mode;
   }
 
   get baseUrl(): string {
@@ -26,28 +28,31 @@ export class WsgiMinimalAdapter implements FrameworkAdapter {
 
   get adminUrl(): string {
     // No admin in minimal example
-    return this.baseUrl;
+    return "/";
   }
 
   getServerConfigs(): ServerConfig[] {
+    const target = this.mode === "prod" ? "start-prod" : "start-dev";
+
     return [
       {
-        name: "wsgi-minimal",
+        name: `wsgi-minimal-${this.mode}`,
         command: "make",
-        args: ["start", `HTTP_PORT=${this.port}`],
+        args: [target, `HTTP_PORT=${this.port}`],
         cwd: "../wsgi-minimal",
         port: this.port,
         healthCheckPath: "/",
+        ...(this.mode === "dev" ? { env: { WILCO_BUILD_DIR: "" } } : {}),
       },
     ];
   }
 
   productListUrl(): string {
-    return `${this.baseUrl}/`;
+    return "/";
   }
 
   productDetailUrl(id: number): string {
-    return `${this.baseUrl}/products/${id}`;
+    return `/products/${id}`;
   }
 
   getSelectors(): PageSelectors {

@@ -1,9 +1,7 @@
 import path from "node:path";
 import type { FrameworkAdapter, PageSelectors } from "./FrameworkAdapter.js";
-import type { ServerConfig } from "../server/types.js";
+import type { ServerConfig, BundleMode } from "../server/types.js";
 import { getExamplesDir } from "../server/ServerManager.js";
-
-const DJANGO_VANILLA_PORT = 8100;
 
 /**
  * Adapter for Django Vanilla example.
@@ -14,41 +12,52 @@ export class DjangoVanillaAdapter implements FrameworkAdapter {
   readonly name = "Django Vanilla";
   readonly hasLivePreview = true;
   readonly isSPA = false;
+  readonly mode: BundleMode;
 
-  readonly baseUrl = `http://localhost:${DJANGO_VANILLA_PORT}`;
-  readonly adminUrl = `http://localhost:${DJANGO_VANILLA_PORT}/admin/`;
+  private readonly port: number;
 
   readonly adminCredentials = {
     username: "admin",
     password: "admin",
   };
 
+  constructor(port = 8100, mode: BundleMode = "dev") {
+    this.port = port;
+    this.mode = mode;
+  }
+
+  get baseUrl(): string {
+    return `http://localhost:${this.port}`;
+  }
+
+  get adminUrl(): string {
+    return "/admin/";
+  }
+
   getServerConfigs(): ServerConfig[] {
+    const exampleDir = path.join(getExamplesDir(), "django-vanilla");
+    const target = this.mode === "prod" ? "start-prod" : "start-dev";
+
     return [
       {
-        name: "django-vanilla",
-        command: "uv",
-        args: [
-          "run",
-          "python",
-          "manage.py",
-          "runserver",
-          String(DJANGO_VANILLA_PORT),
-        ],
-        cwd: path.join(getExamplesDir(), "django-vanilla"),
-        port: DJANGO_VANILLA_PORT,
+        name: `django-vanilla-${this.mode}`,
+        command: "make",
+        args: [target, `HTTP_PORT=${this.port}`],
+        cwd: exampleDir,
+        port: this.port,
         healthCheckPath: "/",
         healthCheckTimeout: 30000,
+        ...(this.mode === "dev" ? { env: { WILCO_BUILD_DIR: "" } } : {}),
       },
     ];
   }
 
   productListUrl(): string {
-    return `${this.baseUrl}/`;
+    return "/";
   }
 
   productDetailUrl(id: number): string {
-    return `${this.baseUrl}/product/${id}/`;
+    return `/product/${id}/`;
   }
 
   getSelectors(): PageSelectors {

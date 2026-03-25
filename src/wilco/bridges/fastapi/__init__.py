@@ -8,6 +8,8 @@ import importlib.util
 if importlib.util.find_spec("fastapi") is None:
     raise ImportError("FastAPI is required for the FastAPI bridge. Install it with: pip install wilco[fastapi]")
 
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
@@ -15,7 +17,7 @@ from ...registry import ComponentRegistry
 from ..base import CACHE_CONTROL_IMMUTABLE, BridgeHandlers
 
 
-def create_router(registry: ComponentRegistry) -> APIRouter:
+def create_router(registry: ComponentRegistry, build_dir: Path | None = None) -> APIRouter:
     """Create an APIRouter with component serving endpoints.
 
     Args:
@@ -35,7 +37,7 @@ def create_router(registry: ComponentRegistry) -> APIRouter:
         app.include_router(create_router(registry), prefix="/api")
         ```
     """
-    handlers = BridgeHandlers(registry)
+    handlers = BridgeHandlers(registry, build_dir=build_dir)
     router = APIRouter()
 
     @router.get("/bundles")
@@ -46,6 +48,9 @@ def create_router(registry: ComponentRegistry) -> APIRouter:
     @router.get("/bundles/{name}.js")
     def get_bundle(name: str) -> Response:
         """Get the bundled JavaScript for a component."""
+        if handlers.static_mode:
+            raise HTTPException(status_code=404, detail="Bundles are served as static files")
+
         try:
             result = handlers.get_bundle(name)
         except ValueError as e:

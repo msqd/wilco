@@ -1,16 +1,21 @@
 import { test, expect } from "@playwright/test";
 import { FlaskAdapter } from "../../src/adapters/index.js";
 import { AdminPage } from "../../src/pages/index.js";
+import { adminLinkTest } from "../shared/admin-link.spec.js";
+import { adminPreviewTest } from "../shared/admin-preview.spec.js";
 
 const adapter = new FlaskAdapter();
 
 test.describe("Flask Admin", () => {
+  adminLinkTest({ pagePath: "/" });
+  adminPreviewTest({ editPath: "/admin/product/edit/?id=1" });
+
   test("admin panel is accessible", async ({ page }) => {
     // Flask-Admin doesn't require login by default
     await page.goto(adapter.adminUrl);
 
     // Should see admin content
-    await expect(page.locator("body")).toContainText("Wilco Shop Admin");
+    await expect(page.locator("body")).toContainText("Shop Admin");
   });
 
   test("product list is visible in admin", async ({ page }) => {

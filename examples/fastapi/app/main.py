@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from fastapi import FastAPI, Depends
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -12,25 +13,27 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from wilco import ComponentRegistry
 from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 from wilco.bridges.fastapi import create_router
+from wilco.manifest import resolve_build_dir
 
 from .database import engine, get_db
 from .models import Product
 from .admin import ProductAdmin, preview_router
 
 BASE_DIR = Path(__file__).parent.parent
+FRONTEND_DIST = BASE_DIR / "frontend" / "dist"
 
 
 class AdminPreviewMiddleware:
     """ASGI middleware to inject live preview scripts into SQLAdmin pages."""
 
-    INJECT_SCRIPTS = """
-    <script src="/wilco-static/wilco/loader.js" defer></script>
+    def __init__(self, app: ASGIApp, manifest_url: str | None = None) -> None:
+        self.app = app
+        manifest_attr = f' data-wilco-manifest="{manifest_url}"' if manifest_url else ""
+        self.inject_scripts = f"""
+    <script src="/wilco-static/wilco/loader.js"{manifest_attr} defer></script>
     <script src="/static/wilco/admin-preview-inject.js" defer></script>
     <script src="/static/wilco/live-loader-fastapi.js" defer></script>
     </body>"""
-
-    def __init__(self, app: ASGIApp) -> None:
-        self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -71,7 +74,7 @@ class AdminPreviewMiddleware:
                         try:
                             html = full_body.decode("utf-8")
                             if "</body>" in html:
-                                html = html.replace("</body>", self.INJECT_SCRIPTS)
+                                html = html.replace("</body>", self.inject_scripts)
                                 full_body = html.encode("utf-8")
                         except UnicodeDecodeError:
                             pass
@@ -115,6 +118,11 @@ app.add_middleware(
 # Static files
 STATIC_DIR = BASE_DIR / "resources" / "static"
 MEDIA_DIR = BASE_DIR / "resources" / "media"
+# Pre-built bundles (auto-detected, or set via WILCO_BUILD_DIR env var)
+BUILD_DIR = resolve_build_dir(BASE_DIR / "dist" / "wilco")
+if BUILD_DIR:
+    # Serve manifest + hashed bundle files from /wilco-builds/
+    app.mount("/wilco-builds", StaticFiles(directory=str(BUILD_DIR)), name="wilco_bundles")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 app.mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="wilco_static")
@@ -123,7 +131,7 @@ app.mount("/wilco-static", StaticFiles(directory=str(WILCO_STATIC_DIR)), name="w
 app.include_router(preview_router)
 
 # SQLAdmin for admin panel
-admin = Admin(app, engine, title="Wilco Shop Admin")
+admin = Admin(app, engine, title="Shop Admin")
 admin.add_view(ProductAdmin)
 
 # Wilco component registry - use shared components from examples/common
@@ -131,8 +139,8 @@ STORE_COMPONENTS_DIR = BASE_DIR.parent / "common" / "components" / "store"
 registry = ComponentRegistry()
 registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
-# Mount wilco API router
-app.include_router(create_router(registry), prefix="/api")
+# Mount wilco API router (serves pre-built bundles in prod, live bundles in dev)
+app.include_router(create_router(registry, build_dir=BUILD_DIR), prefix="/api")
 
 
 # API endpoints for products
@@ -170,5 +178,20 @@ def get_product(product_id: int, db: Session = Depends(get_db)) -> dict:
     }
 
 
+# In production, serve the built React SPA from frontend/dist/
+# This enables `make build && make start-prod` to serve everything from a single process.
+if FRONTEND_DIST.exists() and (FRONTEND_DIST / "index.html").exists():
+    # Serve Vite build assets (JS, CSS, images with hashed filenames)
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="frontend_assets")
+
+    # SPA catch-all: serve index.html for any unmatched route.
+    # IMPORTANT: this must be registered LAST. All API, admin, and static
+    # routes above take priority. New routes must be added BEFORE this block.
+    @app.get("/{path:path}")
+    async def spa_catch_all(path: str):
+        return FileResponse(FRONTEND_DIST / "index.html")
+
+
 # Wrap with preview middleware to inject scripts into admin pages
-app = AdminPreviewMiddleware(app)
+MANIFEST_URL = "/wilco-builds/manifest.json" if BUILD_DIR else None
+app = AdminPreviewMiddleware(app, manifest_url=MANIFEST_URL)

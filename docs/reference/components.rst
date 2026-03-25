@@ -24,16 +24,16 @@ Component structure
 Directory layout
 ----------------
 
-Each component is a Python package (directory with ``__init__.py``) located
+Each component is a directory containing a TypeScript entry point, located
 under the components directory:
 
 .. code-block:: text
 
     src/wilco/examples/
     └── <name>/
-        ├── __init__.py      # Required: Package marker
         ├── index.tsx        # Required: Component entry point
         ├── schema.json      # Optional: Props schema + metadata
+        ├── __init__.py      # Optional: Only needed if used as a Python package
         └── *.tsx            # Optional: Additional component files
 
 Component naming
@@ -56,15 +56,13 @@ if needed when generating display names from package paths.
 Required files
 --------------
 
-__init__.py
-^^^^^^^^^^^
+__init__.py (optional)
+^^^^^^^^^^^^^^^^^^^^^^
 
-A marker file that identifies the directory as a Python package and a valid
-component. For now, this file should be empty:
-
-.. code-block:: python
-
-    # Empty file - marks this directory as a component package
+An optional marker file. The ``__init__.py`` file is **not required** for
+component discovery. Components only need an ``index.tsx`` (or ``index.ts``)
+file. Add ``__init__.py`` only if the component directory needs to be
+importable as a Python package.
 
 **Future extensibility**: This file may later support optional exports for
 server-side capabilities such as props validation, data fetching, or props
@@ -335,7 +333,9 @@ Returns bundled JavaScript code for the component. The bundle:
 - Has external dependencies (react, react-dom) excluded
 - Is generated on-demand via esbuild
 
-Response headers include ``Cache-Control: no-cache`` for development.
+Response headers include ``Cache-Control: public, max-age=31536000, immutable``
+for aggressive caching. Cache busting is achieved via the content hash
+(see :doc:`/specs/http-caching`).
 
 Get component metadata
 ----------------------
@@ -589,33 +589,6 @@ A larger component with internal organization:
       // Uses internal Calendar component
       return <Calendar {...props} />;
     }
-
-Migration from current structure
-================================
-
-The current component structure uses co-located ``.py`` and ``.tsx`` files:
-
-.. code-block:: text
-
-    # Current
-    components/example/
-    ├── __init__.py
-    ├── counter.py      # METADATA dict
-    └── counter.tsx     # Component
-
-    # New
-    components/example/counter/
-    ├── __init__.py
-    ├── index.tsx       # Component
-    └── schema.json     # Props schema
-
-Migration steps:
-
-1. Create subdirectory for each component
-2. Move ``.tsx`` to ``index.tsx`` in subdirectory
-3. Convert ``METADATA`` dict to ``schema.json``
-4. Add ``__init__.py`` to subdirectory
-5. Update registry to use new discovery logic
 
 Appendix
 ========

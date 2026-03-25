@@ -8,10 +8,10 @@ This module provides common functionality used by all framework-specific bridges
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
-from typing import Optional
 
 from wilco import BundleResult, ComponentRegistry
 from wilco.bundler import bundle_component
+from wilco.manifest import Manifest, load_manifest
 
 # Path to wilco's static files (loader.js, live-loader.js)
 STATIC_DIR = Path(__file__).parent / "django" / "static"
@@ -41,7 +41,7 @@ class BundleCache:
         self._cache: dict[str, CachedBundle] = {}
         self._lock = Lock()
 
-    def get(self, name: str, *, mtime: float) -> Optional[BundleResult]:
+    def get(self, name: str, *, mtime: float) -> BundleResult | None:
         """Get cached bundle if mtime matches.
 
         Args:
@@ -68,7 +68,7 @@ class BundleCache:
         with self._lock:
             self._cache[name] = CachedBundle(result=result, mtime=mtime)
 
-    def clear(self, name: Optional[str] = None) -> None:
+    def clear(self, name: str | None = None) -> None:
         """Clear cache entries.
 
         Args:
@@ -103,14 +103,18 @@ class BridgeHandlers:
         ```
     """
 
-    def __init__(self, registry: ComponentRegistry) -> None:
+    def __init__(self, registry: ComponentRegistry, build_dir: Path | None = None) -> None:
         """Initialize handlers with a component registry.
 
         Args:
             registry: The component registry to serve components from.
+            build_dir: Optional path to pre-built bundles directory.
+                When provided, serves pre-built bundles from manifest
+                and falls back to live bundling for missing components.
         """
         self.registry = registry
         self._cache = BundleCache()
+        self._manifest: Manifest | None = load_manifest(build_dir) if build_dir else None
 
     def list_bundles(self) -> list[dict]:
         """List all available bundles.
@@ -120,10 +124,11 @@ class BridgeHandlers:
         """
         return [{"name": name} for name in self.registry.components.keys()]
 
-    def get_bundle(self, name: str) -> Optional[BundleResult]:
+    def get_bundle(self, name: str) -> BundleResult | None:
         """Get the bundled JavaScript for a component.
 
-        Uses mtime-based caching for development hot-reload support.
+        Checks pre-built manifest first, then falls back to live bundling
+        with mtime-based caching for development hot-reload support.
 
         Args:
             name: Component name.
@@ -131,6 +136,12 @@ class BridgeHandlers:
         Returns:
             BundleResult with code and hash, or None if not found.
         """
+        # Try pre-built bundle first (returns cached BundleResult)
+        if self._manifest is not None:
+            result = self._manifest.get_bundle(name)
+            if result is not None:
+                return result
+
         component = self.registry.get(name)
         if component is None:
             return None
@@ -154,7 +165,7 @@ class BridgeHandlers:
 
         return result
 
-    def get_metadata(self, name: str) -> Optional[dict]:
+    def get_metadata(self, name: str) -> dict | None:
         """Get metadata for a component.
 
         Includes the bundle hash for cache busting.
@@ -172,14 +183,30 @@ class BridgeHandlers:
 
         metadata = dict(component.metadata)
 
-        # Include bundle hash for cache busting
+        # Try hash from manifest first (avoids reading the bundle file)
+        if self._manifest is not None:
+            hash_value = self._manifest.get_hash(name)
+            if hash_value is not None:
+                metadata["hash"] = hash_value
+                return metadata
+
+        # Fall back to live bundling for hash
         result = self.get_bundle(name)
         if result:
             metadata["hash"] = result.hash
 
         return metadata
 
-    def clear_cache(self, name: Optional[str] = None) -> None:
+    @property
+    def static_mode(self) -> bool:
+        """Whether pre-built bundles are available via static files.
+
+        When True, the API bundle endpoint should return 404 and clients
+        should load bundles from static file URLs instead.
+        """
+        return self._manifest is not None
+
+    def clear_cache(self, name: str | None = None) -> None:
         """Clear the bundle cache.
 
         Args:

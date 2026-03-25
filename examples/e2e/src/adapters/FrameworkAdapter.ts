@@ -1,4 +1,4 @@
-import type { ServerConfig, FrameworkType } from "../server/types.js";
+import type { ServerConfig, FrameworkType, BundleMode } from "../server/types.js";
 
 /**
  * CSS selectors for page elements.
@@ -35,6 +35,9 @@ export interface PageSelectors {
 export interface FrameworkAdapter {
   /** Framework type identifier */
   readonly type: FrameworkType;
+
+  /** Bundle mode (dev or prod) */
+  readonly mode: BundleMode;
 
   /** Display name for the framework */
   readonly name: string;

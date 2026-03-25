@@ -1,4 +1,4 @@
-.PHONY: start test test-backend test-frontend test-e2e install install-dev clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
+.PHONY: start test test-all test-backend test-frontend test-e2e test-e2e-dev test-e2e-prod install install-dev clean wheel format format-python format-frontend build-loader publish publish-test docs docs-watch help
 
 # Default target
 .DEFAULT_GOAL := start
@@ -31,6 +31,9 @@ install-dev:  ## Install dependencies with dev tools (Python + JavaScript)
 build-loader:  ## Build the standalone loader (TypeScript -> JavaScript)
 	$(call execute,cd src/wilcojs/react && pnpm build:loader)
 
+build:  ## Pre-compile component bundles for production
+	$(call execute,uv run python -m wilco build --output dist/wilco/)
+
 wheel: build-loader  ## Build Python wheel (includes pre-built JS assets)
 	$(call execute,uv build)
 
@@ -48,7 +51,9 @@ publish-test: wheel  ## Publish to TestPyPI (for testing)
 # Testing
 ########################################################################################################################
 
-test: test-backend test-frontend  ## Run all tests
+test: test-backend test-frontend  ## Run core tests (backend + frontend)
+
+test-all: test test-e2e  ## Run everything: core tests + E2E (dev + prod)
 
 test-backend: install-dev  ## Run backend tests (Python/pytest)
 	$(call execute,uv run pytest)
@@ -56,8 +61,14 @@ test-backend: install-dev  ## Run backend tests (Python/pytest)
 test-frontend:  ## Run frontend tests (TypeScript typecheck + Vitest)
 	$(call execute,cd src/wilcojs/react && pnpm typecheck && pnpm test:run)
 
-test-e2e:  ## Run E2E tests for all examples (requires setup)
-	$(call execute,cd examples/e2e && pnpm test)
+test-e2e:  ## Run E2E tests for all examples in dev + prod modes
+	$(call execute,cd examples/e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test)
+
+test-e2e-dev:  ## Run E2E tests in dev mode only (live esbuild)
+	$(call execute,cd examples/e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test:dev)
+
+test-e2e-prod:  ## Run E2E tests in prod mode only (pre-built assets)
+	$(call execute,cd examples/e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test:prod)
 
 ########################################################################################################################
 # Documentation
@@ -103,13 +114,14 @@ help:  ## Show available commands
 	@grep -E '^(start|install|install-dev):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mBuild\033[0m"
-	@grep -E '^(build-loader|wheel):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(build|build-loader|wheel):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mPublishing\033[0m"
 	@grep -E '^(publish|publish-test):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mTesting\033[0m"
-	@grep -E '^(test|test-backend|test-frontend|test-e2e):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(test-all|test|test-backend|test-frontend|test-e2e|test-e2e-dev|test-e2e-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo "  \033[2mE2E env vars: HEADED=1 (show browser), WILCO_E2E_VERBOSE=1 (server logs), PWDEBUG=1 (inspector)\033[0m"
 	@echo
 	@echo "\033[1mDocumentation\033[0m"
 	@grep -E '^(docs|docs-watch):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

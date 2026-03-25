@@ -1,7 +1,7 @@
-.PHONY: install setup start test clean help django-unfold django-vanilla flask fastapi starlette asgi-minimal wsgi-minimal test-e2e test-e2e-django-unfold test-e2e-django-vanilla test-e2e-flask test-e2e-fastapi test-e2e-starlette test-e2e-asgi-minimal test-e2e-wsgi-minimal
+.PHONY: install setup build start-dev start-prod test clean help django-unfold django-vanilla flask fastapi starlette asgi-minimal wsgi-minimal test-e2e test-e2e-django-unfold test-e2e-django-vanilla test-e2e-flask test-e2e-fastapi test-e2e-starlette test-e2e-asgi-minimal test-e2e-wsgi-minimal
 
 # Default target
-.DEFAULT_GOAL := start
+.DEFAULT_GOAL := help
 
 # Port configuration for running all examples simultaneously
 # Using 100 increments to leave room for additional services per example
@@ -20,7 +20,7 @@ EXAMPLES := django-unfold django-vanilla flask fastapi starlette asgi-minimal ws
 # All Examples
 ########################################################################################################################
 
-start:  ## Start all examples simultaneously (requires overmind)
+start-dev:  ## Start all examples in dev mode (requires overmind)
 	@if command -v overmind >/dev/null 2>&1; then \
 		DJANGO_UNFOLD_PORT=$(DJANGO_UNFOLD_PORT) \
 		DJANGO_VANILLA_PORT=$(DJANGO_VANILLA_PORT) \
@@ -35,6 +35,13 @@ start:  ## Start all examples simultaneously (requires overmind)
 		echo "Install with: brew install overmind (macOS) or see https://github.com/DarthSim/overmind"; \
 		exit 1; \
 	fi
+
+start-prod: build  ## Build and start all examples in prod mode
+	@for example in $(EXAMPLES); do \
+		echo "Starting $$example in prod mode..."; \
+		$(MAKE) -C $$example start-prod & \
+	done; \
+	wait
 
 install:  ## Install dependencies for all examples
 	@for example in $(EXAMPLES); do \
@@ -54,6 +61,12 @@ test:  ## Run tests for all examples
 		$(MAKE) -C $$example test; \
 	done
 
+build:  ## Build all examples (pre-build assets for prod mode)
+	@for example in $(EXAMPLES); do \
+		echo "Building $$example..."; \
+		$(MAKE) -C $$example build; \
+	done
+
 clean:  ## Clean all examples
 	@for example in $(EXAMPLES); do \
 		echo "Cleaning $$example..."; \
@@ -64,54 +77,60 @@ clean:  ## Clean all examples
 # E2E Tests
 ########################################################################################################################
 
-test-e2e:  ## Run all E2E tests (Django Unfold, Django Vanilla, Flask, FastAPI, Starlette)
-	cd e2e && pnpm test
+test-e2e:  ## Run all E2E tests (dev + prod modes)
+	cd e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test
 
-test-e2e-django-unfold:  ## Run Django Unfold E2E tests only
+test-e2e-dev:  ## Run all E2E tests in dev mode only
+	cd e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test:dev
+
+test-e2e-prod:  ## Run all E2E tests in prod mode only
+	cd e2e && pnpm install --frozen-lockfile && pnpm install-browsers && pnpm test:prod
+
+test-e2e-django-unfold:  ## Run Django Unfold E2E tests only (dev + prod)
 	cd e2e && pnpm test:django-unfold
 
-test-e2e-django-vanilla:  ## Run Django Vanilla E2E tests only
+test-e2e-django-vanilla:  ## Run Django Vanilla E2E tests only (dev + prod)
 	cd e2e && pnpm test:django-vanilla
 
-test-e2e-flask:  ## Run Flask E2E tests only
+test-e2e-flask:  ## Run Flask E2E tests only (dev + prod)
 	cd e2e && pnpm test:flask
 
-test-e2e-fastapi:  ## Run FastAPI E2E tests only
+test-e2e-fastapi:  ## Run FastAPI E2E tests only (dev + prod)
 	cd e2e && pnpm test:fastapi
 
-test-e2e-starlette:  ## Run Starlette E2E tests only
+test-e2e-starlette:  ## Run Starlette E2E tests only (dev + prod)
 	cd e2e && pnpm test:starlette
 
-test-e2e-asgi-minimal:  ## Run ASGI Minimal E2E tests only
+test-e2e-asgi-minimal:  ## Run ASGI Minimal E2E tests only (dev + prod)
 	cd e2e && pnpm test:asgi-minimal
 
-test-e2e-wsgi-minimal:  ## Run WSGI Minimal E2E tests only
+test-e2e-wsgi-minimal:  ## Run WSGI Minimal E2E tests only (dev + prod)
 	cd e2e && pnpm test:wsgi-minimal
 
 ########################################################################################################################
 # Individual Examples
 ########################################################################################################################
 
-django-unfold:  ## Start Django Unfold example only
-	$(MAKE) -C django-unfold start HTTP_PORT=$(DJANGO_UNFOLD_PORT)
+django-unfold:  ## Start Django Unfold example (dev mode)
+	$(MAKE) -C django-unfold start-dev HTTP_PORT=$(DJANGO_UNFOLD_PORT)
 
-django-vanilla:  ## Start Django Vanilla example only
-	$(MAKE) -C django-vanilla start HTTP_PORT=$(DJANGO_VANILLA_PORT)
+django-vanilla:  ## Start Django Vanilla example (dev mode)
+	$(MAKE) -C django-vanilla start-dev HTTP_PORT=$(DJANGO_VANILLA_PORT)
 
-flask:  ## Start Flask example only
-	$(MAKE) -C flask start HTTP_PORT=$(FLASK_PORT)
+flask:  ## Start Flask example (dev mode)
+	$(MAKE) -C flask start-dev HTTP_PORT=$(FLASK_PORT)
 
-fastapi:  ## Start FastAPI example only
-	$(MAKE) -C fastapi start HTTP_PORT=$(FASTAPI_PORT)
+fastapi:  ## Start FastAPI example (dev mode)
+	$(MAKE) -C fastapi start-dev HTTP_PORT=$(FASTAPI_PORT)
 
-starlette:  ## Start Starlette example only
-	$(MAKE) -C starlette start HTTP_PORT=$(STARLETTE_PORT)
+starlette:  ## Start Starlette example (dev mode)
+	$(MAKE) -C starlette start-dev HTTP_PORT=$(STARLETTE_PORT)
 
-asgi-minimal:  ## Start ASGI Minimal example only
-	$(MAKE) -C asgi-minimal start HTTP_PORT=$(ASGI_MINIMAL_PORT)
+asgi-minimal:  ## Start ASGI Minimal example (dev mode)
+	$(MAKE) -C asgi-minimal start-dev HTTP_PORT=$(ASGI_MINIMAL_PORT)
 
-wsgi-minimal:  ## Start WSGI Minimal example only
-	$(MAKE) -C wsgi-minimal start HTTP_PORT=$(WSGI_MINIMAL_PORT)
+wsgi-minimal:  ## Start WSGI Minimal example (dev mode)
+	$(MAKE) -C wsgi-minimal start-dev HTTP_PORT=$(WSGI_MINIMAL_PORT)
 
 ########################################################################################################################
 # Help
@@ -122,15 +141,21 @@ help:  ## Show available commands
 	@echo "==============="
 	@echo
 	@echo "Run all examples simultaneously with different ports:"
-	@echo "  make start                           # Django Unfold:8000, Django Vanilla:8100, Flask:8200, FastAPI:8300, Starlette:8400, ASGI-Minimal:8500, WSGI-Minimal:8600"
-	@echo "  make start DJANGO_UNFOLD_PORT=9000   # Custom ports"
+	@echo "  make start-dev                               # Dev mode: Django Unfold:8000, Django Vanilla:8100, Flask:8200, FastAPI:8300, Starlette:8400, ASGI-Minimal:8500, WSGI-Minimal:8600"
+	@echo "  make start-prod                              # Prod mode: build all, then start"
+	@echo "  make start-dev DJANGO_UNFOLD_PORT=9000       # Custom ports"
 	@echo
 	@echo "\033[1mAll Examples\033[0m"
-	@grep -E '^(start|install|setup|test|clean):.*?##' $(MAKEFILE_LIST) | head -5 | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(start-dev|start-prod|install|setup|build|test|clean):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mIndividual Examples\033[0m"
 	@grep -E '^(django-unfold|django-vanilla|flask|fastapi|starlette|asgi-minimal|wsgi-minimal):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
 	@echo "\033[1mE2E Tests\033[0m"
 	@grep -E '^(test-e2e|test-e2e-django-unfold|test-e2e-django-vanilla|test-e2e-flask|test-e2e-fastapi|test-e2e-starlette|test-e2e-asgi-minimal|test-e2e-wsgi-minimal):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo
+	@echo "  \033[2mEnvironment variables:\033[0m"
+	@echo "    HEADED=1                 Show browser during E2E tests"
+	@echo "    WILCO_E2E_VERBOSE=1      Show server output during E2E tests"
+	@echo "    PWDEBUG=1                Enable Playwright Inspector"
 	@echo

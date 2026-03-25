@@ -23,6 +23,8 @@ import importlib.util
 if importlib.util.find_spec("starlette") is None:
     raise ImportError("Starlette is required for the Starlette bridge. Install it with: pip install wilco[starlette]")
 
+from pathlib import Path
+
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
@@ -31,7 +33,7 @@ from wilco import ComponentRegistry
 from wilco.bridges.base import CACHE_CONTROL_IMMUTABLE, BridgeHandlers
 
 
-def create_routes(registry: ComponentRegistry) -> list[Route]:
+def create_routes(registry: ComponentRegistry, build_dir: Path | None = None) -> list[Route]:
     """Create Starlette routes for component serving.
 
     Args:
@@ -55,7 +57,7 @@ def create_routes(registry: ComponentRegistry) -> list[Route]:
         ])
         ```
     """
-    handlers = BridgeHandlers(registry)
+    handlers = BridgeHandlers(registry, build_dir=build_dir)
 
     async def list_bundles(request: Request) -> JSONResponse:
         """List all available bundles."""
@@ -64,6 +66,12 @@ def create_routes(registry: ComponentRegistry) -> list[Route]:
 
     async def get_bundle(request: Request) -> Response:
         """Get the bundled JavaScript for a component."""
+        if handlers.static_mode:
+            return JSONResponse(
+                {"detail": "Bundles are served as static files"},
+                status_code=404,
+            )
+
         name = request.path_params["name"]
 
         try:

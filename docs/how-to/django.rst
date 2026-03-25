@@ -90,6 +90,20 @@ Settings
 ``WILCO_AUTODISCOVER``
     Whether to auto-discover components from Django apps (default: ``True``).
 
+``WILCO_BUILD_DIR``
+    Path to the directory containing pre-built bundles and ``manifest.json``.
+    When set, the bridge serves pre-built bundles instead of bundling at
+    runtime. Used by ``WilcoBundleFinder`` for ``collectstatic``, the
+    ``wilco_build`` management command, and the template tags for static mode
+    detection.
+
+    .. code-block:: python
+
+        WILCO_BUILD_DIR = BASE_DIR / "dist" / "wilco"
+
+    Can also be set via the ``WILCO_BUILD_DIR`` environment variable (takes
+    precedence over the setting).
+
 Template tags
 =============
 
@@ -407,8 +421,114 @@ Component with both list and detail views:
     }
 
 
-Example application
-===================
+Production deployment
+=====================
+
+The Django examples include a production-like setup that mirrors how you would
+deploy a real application. This is useful for testing wilco with pre-built
+bundles, gunicorn, and ``DEBUG=False``.
+
+Configuration overview
+----------------------
+
+The examples use environment variables to toggle between dev and prod modes:
+
+.. code-block:: python
+
+    # config/settings.py
+    import os
+
+    DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
+    ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1", "0.0.0.0"]
+
+**Dev mode** (``make start-dev``): sets ``DJANGO_DEBUG=True``, uses Django's
+built-in runserver with auto-reload. Components are bundled on-the-fly by
+esbuild.
+
+**Prod mode** (``make start-prod``): leaves ``DJANGO_DEBUG`` unset (defaults
+to ``False``), pre-builds component bundles, collects static files, then serves
+through gunicorn.
+
+Static files with WhiteNoise
+-----------------------------
+
+With ``DEBUG=False``, Django does not serve static files. The examples use
+`WhiteNoise <https://whitenoise.readthedocs.io/>`_ to serve them directly
+from the WSGI application:
+
+.. code-block:: python
+
+    MIDDLEWARE = [
+        "django.middleware.security.SecurityMiddleware",
+        "whitenoise.middleware.WhiteNoiseMiddleware",
+        # ...
+    ]
+
+WhiteNoise serves files from ``STATIC_ROOT`` (populated by ``collectstatic``)
+without needing nginx or a CDN. This includes pre-built wilco bundles, which
+are collected via the ``WilcoBundleFinder``.
+
+Running in production mode
+--------------------------
+
+.. code-block:: bash
+
+    cd examples/django-unfold
+    make setup       # Install deps, migrate, load fixtures
+    make start-prod  # Build bundles, collect static, start gunicorn
+
+This runs:
+
+1. ``wilco_build`` — pre-compiles all components into hashed JS files
+2. ``collectstatic`` — copies static files (including bundles) to ``STATIC_ROOT``
+3. ``gunicorn config.wsgi:application`` — serves the app on the configured port
+
+WilcoBundleFinder
+-----------------
+
+The ``WilcoBundleFinder`` is a Django static files finder that discovers
+pre-built bundles from ``WILCO_BUILD_DIR``. It must be added explicitly
+to ``STATICFILES_FINDERS`` in your settings:
+
+.. code-block:: python
+
+    STATICFILES_FINDERS = [
+        "django.contrib.staticfiles.finders.FileSystemFinder",
+        "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+        "wilco.bridges.django.finders.WilcoBundleFinder",
+    ]
+
+During ``collectstatic``, it copies:
+
+- ``bundles/*.js`` files to ``STATIC_ROOT/wilco/bundles/``
+- ``manifest.json`` to ``STATIC_ROOT/wilco/manifest.json``
+
+This allows WhiteNoise (or nginx, or any static file server) to serve the
+pre-built bundles at ``/static/wilco/bundles/{name}.{hash}.js``.
+
+wilco_build management command
+------------------------------
+
+The Django bridge provides a ``wilco_build`` management command as an
+alternative to the ``wilco build`` CLI:
+
+.. code-block:: bash
+
+    python manage.py wilco_build [--output DIR]
+
+When ``--output`` is not specified, it uses the ``WILCO_BUILD_DIR`` setting.
+The command discovers components using Django's autodiscovery and configured
+component sources.
+
+Dependencies
+------------
+
+The production setup adds two dependencies to each Django example:
+
+- ``gunicorn`` — production WSGI server
+- ``whitenoise`` — static file serving middleware
+
+Both are listed in the example's ``pyproject.toml`` and installed by ``uv sync``.
 
 Example applications
 ====================
@@ -426,12 +546,14 @@ demonstrates Django with the Unfold admin theme:
 - Django Unfold admin with live preview (tabbed interface)
 - Django ORM models for products
 - Component discovery from Django apps
+- Production mode with gunicorn and WhiteNoise
 
 .. code-block:: bash
 
     cd examples/django-unfold
-    make setup   # Install deps, migrate, load fixtures
-    make start   # Run development server
+    make setup       # Install deps, migrate, load fixtures
+    make start-dev   # Run development server (DEBUG=True, auto-reload)
+    make start-prod  # Run production server (gunicorn, DEBUG=False)
 
 Visit http://localhost:8000 for the store, http://localhost:8000/admin for the admin
 (credentials: admin/admin).
@@ -445,12 +567,14 @@ demonstrates Django with the standard built-in admin:
 
 - Same features as Django Unfold but with standard admin UI
 - ``LivePreviewAdminMixin`` works with both admin themes
+- Production mode with gunicorn and WhiteNoise
 
 .. code-block:: bash
 
     cd examples/django-vanilla
-    make setup   # Install deps, migrate, load fixtures
-    make start   # Run development server
+    make setup       # Install deps, migrate, load fixtures
+    make start-dev   # Run development server (DEBUG=True, auto-reload)
+    make start-prod  # Run production server (gunicorn, DEBUG=False)
 
 Visit http://localhost:8100 for the store, http://localhost:8100/admin for the admin
 (credentials: admin/admin).

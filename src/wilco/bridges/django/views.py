@@ -51,8 +51,19 @@ def get_registry() -> ComponentRegistry:
 
 @lru_cache(maxsize=1)
 def _get_handlers() -> BridgeHandlers:
-    """Get or create the BridgeHandlers instance."""
-    return BridgeHandlers(get_registry())
+    """Get or create the BridgeHandlers instance.
+
+    Uses resolve_django_build_dir() for consistent build-dir resolution
+    across all Django bridge consumers. Only activates static mode if
+    the build directory contains a manifest.
+
+    Note: lru_cache means this is computed once per process. Call
+    _get_handlers.cache_clear() in tests that modify WILCO_BUILD_DIR.
+    """
+    from .utils import resolve_django_build_dir
+
+    build_path = resolve_django_build_dir()
+    return BridgeHandlers(get_registry(), build_dir=build_path)
 
 
 def get_bundle_result(name: str) -> BundleResult | None:
@@ -97,8 +108,11 @@ def get_bundle(request, name: str) -> HttpResponse:
         The client should include a hash query parameter for cache busting.
 
     Raises:
-        Http404: If component not found or bundling fails.
+        Http404: If component not found, static mode active, or bundling fails.
     """
+    if _get_handlers().static_mode:
+        raise Http404("Bundles are served as static files")
+
     result = get_bundle_result(name)
 
     if result is None:

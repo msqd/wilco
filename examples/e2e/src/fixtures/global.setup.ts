@@ -1,9 +1,12 @@
-import { execSync } from "node:child_process";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 import fs from "node:fs";
 import path from "node:path";
 import { getServerManager } from "../server/index.js";
 import { getAdapter } from "../adapters/index.js";
-import type { FrameworkType } from "../server/types.js";
+import type { FrameworkType, BundleMode } from "../server/types.js";
+
+const execAsync = promisify(exec);
 
 // State file to store running server info for teardown
 const STATE_FILE = path.join(import.meta.dirname, "..", "..", ".server-state.json");
@@ -23,36 +26,53 @@ const ALL_FRAMEWORKS: FrameworkType[] = [
 ];
 
 /**
+ * Determine which modes to run from WILCO_E2E_MODE env var.
+ * Possible values: "dev", "prod", "all" (default: "all").
+ */
+function getModesToRun(): BundleMode[] {
+  const modeEnv = process.env.WILCO_E2E_MODE ?? "all";
+  if (modeEnv === "dev") return ["dev"];
+  if (modeEnv === "prod") return ["prod"];
+  return ["dev", "prod"];
+}
+
+/**
  * Run setup for an example (install dependencies, migrate, load fixtures).
  */
-function runSetup(framework: FrameworkType): void {
-  // Map framework to directory (most are 1:1, fastapi is special)
+interface StepResult {
+  framework: string;
+  ok: boolean;
+  error?: string;
+}
+
+/**
+ * Run a Make target for an example and return the result.
+ */
+async function runMakeTarget(
+  framework: FrameworkType,
+  target: string,
+): Promise<StepResult | null> {
   const exampleDir = path.join(EXAMPLES_DIR, framework);
 
   if (!fs.existsSync(exampleDir)) {
-    console.log(`  Skipping setup for ${framework} (directory not found)`);
-    return;
+    return null;
   }
 
-  console.log(`  Setting up ${framework}...`);
-
   try {
-    // Run make setup with a timeout
-    execSync("make setup", {
+    await execAsync(`make ${target}`, {
       cwd: exampleDir,
-      stdio: ["ignore", "pipe", "pipe"],
-      timeout: 120000, // 2 minutes
+      timeout: 120000,
     });
-    console.log(`  ${framework} setup complete`);
+    return { framework, ok: true };
   } catch (error) {
-    // Log but don't fail - the server might still work if already set up
-    console.log(`  ${framework} setup warning: ${(error as Error).message}`);
+    return { framework, ok: false, error: (error as Error).message };
   }
 }
 
 /**
  * Global setup for E2E tests.
  * Reads WILCO_E2E_FRAMEWORK env var to determine which framework to start.
+ * Reads WILCO_E2E_MODE env var to determine which modes to run ("dev", "prod", or "all").
  */
 async function globalSetup(): Promise<void> {
   // Get framework from environment or default to all
@@ -62,27 +82,44 @@ async function globalSetup(): Promise<void> {
       ? [frameworkEnv]
       : ALL_FRAMEWORKS;
 
+  const modes = getModesToRun();
+
   console.log(`\n=== E2E Global Setup ===`);
-  console.log(`Frameworks: ${frameworks.join(", ")}\n`);
+  console.log(`Frameworks: ${frameworks.join(", ")}`);
+  console.log(`Modes: ${modes.join(", ")}\n`);
 
-  // Run setup for each example first
-  console.log("Running setup for examples...\n");
-  for (const framework of frameworks) {
-    runSetup(framework);
+  async function runStep(label: string, target: string): Promise<void> {
+    console.log(`${label}:`);
+    const results = await Promise.all(
+      frameworks.map((fw) => runMakeTarget(fw, target)),
+    );
+    for (const r of results) {
+      if (!r) continue;
+      const icon = r.ok ? "\x1b[32m✓\x1b[0m" : "\x1b[33m⚠\x1b[0m";
+      console.log(`  ${r.framework} ${icon}${r.ok ? "" : ` ${r.error}`}`);
+    }
   }
-  console.log("");
 
-  // Start servers
+  await runStep("Setup", "setup");
+
+  if (modes.includes("prod")) {
+    await runStep("Build", "build");
+  }
+
+  // Start servers for all framework + mode combinations
+  console.log("Servers:");
   const manager = getServerManager();
   const serverNames: string[] = [];
 
   for (const framework of frameworks) {
-    const adapter = getAdapter(framework);
-    const configs = adapter.getServerConfigs();
+    for (const mode of modes) {
+      const adapter = getAdapter(framework, mode);
+      const configs = adapter.getServerConfigs();
 
-    for (const config of configs) {
-      await manager.start(config);
-      serverNames.push(config.name);
+      for (const config of configs) {
+        await manager.start(config);
+        serverNames.push(config.name);
+      }
     }
   }
 

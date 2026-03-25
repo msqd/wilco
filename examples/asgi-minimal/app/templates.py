@@ -17,6 +17,11 @@ _env = Environment(
 )
 
 
+def set_global(key: str, value) -> None:
+    """Set a Jinja2 global variable available in all templates."""
+    _env.globals[key] = value
+
+
 def render_template(template_name: str, **context) -> str:
     """Render a Jinja2 template with the given context."""
     template = _env.get_template(template_name)

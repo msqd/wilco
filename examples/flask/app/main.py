@@ -7,6 +7,7 @@ from flask import Flask, abort, render_template, send_from_directory
 from wilco import ComponentRegistry
 from wilco.bridges.base import STATIC_DIR as WILCO_STATIC_DIR
 from wilco.bridges.flask import create_blueprint
+from wilco.manifest import resolve_build_dir
 
 from .admin import create_admin
 from .database import db
@@ -46,11 +47,27 @@ def create_app(test_config=None):
     registry = ComponentRegistry()
     registry.add_source(STORE_COMPONENTS_DIR, prefix="store")
 
-    # Register wilco API blueprint
-    app.register_blueprint(create_blueprint(registry), url_prefix="/api")
+    # Register wilco API blueprint (serves pre-built bundles in prod, live bundles in dev)
+    build_dir = resolve_build_dir(BASE_DIR / "dist" / "wilco")
+    app.register_blueprint(create_blueprint(registry, build_dir=build_dir), url_prefix="/api")
+
+    # In static mode, serve pre-built bundles and expose manifest URL to templates
+    if build_dir:
+
+        @app.route("/static/wilco/<path:filename>")
+        def wilco_bundles(filename):
+            """Serve pre-built wilco bundles, fall back to app static for other wilco files."""
+            file_path = Path(build_dir) / filename
+            if file_path.exists():
+                return send_from_directory(str(build_dir), filename)
+            # Fall back to app's static/wilco/ for admin scripts etc.
+            return send_from_directory(str(STATIC_DIR / "wilco"), filename)
+
+    wilco_manifest_url = "/static/wilco/manifest.json" if build_dir else None
+    app.jinja_env.globals["wilco_manifest_url"] = wilco_manifest_url
 
     # Register admin
-    create_admin(app)
+    create_admin(app, manifest_url=wilco_manifest_url)
 
     # Routes
     @app.route("/")

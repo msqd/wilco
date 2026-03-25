@@ -6,7 +6,7 @@ A simple Django store showcasing wilco integration.
 
 ```bash
 cd examples/django
-make setup start
+make setup start-dev
 ```
 
 Open http://localhost:8000 to view the store.
@@ -19,7 +19,9 @@ Open http://localhost:8000 to view the store.
 
 | Target | Description |
 |--------|-------------|
-| `make start` | Start development server (default) |
+| `make start-dev` | Start development server (live bundling, auto-reload) |
+| `make start-prod` | Build assets then start in production mode |
+| `make build` | Pre-compile wilco component bundles for production |
 | `make install` | Install Python dependencies |
 | `make setup` | Full setup: install, migrate, fixtures, users |
 | `make migrate` | Run database migrations |

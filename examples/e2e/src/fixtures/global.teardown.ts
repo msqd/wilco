@@ -10,24 +10,19 @@ const STATE_FILE = path.join(import.meta.dirname, "..", "..", ".server-state.jso
  * Stops all servers that were started in setup.
  */
 async function globalTeardown(): Promise<void> {
-  console.log(`\n=== E2E Global Teardown ===\n`);
+  console.log(`\n=== Teardown ===`);
 
   const manager = getServerManager();
 
-  // Read state if available
   if (fs.existsSync(STATE_FILE)) {
     try {
-      const state = JSON.parse(fs.readFileSync(STATE_FILE, "utf-8"));
-      console.log(`Stopping servers: ${state.serverNames?.join(", ") || "all"}`);
+      fs.unlinkSync(STATE_FILE);
     } catch {
-      // Ignore errors reading state
+      // Ignore
     }
-    fs.unlinkSync(STATE_FILE);
   }
 
   await manager.stopAll();
-
-  console.log(`\n=== Teardown Complete ===\n`);
 }
 
 export default globalTeardown;

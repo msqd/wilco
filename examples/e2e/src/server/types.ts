@@ -66,3 +66,10 @@ export type FrameworkType =
   | "fastapi"
   | "starlette"
   | "wsgi-minimal";
+
+/**
+ * Bundle mode for the server.
+ * - "dev": live esbuild bundling at runtime (current default behavior)
+ * - "prod": pre-built assets via `make build` (no esbuild at runtime)
+ */
+export type BundleMode = "dev" | "prod";

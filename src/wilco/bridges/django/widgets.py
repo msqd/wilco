@@ -42,9 +42,6 @@ class WilcoComponentWidget:
         validate_url: URL for validation endpoint (required if live=True)
     """
 
-    # Track if loader script has been included on the page
-    _loader_included = False
-
     def __init__(
         self,
         component_name: str,
@@ -115,8 +112,7 @@ class WilcoComponentWidget:
         # Note: In Django admin, each readonly field is rendered independently,
         # so we include the script with each widget. The browser will only
         # load it once due to caching.
-        output += """
-<script src="/static/wilco/loader.js" defer></script>"""
+        output += self._loader_script_tag()
 
         # Include live loader script if in live mode
         if self.live:
@@ -124,6 +120,12 @@ class WilcoComponentWidget:
 <script src="/static/wilco/live-loader.js" defer></script>"""
 
         return mark_safe(output)
+
+    def _loader_script_tag(self) -> str:
+        """Generate the loader script tag with the correct mode."""
+        from .utils import get_loader_script_tag
+
+        return f"\n{get_loader_script_tag()}"
 
     def __str__(self) -> str:
         """Allow widget to be used directly in templates."""

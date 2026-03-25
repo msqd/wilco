@@ -10,4 +10,8 @@ These documents help you understand *why* things work the way they do.
    :maxdepth: 2
    :caption: Contents:
 
+   architecture
+   request-lifecycle
+   bundling
+   live-preview
    standalone-loader
