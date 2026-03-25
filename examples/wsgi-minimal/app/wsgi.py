@@ -135,7 +135,12 @@ def serve_static(path: str) -> tuple[str, str, bytes, dict[str, str]]:
     extra_headers: dict[str, str] = {}
 
     # Determine file path, base directory, and cache headers based on URL prefix
-    if path.startswith("/static/"):
+    # Note: /static/wilco/ must be checked before /static/ (more specific prefix first)
+    if path.startswith("/static/wilco/") and BUILD_DIR:
+        file_path = BUILD_DIR / path[14:]  # Remove /static/wilco/
+        base_dir = BUILD_DIR
+        extra_headers["Cache-Control"] = CACHE_CONTROL_IMMUTABLE
+    elif path.startswith("/static/"):
         file_path = STATIC_DIR / path[8:]  # Remove /static/
         base_dir = STATIC_DIR
         extra_headers["Cache-Control"] = "public, max-age=3600"
@@ -143,10 +148,6 @@ def serve_static(path: str) -> tuple[str, str, bytes, dict[str, str]]:
         file_path = MEDIA_DIR / path[7:]  # Remove /media/
         base_dir = MEDIA_DIR
         extra_headers["Cache-Control"] = "public, max-age=86400"
-    elif path.startswith("/static/wilco/") and BUILD_DIR:
-        file_path = BUILD_DIR / path[14:]  # Remove /static/wilco/
-        base_dir = BUILD_DIR
-        extra_headers["Cache-Control"] = CACHE_CONTROL_IMMUTABLE
     elif path.startswith("/wilco-static/"):
         file_path = WILCO_STATIC_DIR / path[14:]  # Remove /wilco-static/
         base_dir = WILCO_STATIC_DIR
