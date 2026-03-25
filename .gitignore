@@ -1,50 +1,32 @@
-# OS
-.DS_Store
-
-# Python
-__pycache__/
-*.py[cod]
+!.claude/commands/
 *$py.class
-*.egg-info/
 *.egg
+*.egg-info/
+*.iml
+*.py[cod]
 *.so
-.venv/
-.python-version
-
-# Testing & Coverage
+*.whl
+.DS_Store
+.benchmarks/
+.claude/*
 .coverage
 .coverage.*
-htmlcov/
-.pytest_cache/
+.full-review*/
 .hypothesis/
-.benchmarks/
-
-# IDEs
 .idea/
+.mypy_cache/
+.overmind.sock
+.pyre/
+.pytest_cache/
+.python-version
+.pytype/
+.ruff_cache/
+.venv/
 .vscode/
-*.iml
-
-# Build outputs
+__pycache__/
 build/
 dist/
-wheels/
-*.whl
-
-# Documentation
 docs/_build/
-
-# Type checkers
-.mypy_cache/
-.pytype/
-.pyre/
-.ruff_cache/
-
-# JavaScript
+htmlcov/
 node_modules/
-
-# Claude Code
-.claude/*
-!.claude/commands/
-
-# Project-specific
-.overmind.sock
+wheels/
