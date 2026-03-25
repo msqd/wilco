@@ -46,8 +46,10 @@ class WilcoBundleFinder(BaseFinder):
             )
             self._storage.prefix = "wilco"
 
-    def find(self, path, all=False):
+    def find(self, path, all=False, find_all=None):
         """Find a file matching the given relative path."""
+        if find_all is not None:
+            all = find_all
         if not self._build_path or not path.startswith("wilco/"):
             return [] if all else ""
 
