@@ -42,7 +42,8 @@ export function bundleModeTests(opts: {
     const staticBundleRequests = urls.filter(
       (u) =>
         u.includes("/static/wilco/bundles/") ||
-        u.includes("/wilco-static/wilco/bundles/"),
+        u.includes("/wilco-static/wilco/bundles/") ||
+        u.includes("/wilco-builds/bundles/"),
     );
     const manifestRequests = urls.filter(
       (u) => u.includes("manifest.json") && u.includes("wilco"),

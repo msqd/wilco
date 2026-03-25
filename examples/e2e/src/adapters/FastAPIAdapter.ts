@@ -13,7 +13,7 @@ import { getExamplesDir } from "../server/ServerManager.js";
 export class FastAPIAdapter implements FrameworkAdapter {
   readonly type = "fastapi" as const;
   readonly name = "FastAPI";
-  readonly hasLivePreview = false;
+  readonly hasLivePreview = true;
   readonly isSPA = true;
   readonly mode: BundleMode;
 
