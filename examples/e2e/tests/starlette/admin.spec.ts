@@ -1,10 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { StarletteAdapter } from "../../src/adapters/index.js";
 import { AdminPage } from "../../src/pages/index.js";
+import { adminLinkTest } from "../shared/admin-link.spec.js";
 
 const adapter = new StarletteAdapter();
 
 test.describe("Starlette Admin", () => {
+  adminLinkTest({ pagePath: "/" });
+
   test("admin panel is accessible", async ({ page }) => {
     const admin = new AdminPage(page, adapter);
     await admin.navigateAndLogin();

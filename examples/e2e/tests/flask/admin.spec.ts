@@ -1,10 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { FlaskAdapter } from "../../src/adapters/index.js";
 import { AdminPage } from "../../src/pages/index.js";
+import { adminLinkTest } from "../shared/admin-link.spec.js";
 
 const adapter = new FlaskAdapter();
 
 test.describe("Flask Admin", () => {
+  adminLinkTest({ pagePath: "/" });
+
   test("admin panel is accessible", async ({ page }) => {
     // Flask-Admin doesn't require login by default
     await page.goto(adapter.adminUrl);

@@ -1,10 +1,13 @@
 import { test, expect } from "@playwright/test";
 import { DjangoUnfoldAdapter } from "../../src/adapters/index.js";
 import { AdminPage } from "../../src/pages/index.js";
+import { adminLinkTest } from "../shared/admin-link.spec.js";
 
 const adapter = new DjangoUnfoldAdapter();
 
 test.describe("Django Unfold Admin", () => {
+  adminLinkTest({ pagePath: "/" });
+
   test("can login to admin panel", async ({ page }) => {
     const admin = new AdminPage(page, adapter);
     await admin.navigateAndLogin();

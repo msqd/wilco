@@ -43,7 +43,7 @@ function Layout({ children }: LayoutProps) {
         </h1>
         <nav>
           <a
-            href="/admin"
+            href="/admin/"
             className="no-underline"
             style={{
               color: '#c8d6e5',
