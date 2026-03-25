@@ -37,6 +37,7 @@ class WilcoBundleFinder(BaseFinder):
         super().__init__(*args, **kwargs)
         build_dir = getattr(settings, "WILCO_BUILD_DIR", None)
         self._build_path: Path | None = Path(build_dir) if build_dir else None
+        self._resolved_build_path: Path | None = self._build_path.resolve() if self._build_path else None
         self._storage: FileSystemStorage | None = None
 
         if self._build_path and self._build_path.exists():
@@ -54,11 +55,11 @@ class WilcoBundleFinder(BaseFinder):
             return [] if all else ""
 
         # Strip the wilco/ prefix to get the path relative to build dir
-        relative = path[len("wilco/"):]
+        relative = path[len("wilco/") :]
         full_path = (self._build_path / relative).resolve()
 
         # Prevent path traversal outside the build directory
-        if not full_path.is_relative_to(self._build_path.resolve()):
+        if not full_path.is_relative_to(self._resolved_build_path):
             return [] if all else ""
 
         if full_path.is_file():

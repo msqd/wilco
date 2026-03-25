@@ -53,6 +53,7 @@ def create_app(test_config=None):
 
     # In static mode, serve pre-built bundles and expose manifest URL to templates
     if build_dir:
+
         @app.route("/static/wilco/<path:filename>")
         def wilco_bundles(filename):
             """Serve pre-built wilco bundles, fall back to app static for other wilco files."""

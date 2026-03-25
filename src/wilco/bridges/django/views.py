@@ -60,13 +60,10 @@ def _get_handlers() -> BridgeHandlers:
     Note: lru_cache means this is computed once per process. Call
     _get_handlers.cache_clear() in tests that modify WILCO_BUILD_DIR.
     """
-    from wilco.manifest import load_manifest
-
     from .utils import resolve_django_build_dir
 
     build_path = resolve_django_build_dir()
-    effective_build_dir = build_path if (build_path and load_manifest(build_path)) else None
-    return BridgeHandlers(get_registry(), build_dir=effective_build_dir)
+    return BridgeHandlers(get_registry(), build_dir=build_path)
 
 
 def get_bundle_result(name: str) -> BundleResult | None:

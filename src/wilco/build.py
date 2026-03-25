@@ -65,7 +65,7 @@ def build_components(
                 minify=minify,
                 sourcemap=sourcemap,
             )
-        except (RuntimeError, Exception) as e:
+        except Exception as e:
             errors.append((name, str(e)))
             continue
 

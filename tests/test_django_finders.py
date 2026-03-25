@@ -209,21 +209,25 @@ class TestGetLoaderScriptTag:
         """Should return plain loader when no build dir configured."""
         from django.conf import settings
 
+        from wilco.bridges.django.utils import get_loader_script_tag, is_static_mode
+
         monkeypatch.delenv("WILCO_BUILD_DIR", raising=False)
         original = getattr(settings, "WILCO_BUILD_DIR", None)
         settings.WILCO_BUILD_DIR = None
+        is_static_mode.cache_clear()
         try:
-            from wilco.bridges.django.utils import get_loader_script_tag
-
             result = get_loader_script_tag()
             assert "data-wilco-manifest" not in result
             assert "loader.js" in result
         finally:
             settings.WILCO_BUILD_DIR = original
+            is_static_mode.cache_clear()
 
     def test_returns_static_loader_when_manifest_exists(self, temp_dir: Path, monkeypatch) -> None:
         """Should include data-wilco-manifest when build dir has manifest."""
         from django.conf import settings
+
+        from wilco.bridges.django.utils import get_loader_script_tag, is_static_mode
 
         build_dir = temp_dir / "build"
         build_dir.mkdir()
@@ -232,17 +236,19 @@ class TestGetLoaderScriptTag:
         monkeypatch.setenv("WILCO_BUILD_DIR", str(build_dir))
         original = getattr(settings, "WILCO_BUILD_DIR", None)
         settings.WILCO_BUILD_DIR = str(build_dir)
+        is_static_mode.cache_clear()
         try:
-            from wilco.bridges.django.utils import get_loader_script_tag
-
             result = get_loader_script_tag()
             assert "data-wilco-manifest" in result
         finally:
             settings.WILCO_BUILD_DIR = original
+            is_static_mode.cache_clear()
 
     def test_empty_env_var_disables_static_mode(self, temp_dir: Path, monkeypatch) -> None:
         """WILCO_BUILD_DIR='' should disable static mode even if manifest exists."""
         from django.conf import settings
+
+        from wilco.bridges.django.utils import get_loader_script_tag, is_static_mode
 
         build_dir = temp_dir / "build"
         build_dir.mkdir()
@@ -251,10 +257,10 @@ class TestGetLoaderScriptTag:
         monkeypatch.setenv("WILCO_BUILD_DIR", "")
         original = getattr(settings, "WILCO_BUILD_DIR", None)
         settings.WILCO_BUILD_DIR = str(build_dir)
+        is_static_mode.cache_clear()
         try:
-            from wilco.bridges.django.utils import get_loader_script_tag
-
             result = get_loader_script_tag()
             assert "data-wilco-manifest" not in result
         finally:
             settings.WILCO_BUILD_DIR = original
+            is_static_mode.cache_clear()

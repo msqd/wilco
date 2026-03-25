@@ -1,6 +1,7 @@
 """Shared utilities for the Django bridge."""
 
 import os
+from functools import lru_cache
 from pathlib import Path
 
 
@@ -25,8 +26,13 @@ def resolve_django_build_dir() -> Path | None:
     return Path(raw) if raw else None
 
 
+@lru_cache(maxsize=1)
 def is_static_mode() -> bool:
-    """Check if static mode is active (build dir exists with a manifest)."""
+    """Check if static mode is active (build dir exists with a manifest).
+
+    Result is cached for the process lifetime (same as _get_handlers).
+    Call is_static_mode.cache_clear() in tests that modify WILCO_BUILD_DIR.
+    """
     from wilco.manifest import load_manifest
 
     build_path = resolve_django_build_dir()

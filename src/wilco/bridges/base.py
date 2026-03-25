@@ -137,8 +137,10 @@ class BridgeHandlers:
             BundleResult with code and hash, or None if not found.
         """
         # Try pre-built bundle first (returns cached BundleResult)
-        if self._manifest is not None and self._manifest.has(name):
-            return self._manifest.get_bundle(name)
+        if self._manifest is not None:
+            result = self._manifest.get_bundle(name)
+            if result is not None:
+                return result
 
         component = self.registry.get(name)
         if component is None:

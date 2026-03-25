@@ -28,6 +28,7 @@ class Manifest:
             raise ValueError(f"Invalid manifest JSON: {e}") from e
 
         self._build_dir = build_dir
+        self._resolved_build_dir = build_dir.resolve()
         self._bundle_cache: dict[str, BundleResult] = {}
 
     def get_bundle(self, name: str) -> BundleResult | None:
@@ -49,7 +50,7 @@ class Manifest:
         file_path = (self._build_dir / entry["file"]).resolve()
 
         # Prevent path traversal outside the build directory
-        if not file_path.is_relative_to(self._build_dir.resolve()):
+        if not file_path.is_relative_to(self._resolved_build_dir):
             return None
 
         try:
