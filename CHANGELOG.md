@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-03-25
+
 ### Added
 
 - **Pre-compile CLI**: `wilco build` command pre-compiles all registered components
@@ -110,6 +112,7 @@ This release marks a fresh start with a new license model.
 - **Source Maps**: Full debugging support in browser devtools
 - **Error Handling**: Typed error classes for better debugging
 
-[Unreleased]: https://github.com/msqd/wilco/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/msqd/wilco/compare/0.5.0...HEAD
+[0.5.0]: https://github.com/msqd/wilco/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/msqd/wilco/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/msqd/wilco/releases/tag/0.3.0
