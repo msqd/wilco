@@ -121,6 +121,7 @@ help:  ## Show available commands
 	@echo
 	@echo "\033[1mTesting\033[0m"
 	@grep -E '^(test-all|test|test-backend|test-frontend|test-e2e|test-e2e-dev|test-e2e-prod):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@echo "  \033[2mE2E env vars: HEADED=1 (show browser), WILCO_E2E_VERBOSE=1 (server logs), PWDEBUG=1 (inspector)\033[0m"
 	@echo
 	@echo "\033[1mDocumentation\033[0m"
 	@grep -E '^(docs|docs-watch):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'

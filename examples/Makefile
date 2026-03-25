@@ -154,3 +154,8 @@ help:  ## Show available commands
 	@echo "\033[1mE2E Tests\033[0m"
 	@grep -E '^(test-e2e|test-e2e-django-unfold|test-e2e-django-vanilla|test-e2e-flask|test-e2e-fastapi|test-e2e-starlette|test-e2e-asgi-minimal|test-e2e-wsgi-minimal):.*?##' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?##"}; {printf "    make \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 	@echo
+	@echo "  \033[2mEnvironment variables:\033[0m"
+	@echo "    HEADED=1                 Show browser during E2E tests"
+	@echo "    WILCO_E2E_VERBOSE=1      Show server output during E2E tests"
+	@echo "    PWDEBUG=1                Enable Playwright Inspector"
+	@echo
