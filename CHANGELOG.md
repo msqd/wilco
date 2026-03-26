@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Standalone loader**: handle hashed manifest filenames (e.g. `manifest.49a00a0d5276.json`) when deriving the bundle base URL, fixing component loading with Django's `CompressedManifestStaticFilesStorage`
+
 ## [0.5.0] - 2026-03-25
 
 ### Added

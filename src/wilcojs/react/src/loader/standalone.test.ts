@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { transformEsmToRuntime } from "./standalone"
+import { deriveManifestBaseUrl, transformEsmToRuntime } from "./standalone"
 
 // Mock fetch globally
 const mockFetch = vi.fn()
@@ -163,6 +163,32 @@ function Counter() { return 42; }`
       const result = transformEsmToRuntime("", "test")
       expect(result).toContain("//# sourceURL=components://bundles/test.js")
     })
+  })
+})
+
+describe("deriveManifestBaseUrl", () => {
+  it("strips /manifest.json from a standard URL", () => {
+    expect(deriveManifestBaseUrl("/static/wilco/manifest.json")).toBe("/static/wilco")
+  })
+
+  it("strips hashed manifest filename", () => {
+    expect(deriveManifestBaseUrl("/static/wilco/manifest.49a00a0d5276.json")).toBe("/static/wilco")
+  })
+
+  it("handles long hashes", () => {
+    expect(deriveManifestBaseUrl("/static/wilco/manifest.abcdef0123456789.json")).toBe("/static/wilco")
+  })
+
+  it("handles short hashes", () => {
+    expect(deriveManifestBaseUrl("/static/wilco/manifest.abc.json")).toBe("/static/wilco")
+  })
+
+  it("returns URL unchanged when no manifest pattern matches", () => {
+    expect(deriveManifestBaseUrl("/static/wilco/other.json")).toBe("/static/wilco/other.json")
+  })
+
+  it("does not match non-hex hash segments", () => {
+    expect(deriveManifestBaseUrl("/static/wilco/manifest.GHIJKL.json")).toBe("/static/wilco/manifest.GHIJKL.json")
   })
 })
 

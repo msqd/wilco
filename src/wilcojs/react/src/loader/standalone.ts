@@ -383,6 +383,14 @@ function initializeComponents(): void {
 }
 
 /**
+ * Derive the base URL from a manifest URL by stripping the manifest filename.
+ * Handles both standard (`manifest.json`) and hashed (`manifest.49a00a0d5276.json`) filenames.
+ */
+function deriveManifestBaseUrl(manifestUrl: string): string {
+  return manifestUrl.replace(/\/manifest(\.[a-f0-9]+)?\.json$/, "")
+}
+
+/**
  * Detect static mode from the loader script's data-wilco-manifest attribute.
  * If present, fetches the manifest and configures static loading.
  */
@@ -400,7 +408,7 @@ async function detectAndLoadManifest(): Promise<void> {
 
     _w.__wilcoManifest = await response.json()
     // Derive the base URL from the manifest URL: "/static/wilco/manifest.json" → "/static/wilco"
-    _w.__wilcoManifestBaseUrl = manifestUrl.replace(/\/manifest\.json$/, "")
+    _w.__wilcoManifestBaseUrl = deriveManifestBaseUrl(manifestUrl)
   } catch {
     // Manifest fetch failed, stay in API mode
     console.warn("wilco: failed to load manifest, falling back to API mode")
@@ -437,4 +445,4 @@ export { renderComponent, updateComponentProps }
 
 // Internal exports - exposed for testing and advanced use cases
 // @internal
-export { loadComponent, useComponent, transformEsmToRuntime }
+export { loadComponent, useComponent, transformEsmToRuntime, deriveManifestBaseUrl }
