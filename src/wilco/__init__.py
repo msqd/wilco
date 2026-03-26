@@ -5,7 +5,7 @@ from .bundler import BundleResult, BundlerNotFoundError, bundle_component
 from .manifest import Manifest, load_manifest, resolve_build_dir
 from .registry import Component, ComponentRegistry
 
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 __all__ = [
     "BuildResult",
