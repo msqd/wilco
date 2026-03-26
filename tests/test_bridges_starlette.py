@@ -1,6 +1,7 @@
 """Functional tests for wilco.bridges.starlette API endpoints."""
 
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from starlette.applications import Starlette
@@ -167,6 +168,38 @@ class TestGetBundle:
 
         assert response.status_code == 200
         assert response.headers.get("cache-control") == "public, max-age=31536000, immutable"
+
+
+    def test_returns_500_on_bundler_error(self, starlette_client: TestClient) -> None:
+        """Should return 500 when bundler fails."""
+        list_response = starlette_client.get("/api/bundles")
+        bundles = list_response.json()
+
+        if not bundles:
+            pytest.skip("No bundles available")
+
+        bundle_name = bundles[0]["name"]
+
+        with patch("wilco.bridges.base.bundle_component") as mock_bundle:
+            mock_bundle.side_effect = RuntimeError("Bundling failed")
+            response = starlette_client.get(f"/api/bundles/{bundle_name}.js")
+
+        assert response.status_code == 500
+
+    def test_get_bundle_does_not_block_event_loop(self, starlette_client: TestClient) -> None:
+        """get_bundle should use asyncio.to_thread to avoid blocking the event loop."""
+        list_response = starlette_client.get("/api/bundles")
+        bundles = list_response.json()
+
+        if not bundles:
+            pytest.skip("No bundles available")
+
+        bundle_name = bundles[0]["name"]
+
+        with patch("wilco.bridges.starlette.asyncio.to_thread", wraps=__import__("asyncio").to_thread) as mock_to_thread:
+            response = starlette_client.get(f"/api/bundles/{bundle_name}.js")
+
+        mock_to_thread.assert_called_once()
 
 
 class TestGetBundleMetadata:

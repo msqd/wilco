@@ -18,6 +18,7 @@ Example:
     ```
 """
 
+import asyncio
 import importlib.util
 
 if importlib.util.find_spec("starlette") is None:
@@ -75,11 +76,16 @@ def create_routes(registry: ComponentRegistry, build_dir: Path | None = None) ->
         name = request.path_params["name"]
 
         try:
-            result = handlers.get_bundle(name)
+            result = await asyncio.to_thread(handlers.get_bundle, name)
         except ValueError:
             return JSONResponse(
                 {"detail": f"Invalid component name: '{name}'"},
                 status_code=422,
+            )
+        except RuntimeError as e:
+            return JSONResponse(
+                {"detail": str(e)},
+                status_code=500,
             )
 
         if result is None:

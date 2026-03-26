@@ -122,6 +122,7 @@ The response contains the bundled ESM JavaScript with inline source maps.
 
 - ``404``: Component not found
 - ``422``: Invalid component name
+- ``500``: Bundling failed (esbuild error)
 
 GET /bundles/{name}/metadata
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
