@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Django finders**: `WilcoBundleFinder.find()` now returns `None` instead of `""` when no file matches, fixing Django's `finders.find()` aggregation and whitenoise compatibility (#16)
+
 ## [0.5.1] - 2026-03-26
 
 ### Fixed
