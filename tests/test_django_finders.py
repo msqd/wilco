@@ -54,18 +54,22 @@ class TestWilcoBundleFinder:
         assert result != ""
         assert "manifest.json" in result
 
-    def test_find_returns_empty_for_missing_file(self, temp_dir: Path) -> None:
-        """find() should return empty for non-existent files."""
+    def test_find_returns_none_for_missing_file(self, temp_dir: Path) -> None:
+        """find() should return None for non-existent files (not empty string).
+
+        Regression test for #16: returning '' caused Django's finders.find()
+        to wrap it into [''], breaking downstream consumers like whitenoise.
+        """
         build_dir = temp_dir / "build"
         build_dir.mkdir()
 
         finder = self._make_finder(build_dir)
         result = finder.find("wilco/nonexistent.js")
 
-        assert result == ""
+        assert result is None
 
-    def test_find_returns_empty_for_non_wilco_prefix(self, temp_dir: Path) -> None:
-        """find() should return empty for paths not starting with wilco/."""
+    def test_find_returns_none_for_non_wilco_prefix(self, temp_dir: Path) -> None:
+        """find() should return None for paths not starting with wilco/."""
         build_dir = temp_dir / "build"
         build_dir.mkdir()
         (build_dir / "manifest.json").write_text("{}")
@@ -73,7 +77,7 @@ class TestWilcoBundleFinder:
         finder = self._make_finder(build_dir)
         result = finder.find("other/manifest.json")
 
-        assert result == ""
+        assert result is None
 
     def test_find_rejects_path_traversal(self, temp_dir: Path) -> None:
         """find() must reject paths that escape the build directory."""
@@ -87,7 +91,7 @@ class TestWilcoBundleFinder:
         finder = self._make_finder(build_dir)
         result = finder.find("wilco/../secret.txt")
 
-        assert result == ""
+        assert result is None
 
     def test_find_rejects_deep_traversal(self, temp_dir: Path) -> None:
         """find() must reject deeply nested traversal attempts."""
@@ -97,7 +101,7 @@ class TestWilcoBundleFinder:
         finder = self._make_finder(build_dir)
         result = finder.find("wilco/../../../etc/passwd")
 
-        assert result == ""
+        assert result is None
 
     def test_find_with_all_returns_list(self, temp_dir: Path) -> None:
         """find(all=True) should return a list."""
