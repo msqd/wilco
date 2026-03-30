@@ -169,7 +169,6 @@ class TestGetBundle:
         assert response.status_code == 200
         assert response.headers.get("cache-control") == "public, max-age=31536000, immutable"
 
-
     def test_returns_500_on_bundler_error(self, starlette_client: TestClient) -> None:
         """Should return 500 when bundler fails."""
         list_response = starlette_client.get("/api/bundles")
@@ -196,7 +195,9 @@ class TestGetBundle:
 
         bundle_name = bundles[0]["name"]
 
-        with patch("wilco.bridges.starlette.asyncio.to_thread", wraps=__import__("asyncio").to_thread) as mock_to_thread:
+        with patch(
+            "wilco.bridges.starlette.asyncio.to_thread", wraps=__import__("asyncio").to_thread
+        ) as mock_to_thread:
             starlette_client.get(f"/api/bundles/{bundle_name}.js")
 
         mock_to_thread.assert_called_once()
