@@ -55,7 +55,11 @@ class TestWilcoBundleFinder:
         assert "manifest.json" in result
 
     def test_find_returns_none_for_missing_file(self, temp_dir: Path) -> None:
-        """find() should return None for non-existent files (not empty string)."""
+        """find() should return None for non-existent files (not empty string).
+
+        Regression test for #16: returning '' caused Django's finders.find()
+        to wrap it into [''], breaking downstream consumers like whitenoise.
+        """
         build_dir = temp_dir / "build"
         build_dir.mkdir()
 
@@ -98,30 +102,6 @@ class TestWilcoBundleFinder:
         result = finder.find("wilco/../../../etc/passwd")
 
         assert result is None
-
-    def test_find_no_match_does_not_pollute_django_finders(self, temp_dir: Path) -> None:
-        """Django finders.find() must not return [''] due to WilcoBundleFinder.
-
-        Regression test for #16: when all=False, returning '' instead of None
-        causes Django's finders.find() to wrap it into [''] and return that
-        instead of None.
-        """
-        build_dir = temp_dir / "build"
-        build_dir.mkdir()
-
-        finder = self._make_finder(build_dir)
-        result = finder.find("wilco/nonexistent.js")
-
-        # Must be None (falsy AND not wrappable into a truthy list)
-        assert result is None
-        # Simulate Django's finders.find() wrapping logic
-        if not isinstance(result, (list, tuple)):
-            wrapped = [result]
-        else:
-            wrapped = result
-        # [None] is truthy, but Django checks `not all and result` first,
-        # which short-circuits when result is None (falsy)
-        assert not result  # falsy, so Django skips wrapping entirely
 
     def test_find_with_all_returns_list(self, temp_dir: Path) -> None:
         """find(all=True) should return a list."""
