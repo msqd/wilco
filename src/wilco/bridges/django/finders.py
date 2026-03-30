@@ -52,7 +52,7 @@ class WilcoBundleFinder(BaseFinder):
         if find_all is not None:
             all = find_all
         if not self._build_path or not path.startswith("wilco/"):
-            return [] if all else None
+            return []
 
         # Strip the wilco/ prefix to get the path relative to build dir
         relative = path[len("wilco/") :]
@@ -60,13 +60,13 @@ class WilcoBundleFinder(BaseFinder):
 
         # Prevent path traversal outside the build directory
         if not full_path.is_relative_to(self._resolved_build_path):
-            return [] if all else None
+            return []
 
         if full_path.is_file():
             matched = str(full_path)
             return [matched] if all else matched
 
-        return [] if all else None
+        return []
 
     def list(self, ignore_patterns):
         """List all files in the build directory."""

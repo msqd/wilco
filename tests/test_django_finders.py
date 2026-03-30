@@ -51,14 +51,16 @@ class TestWilcoBundleFinder:
         finder = self._make_finder(build_dir)
         result = finder.find("wilco/manifest.json")
 
-        assert result != ""
+        assert isinstance(result, str)
         assert "manifest.json" in result
 
-    def test_find_returns_none_for_missing_file(self, temp_dir: Path) -> None:
-        """find() should return None for non-existent files (not empty string).
+    def test_find_returns_empty_list_for_missing_file(self, temp_dir: Path) -> None:
+        """find() should return [] for non-existent files.
 
-        Regression test for #16: returning '' caused Django's finders.find()
-        to wrap it into [''], breaking downstream consumers like whitenoise.
+        Regression test for #16: Django's top-level finders.find() wraps
+        non-list results via ``[result]``, so returning None or '' produces
+        ``[None]`` or ``['']`` which are truthy, breaking downstream consumers
+        like whitenoise. Returning ``[]`` is safe because extend([]) is a no-op.
         """
         build_dir = temp_dir / "build"
         build_dir.mkdir()
@@ -66,10 +68,10 @@ class TestWilcoBundleFinder:
         finder = self._make_finder(build_dir)
         result = finder.find("wilco/nonexistent.js")
 
-        assert result is None
+        assert result == []
 
-    def test_find_returns_none_for_non_wilco_prefix(self, temp_dir: Path) -> None:
-        """find() should return None for paths not starting with wilco/."""
+    def test_find_returns_empty_list_for_non_wilco_prefix(self, temp_dir: Path) -> None:
+        """find() should return [] for paths not starting with wilco/."""
         build_dir = temp_dir / "build"
         build_dir.mkdir()
         (build_dir / "manifest.json").write_text("{}")
@@ -77,7 +79,7 @@ class TestWilcoBundleFinder:
         finder = self._make_finder(build_dir)
         result = finder.find("other/manifest.json")
 
-        assert result is None
+        assert result == []
 
     def test_find_rejects_path_traversal(self, temp_dir: Path) -> None:
         """find() must reject paths that escape the build directory."""
@@ -91,7 +93,7 @@ class TestWilcoBundleFinder:
         finder = self._make_finder(build_dir)
         result = finder.find("wilco/../secret.txt")
 
-        assert result is None
+        assert result == []
 
     def test_find_rejects_deep_traversal(self, temp_dir: Path) -> None:
         """find() must reject deeply nested traversal attempts."""
@@ -101,7 +103,7 @@ class TestWilcoBundleFinder:
         finder = self._make_finder(build_dir)
         result = finder.find("wilco/../../../etc/passwd")
 
-        assert result is None
+        assert result == []
 
     def test_find_with_all_returns_list(self, temp_dir: Path) -> None:
         """find(all=True) should return a list."""
@@ -128,7 +130,6 @@ class TestWilcoBundleFinder:
 
         paths = [path for path, storage in files]
         assert "manifest.json" in paths
-        # bundles/counter.abc123.js should be in the list
         assert any("counter" in p for p in paths)
 
     def test_list_empty_when_no_build_dir(self) -> None:
