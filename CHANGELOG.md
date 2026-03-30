@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-03-30
+
 ### Fixed
 
 - **Django finders**: `WilcoBundleFinder.find()` now returns `None` instead of `""` when no file matches, fixing Django's `finders.find()` aggregation and whitenoise compatibility (#16)
@@ -124,7 +126,9 @@ This release marks a fresh start with a new license model.
 - **Source Maps**: Full debugging support in browser devtools
 - **Error Handling**: Typed error classes for better debugging
 
-[Unreleased]: https://github.com/msqd/wilco/compare/0.5.0...HEAD
+[Unreleased]: https://github.com/msqd/wilco/compare/0.5.2...HEAD
+[0.5.2]: https://github.com/msqd/wilco/compare/0.5.1...0.5.2
+[0.5.1]: https://github.com/msqd/wilco/compare/0.5.0...0.5.1
 [0.5.0]: https://github.com/msqd/wilco/compare/0.4.0...0.5.0
 [0.4.0]: https://github.com/msqd/wilco/compare/0.3.0...0.4.0
 [0.3.0]: https://github.com/msqd/wilco/releases/tag/0.3.0
