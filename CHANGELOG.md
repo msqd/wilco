@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Django finders**: `WilcoBundleFinder.find()` now returns `None` instead of `""` when no file matches, fixing Django's `finders.find()` aggregation and whitenoise compatibility (#16)
+- **Starlette bridge**: `get_bundle` no longer blocks the event loop during live bundling (uses `asyncio.to_thread`)
+- **Starlette bridge**: `get_bundle` now returns HTTP 500 on esbuild failures instead of crashing (parity with FastAPI bridge)
 
 ## [0.5.1] - 2026-03-26
 
