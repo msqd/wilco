@@ -197,7 +197,7 @@ class TestGetBundle:
         bundle_name = bundles[0]["name"]
 
         with patch("wilco.bridges.starlette.asyncio.to_thread", wraps=__import__("asyncio").to_thread) as mock_to_thread:
-            response = starlette_client.get(f"/api/bundles/{bundle_name}.js")
+            starlette_client.get(f"/api/bundles/{bundle_name}.js")
 
         mock_to_thread.assert_called_once()
 
