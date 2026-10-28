@@ -34,14 +34,25 @@ grep "__version__" src/wilco/__init__.py
 
 The last command verifies the version was updated correctly.
 
-### 3. Commit Version Change
+### 3. Build Changelog
+
+Each change carries a fragment in `docs/changelog/unreleased/` (`<issue>.<type>.md`, type one of `added`, `changed`, `deprecated`, `removed`, `fixed`, `security`). Preview, then build the version section of `CHANGELOG.md` (towncrier is pinned to `26.9.0`):
 
 ```bash
-git add src/wilco/__init__.py
+uvx --from 'towncrier==26.9.0' towncrier build --draft --version $VERSION
+uvx --from 'towncrier==26.9.0' towncrier build --yes --version $VERSION
+```
+
+The build consumes the fragments and removes them.
+
+### 4. Commit Version Change
+
+```bash
+git add src/wilco/__init__.py CHANGELOG.md docs/changelog/unreleased
 git commit -m "chore: bump version to $VERSION"
 ```
 
-### 4. Create Annotated Git Tag
+### 5. Create Annotated Git Tag
 
 ```bash
 git tag -a $VERSION -m "Release $VERSION"
@@ -49,14 +60,14 @@ git tag -a $VERSION -m "Release $VERSION"
 
 **Critical:** Use the `-a` flag for annotated tags. Lightweight tags won't trigger the workflow.
 
-### 5. Push Changes and Tag
+### 6. Push Changes and Tag
 
 ```bash
 git push origin main
 git push origin $VERSION
 ```
 
-### 6. Monitor Workflow
+### 7. Monitor Workflow
 
 The automated CI/CD process will:
 1. Validate version matches git tag
@@ -74,7 +85,7 @@ gh run watch
 
 Or visit the [GitHub Actions dashboard](../../actions).
 
-### 7. Verify Release
+### 8. Verify Release
 
 ```bash
 # Test installation from PyPI
