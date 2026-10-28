@@ -60,7 +60,7 @@ dev = [
 ]
 
 [build-system]
-requires = ["hatchling>=1.28,<2"]
+requires = ["hatchling>=1.33,<1.34"]
 build-backend = "hatchling.build"
 
 [tool.hatch.version]
